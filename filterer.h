@@ -4,6 +4,7 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "cl.hpp"
 #include "cv.h"
+#include <vector>
 
 class Filterer {
 public:
@@ -23,9 +24,11 @@ public:
                        cl::Image2D& out2Re, cl::Image2D& out2Im,
                        cl::Image2D& input);
 
+    void cornernessMap(cl::Image2D& output, std::vector<cl::Image2D> subbands);
+
     cl::Image2D createImage2D(cv::Mat& image);
     cl::Image2D createImage2D(int width, int height);
-    cv::Mat getImage2D(cl::Image2D);
+    cv::Mat getImage2D(cl::Image2D&);
     cl::Sampler createSampler();
 
     cl::Buffer createBuffer(const float data[], int length);
@@ -41,6 +44,7 @@ private:
     cl::Kernel rowFilterKernel;
     cl::Kernel colFilterKernel;
     cl::Kernel quadToComplexKernel;
+    cl::Kernel cornernessMapKernel;
 };
 
 

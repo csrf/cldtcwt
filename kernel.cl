@@ -151,3 +151,50 @@ __kernel void quadToComplex(__read_only image2d_t input,
 }
 
 
+__kernel void cornernessMap(__read_only image2d_t sb1re,
+                            __read_only image2d_t sb1im,
+                            __read_only image2d_t sb2re,
+                            __read_only image2d_t sb2im,
+                            __read_only image2d_t sb3re,
+                            __read_only image2d_t sb3im,
+                            __read_only image2d_t sb4re,
+                            __read_only image2d_t sb4im,
+                            __read_only image2d_t sb5re,
+                            __read_only image2d_t sb5im,
+                            __read_only image2d_t sb6re,
+                            __read_only image2d_t sb6im,
+                            sampler_t inputSampler,
+                            __write_only image2d_t cornerMap)
+{
+    int2 coord = (int2) (get_global_id(0), get_global_id(1));
+
+    float4 f1r = read_imagef(sb1re, inputSampler, coord);
+    float4 f1i = read_imagef(sb1im, inputSampler, coord);
+    float4 f2r = read_imagef(sb2re, inputSampler, coord);
+    float4 f2i = read_imagef(sb2im, inputSampler, coord);
+    float4 f3r = read_imagef(sb3re, inputSampler, coord);
+    float4 f3i = read_imagef(sb3im, inputSampler, coord);
+    float4 f4r = read_imagef(sb4re, inputSampler, coord);
+    float4 f4i = read_imagef(sb4im, inputSampler, coord);
+    float4 f5r = read_imagef(sb5re, inputSampler, coord);
+    float4 f5i = read_imagef(sb5im, inputSampler, coord);
+    float4 f6r = read_imagef(sb6re, inputSampler, coord);
+    float4 f6i = read_imagef(sb6im, inputSampler, coord);
+
+    float4 result = fmin(f1r.x * f1r.x + f1i.x * f1i.x,
+                    fmin(f2r.x * f2r.x + f2i.x * f2i.x,
+                    fmin(f3r.x * f3r.x + f3i.x * f3i.x,
+                    fmin(f4r.x * f4r.x + f4i.x * f4i.x,
+                    fmin(f5r.x * f5r.x + f5i.x * f5i.x,
+                         f6r.x * f6r.x + f6i.x * f6i.x)))));
+    
+    write_imagef(cornerMap, (int2) (coord.x * 2, coord.y), sqrt(result));
+}
+
+
+
+
+
+
+
+

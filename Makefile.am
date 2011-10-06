@@ -3,6 +3,6 @@ ACLOCAL_AMFLAGS=-I m4
 AM_CXXFLAGS=@CL_CFLAGS@ @OPENCV_CFLAGS@
 
 bin_PROGRAMS=test
-test_SOURCES=test.cc
+test_SOURCES=test.cc filterer.cc
 test_LDADD=@CL_LIBS@ @OPENCV_LIBS@
 

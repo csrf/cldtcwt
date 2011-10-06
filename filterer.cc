@@ -44,6 +44,7 @@ Filterer::Filterer()
     rowFilterKernel = cl::Kernel(program, "rowFilter");
     colFilterKernel = cl::Kernel(program, "colFilter");
     quadToComplexKernel = cl::Kernel(program, "quadToComplex");
+    cornernessMapKernel = cl::Kernel(program, "cornernessMap");
 
     // Ready the command queue on the first device to hand
     commandQueue = cl::CommandQueue(context, devices[0]);
@@ -78,7 +79,7 @@ cl::Image2D Filterer::createImage2D(int width, int height)
 
 
 
-cv::Mat Filterer::getImage2D(cl::Image2D image)
+cv::Mat Filterer::getImage2D(cl::Image2D& image)
 {
     // Create a matrix to put the data into
     cv::Mat output(image.getImageInfo<CL_IMAGE_HEIGHT>(), 
@@ -96,6 +97,7 @@ cv::Mat Filterer::getImage2D(cl::Image2D image)
     extents.push_back(output.cols);
     extents.push_back(output.rows);
     extents.push_back(1);
+
 
 
     commandQueue.enqueueReadImage(image, CL_TRUE,
@@ -249,4 +251,36 @@ void Filterer::quadToComplex(cl::Image2D& out1Re, cl::Image2D& out1Im,
     commandQueue.finish();
 }
 
+void Filterer::cornernessMap(cl::Image2D& output, 
+                                    std::vector<cl::Image2D> subbands)
+{
+    // The output is the same size as each of the inputs
+    const int width = subbands[0].getImageInfo<CL_IMAGE_WIDTH>();
+    const int height = subbands[0].getImageInfo<CL_IMAGE_HEIGHT>();
+    output = createImage2D(width, height);
+
+    // Send across the real and imaginary components
+    cornernessMapKernel.setArg(0,  subbands[0]);
+    cornernessMapKernel.setArg(1,  subbands[0+6]);
+    cornernessMapKernel.setArg(2,  subbands[1]);
+    cornernessMapKernel.setArg(3,  subbands[1+6]);
+    cornernessMapKernel.setArg(4,  subbands[2]);
+    cornernessMapKernel.setArg(5,  subbands[2+6]);
+    cornernessMapKernel.setArg(6,  subbands[3]);
+    cornernessMapKernel.setArg(7,  subbands[3+6]);
+    cornernessMapKernel.setArg(8,  subbands[4]);
+    cornernessMapKernel.setArg(9,  subbands[4+6]);
+    cornernessMapKernel.setArg(10, subbands[5]);
+    cornernessMapKernel.setArg(11, subbands[5+6]);
+
+    cornernessMapKernel.setArg(12, createSampler());
+
+    cornernessMapKernel.setArg(13, output);
+
+    // Execute
+    commandQueue.enqueueNDRangeKernel(cornernessMapKernel, cl::NullRange,
+                                      cl::NDRange(width, height),
+                                      cl::NullRange);
+    commandQueue.finish();
+}
 

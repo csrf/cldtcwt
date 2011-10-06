@@ -199,8 +199,8 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
                                output[idx][5], output[idx][5+6],
                                hilo);
 
-        filterer.quadToComplex(output[idx][1], output[idx][1+6],
-                               output[idx][4], output[idx][4+6],
+        filterer.quadToComplex(output[idx][4], output[idx][4+6],
+                               output[idx][1], output[idx][1+6],
                                bpbp);
 
     }
@@ -342,28 +342,34 @@ int main()
         std::string displays[] = {"S1", "S2", "S3", "S4", "S5", "S6"};
 
         // Read the image (forcing to RGB), and convert it to floats ("1")
-        cv::Mat inImage = cv::imread("circle.bmp", 1);
+        //cv::Mat inImage = cv::imread("~/Download/PVTRA101a01/00003449.jpg", 1);
+        cv::Mat inImage = cv::imread("traffic.bmp", 1);
 
         // Open the camera for reading
+///*
         cv::VideoCapture videoIn(0);
-        videoIn.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-        videoIn.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+        videoIn.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+        videoIn.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 
-
+//*/
         Filterer filterer;
 
         dtcwtFilters filters = createFilters(filterer);
+///*
         for (int n = 0; n < 6; ++n)
             cv::namedWindow(displays[n], CV_WINDOW_NORMAL);
-       
+        cv::namedWindow("Cornerness", CV_WINDOW_NORMAL);
+//*/ 
         cv::Mat vidImage;
         cv::Mat outImage;
 
         int x = 0;
         int numLevels = 4;
+///*    
         while (1) {
             videoIn >> vidImage;
-            //vidImage = inImage;
+//*/
+            vidImage = inImage;
 
             cv::Mat inputTmp;
             cv::Mat inputTmp2;
@@ -379,9 +385,9 @@ int main()
             // Send to the graphics card
             cl::Image2D img(filterer.createImage2D(input));
 
-            // Get results
+            // Do the calculations there
             std::vector<std::vector<cl::Image2D> > results;
-            dtcwtTransform(results, filterer, img, filters, numLevels, 3);
+            dtcwtTransform(results, filterer, img, filters, numLevels, 2);
 
             const int l = 0;
             int width = results[l][0].getImageInfo<CL_IMAGE_WIDTH>();
@@ -390,6 +396,7 @@ int main()
             cv::Mat disp(height, width, CV_32FC4);
 
             // Read them out
+///*
             for (int n = 0; n < 6; ++n) {
                 cv::Mat re = filterer.getImage2D(results[l][n]);
                 cv::Mat im = filterer.getImage2D(results[l][n+6]);
@@ -397,12 +404,20 @@ int main()
                 cv::sqrt(re.mul(re) + im.mul(im), disp);
                 cv::imshow(displays[n], disp / 64.0f);
             }
+//*/
+            cl::Image2D mapImg;
+            filterer.cornernessMap(mapImg, results[l]);
+///*
+            cv::Mat map = filterer.getImage2D(mapImg);
+            cv::imshow("Cornerness", map / 32.0f);
 
             // Display
             std::cout << "Displayed! " << x++ <<  std::endl;
             cv::waitKey(1);
+//*/
+///*    
         }
-
+//*/
 /*
         for (int n = 0; n < numLevels; ++n) {
             for (int m = 0; m < 6; ++m) {
