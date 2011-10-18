@@ -21,10 +21,38 @@ struct dtcwtFilters {
     cl::Buffer level2hbp;
 };
 
-void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
-                     Filterer& filterer,
-                     cl::Image2D& input, dtcwtFilters& filters,
-                     int numLevels, int startLevel = 1)
+struct dtcwtKernels {
+    cl::Kernel colDecimateFilter;
+    cl::Kernel rowDecimateFilter;
+    cl::Kernel colFilter;
+    cl::Kernel rowFilter;
+    cl::Kernel quadToComplex;
+    cl::Kernel cornernessMap;
+};
+
+dtcwtKernels getKernels(cl::Program& program)
+{
+    dtcwtKernels kernels;
+
+    // Turn these into kernels
+    kernels.rowDecimateFilter = cl::Kernel(program, "rowDecimateFilter");
+    kernels.colDecimateFilter = cl::Kernel(program, "colDecimateFilter");
+    kernels.rowFilter = cl::Kernel(program, "rowFilter");
+    kernels.colFilter = cl::Kernel(program, "colFilter");
+    kernels.quadToComplex = cl::Kernel(program, "quadToComplex");
+    kernels.cornernessMap = cl::Kernel(program, "cornernessMap");
+
+    return kernels;
+}
+    
+
+
+
+void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
+                    std::vector<std::vector<cl::Image2D> >& output,
+                    cl::Image2D& input, dtcwtFilters& filters,
+                    dtcwtKernels& kernels,
+                    int numLevels, int startLevel = 1)
 {
     //std::vector<std::vector<cl::Image2D> > output; 
 
@@ -51,13 +79,15 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
 
             // Low-pass filter the rows...
             cl::Image2D lo = 
-                filterer.createImage2D(width + padW, height);
-            filterer.rowFilter(lo, input, filters.level1h0);
+                createImage2D(context, width + padW, height);
+            rowFilter(context, commandQueue, kernels.rowFilter,
+                      lo, input, filters.level1h0);
 
             // ...and the columns
             lolo = 
-                filterer.createImage2D(width + padW, height + padH);
-            filterer.colFilter(lolo, lo, filters.level1h0);
+                createImage2D(context, width + padW, height + padH);
+            colFilter(context, commandQueue, kernels.colFilter,
+                      lolo, lo, filters.level1h0);
 
         } else {
 
@@ -70,13 +100,15 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
 
             // Low-pass filter the rows...
             cl::Image2D lo = 
-                filterer.createImage2D(width / 2 + padW, height);
-            filterer.rowDecimateFilter(lo, lolo, filters.level2h0, padW);
+                createImage2D(context, width / 2 + padW, height);
+            rowDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              lo, lolo, filters.level2h0, padW);
 
             // ...and the columns
             lolo = 
-                filterer.createImage2D(width / 2 + padW, height / 2 + padH);
-            filterer.colDecimateFilter(lolo, lo, filters.level2h0, padH);
+                createImage2D(context, width / 2 + padW, height / 2 + padH);
+            colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              lolo, lo, filters.level2h0, padH);
             
         }
 
@@ -97,37 +129,44 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
 
             // Low (row) - high (cols)
             cl::Image2D lo = 
-                filterer.createImage2D(width + padW, height);
-            filterer.rowFilter(lo, input, filters.level1h0);
+                createImage2D(context, width + padW, height);
+            rowFilter(context, commandQueue, kernels.rowFilter, 
+                      lo, input, filters.level1h0);
 
             
             lohi =
-                filterer.createImage2D(width + padW, height + padH);
-            filterer.colFilter(lohi, lo, filters.level1h1);
+                createImage2D(context, width + padW, height + padH);
+            colFilter(context, commandQueue, kernels.colFilter, 
+                      lohi, lo, filters.level1h1);
 
             // High (row) - low (cols)
             cl::Image2D hi =
-                filterer.createImage2D(width + padW, height);
-            filterer.rowFilter(hi, input, filters.level1h1);
+                createImage2D(context, width + padW, height);
+            rowFilter(context, commandQueue, kernels.rowFilter,
+                      hi, input, filters.level1h1);
 
             hilo =
-                filterer.createImage2D(width + padW, height + padH);
-            filterer.colFilter(hilo, hi, filters.level1h0);
+                createImage2D(context, width + padW, height + padH);
+            colFilter(context, commandQueue, kernels.colFilter,
+                      hilo, hi, filters.level1h0);
 
             // Band pass - band pass
             cl::Image2D bp =
-                filterer.createImage2D(width + padW, height);
-            filterer.rowFilter(bp, input, filters.level1hbp);
+                createImage2D(context, width + padW, height);
+            rowFilter(context, commandQueue, kernels.rowFilter,
+                      bp, input, filters.level1hbp);
 
             bpbp =
-                filterer.createImage2D(width + padW, height + padH);
-            filterer.colFilter(bpbp, bp, filters.level1hbp);
+                createImage2D(context, width + padW, height + padH);
+            colFilter(context, commandQueue, kernels.colFilter,
+                      bpbp, bp, filters.level1hbp);
 
 
             // Low - low
             lolo = 
-                filterer.createImage2D(width + padW, height + padH);
-            filterer.colFilter(lolo, lo, filters.level1h0);
+                createImage2D(context, width + padW, height + padH);
+            colFilter(context, commandQueue, kernels.colFilter,
+                      lolo, lo, filters.level1h0);
 
 
 
@@ -146,38 +185,45 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
 
             // Low (row) - high (cols)
             cl::Image2D lo = 
-                filterer.createImage2D(width / 2 + padW, height);
-            filterer.rowDecimateFilter(lo, lolo, filters.level2h0, padW);
+                createImage2D(context, width / 2 + padW, height);
+            rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
+                              lo, lolo, filters.level2h0, padW);
 
             lohi =
-                filterer.createImage2D(width / 2 + padW, height / 2 + padH);
-            filterer.colDecimateFilter(lohi, lo, filters.level2h1, padH);
+                createImage2D(context, width / 2 + padW, height / 2 + padH);
+            colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              lohi, lo, filters.level2h1, padH);
 
 
             // High (row) - low (cols)
             cl::Image2D hi =
-                filterer.createImage2D(width / 2 + padW, height);
-            filterer.rowDecimateFilter(hi, lolo, filters.level2h1, padW);
+                createImage2D(context, width / 2 + padW, height);
+            rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
+                              hi, lolo, filters.level2h1, padW);
 
             hilo =
-                filterer.createImage2D(width / 2 + padW, height / 2 + padH);
-            filterer.colDecimateFilter(hilo, hi, filters.level2h0, padH);
+                createImage2D(context, width / 2 + padW, height / 2 + padH);
+            colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              hilo, hi, filters.level2h0, padH);
 
 
             // Band pass - band pass
             cl::Image2D bp =
-                filterer.createImage2D(width / 2 + padW, height);
-            filterer.rowDecimateFilter(bp, lolo, filters.level2hbp, padW);
+                createImage2D(context, width / 2 + padW, height);
+            rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
+                              bp, lolo, filters.level2hbp, padW);
 
             bpbp =
-                filterer.createImage2D(width / 2 + padW, height / 2 + padH);
-            filterer.colDecimateFilter(bpbp, bp, filters.level2hbp, padH);
+                createImage2D(context, width / 2 + padW, height / 2 + padH);
+            colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              bpbp, bp, filters.level2hbp, padH);
 
 
             // Low - low
             lolo = 
-                filterer.createImage2D(width / 2 + padW, height / 2 + padH);
-            filterer.colDecimateFilter(lolo, lo, filters.level2h0, padH);
+                createImage2D(context, width / 2 + padW, height / 2 + padH);
+            colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
+                              lolo, lo, filters.level2h0, padH);
 
         }
 
@@ -188,20 +234,23 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
         int height = hilo.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
 
         for (int n = 0; n < 12; ++n)
-            output[idx].push_back(filterer.createImage2D(width, height));
+            output[idx].push_back(createImage2D(context, width, height));
 
 
-        filterer.quadToComplex(output[idx][2], output[idx][2+6],
-                               output[idx][3], output[idx][3+6],
-                               lohi);
+        quadToComplex(context, commandQueue, kernels.quadToComplex,
+                      output[idx][2], output[idx][2+6],
+                      output[idx][3], output[idx][3+6],
+                      lohi);
 
-        filterer.quadToComplex(output[idx][0], output[idx][0+6],
-                               output[idx][5], output[idx][5+6],
-                               hilo);
+        quadToComplex(context, commandQueue, kernels.quadToComplex,
+                      output[idx][0], output[idx][0+6],
+                      output[idx][5], output[idx][5+6],
+                      hilo);
 
-        filterer.quadToComplex(output[idx][4], output[idx][4+6],
-                               output[idx][1], output[idx][1+6],
-                               bpbp);
+        quadToComplex(context, commandQueue, kernels.quadToComplex,
+                      output[idx][4], output[idx][4+6],
+                      output[idx][1], output[idx][1+6],
+                      bpbp);
 
     }
     //return output;
@@ -209,7 +258,8 @@ void dtcwtTransform(std::vector<std::vector<cl::Image2D> >& output,
 }
 
 
-dtcwtFilters createFilters(Filterer& filterer)
+dtcwtFilters createFilters(cl::Context& context,
+                           cl::CommandQueue& commandQueue)
 {
     const float level1h0[13] = {
        -0.0018,
@@ -324,13 +374,13 @@ dtcwtFilters createFilters(Filterer& filterer)
     };
 
     dtcwtFilters filters;
-    filters.level1h0 = filterer.createBuffer(level1h0, 13);
-    filters.level1h1 = filterer.createBuffer(level1h1, 19);
-    filters.level1hbp = filterer.createBuffer(level1hbp, 19);
+    filters.level1h0 = createBuffer(context, commandQueue, level1h0, 13);
+    filters.level1h1 = createBuffer(context, commandQueue, level1h1, 19);
+    filters.level1hbp = createBuffer(context, commandQueue, level1hbp, 19);
 
-    filters.level2h0 = filterer.createBuffer(level2h0, 14);
-    filters.level2h1 = filterer.createBuffer(level2h1, 14);
-    filters.level2hbp = filterer.createBuffer(level2hbp, 14);
+    filters.level2h0 = createBuffer(context, commandQueue, level2h0, 14);
+    filters.level2h1 = createBuffer(context, commandQueue, level2h1, 14);
+    filters.level2hbp = createBuffer(context, commandQueue, level2hbp, 14);
 
     return filters;
 }
@@ -339,6 +389,42 @@ dtcwtFilters createFilters(Filterer& filterer)
 int main()
 {
     try {
+         // Retrive platform information
+        std::vector<cl::Platform> platforms;
+        cl::Platform::get(&platforms);
+
+        if (platforms.size() == 0)
+            throw std::runtime_error("No platforms!");
+
+        std::vector<cl::Device> devices;
+        platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+        // Create a context to work in 
+        cl::Context context(devices);
+
+
+        // Open the program, find its length and read it out
+        std::ifstream sourceFile("kernel.cl", std::ios::in | std::ios::ate);
+        std::string kernelSource(sourceFile.tellg(), ' ');
+        sourceFile.seekg(0, std::ios::beg);
+        sourceFile.read(&kernelSource[0], kernelSource.length());
+
+        // Create a program compiled from the source code (read in previously)
+        cl::Program::Sources source;
+        source.push_back(std::pair<const char*, size_t>(kernelSource.c_str(),
+                                    kernelSource.length()));
+        cl::Program program(context, source);
+        try {
+            program.build(devices);
+        } catch(cl::Error err) {
+            std::cerr << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) 
+                      << std::endl;
+            throw;
+        }
+
+        // Ready the command queue on the first device to hand
+        cl::CommandQueue commandQueue(context, devices[0]);
+
         std::string displays[] = {"S1", "S2", "S3", "S4", "S5", "S6"};
 
         // Read the image (forcing to RGB), and convert it to floats ("1")
@@ -352,9 +438,9 @@ int main()
         videoIn.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 
 //*/
-        Filterer filterer;
 
-        dtcwtFilters filters = createFilters(filterer);
+        dtcwtFilters filters = createFilters(context, commandQueue);
+        dtcwtKernels kernels = getKernels(program);
 ///*
         for (int n = 0; n < 6; ++n)
             cv::namedWindow(displays[n], CV_WINDOW_NORMAL);
@@ -383,11 +469,13 @@ int main()
             cv::mixChannels(&inputTmp2, 1, &input, 1, fromTo, 4);
 
             // Send to the graphics card
-            cl::Image2D img(filterer.createImage2D(input));
+            cl::Image2D img(createImage2D(context, input));
 
             // Do the calculations there
             std::vector<std::vector<cl::Image2D> > results;
-            dtcwtTransform(results, filterer, img, filters, numLevels, 2);
+            dtcwtTransform(context, commandQueue,
+                           results, img, filters, kernels,
+                           numLevels, 2);
 
             const int l = 0;
             int width = results[l][0].getImageInfo<CL_IMAGE_WIDTH>();
@@ -398,17 +486,18 @@ int main()
             // Read them out
 ///*
             for (int n = 0; n < 6; ++n) {
-                cv::Mat re = filterer.getImage2D(results[l][n]);
-                cv::Mat im = filterer.getImage2D(results[l][n+6]);
+                cv::Mat re = getImage2D(commandQueue, results[l][n]);
+                cv::Mat im = getImage2D(commandQueue, results[l][n+6]);
                 //cv::Mat outArea = disp.colRange(n*width, (n+1)*width-1);
                 cv::sqrt(re.mul(re) + im.mul(im), disp);
                 cv::imshow(displays[n], disp / 64.0f);
             }
 //*/
             cl::Image2D mapImg;
-            filterer.cornernessMap(mapImg, results[l]);
+            cornernessMap(context, commandQueue, kernels.cornernessMap, 
+                          mapImg, results[l]);
 ///*
-            cv::Mat map = filterer.getImage2D(mapImg);
+            cv::Mat map = getImage2D(commandQueue, mapImg);
             cv::imshow("Cornerness", map / 32.0f);
 
             // Display

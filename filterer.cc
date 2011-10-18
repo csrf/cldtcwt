@@ -3,57 +3,8 @@
 #include <iostream>
 #include <fstream>
 
-Filterer::Filterer()
-{
-    // Retrive platform information
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
 
-    if (platforms.size() == 0)
-        throw std::runtime_error("No platforms!");
-
-    std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
-
-    // Create a context to work in 
-    context = cl::Context(devices);
-
-
-    // Open the program, find its length and read it out
-    std::ifstream sourceFile("kernel.cl", std::ios::in | std::ios::ate);
-    std::string kernelSource(sourceFile.tellg(), ' ');
-    sourceFile.seekg(0, std::ios::beg);
-    sourceFile.read(&kernelSource[0], kernelSource.length());
-
-    // Create a program compiled from the source code (read in previously)
-    cl::Program::Sources source;
-    source.push_back(std::pair<const char*, size_t>(kernelSource.c_str(),
-                                kernelSource.length()));
-    program = cl::Program(context, source);
-    try {
-        program.build(devices);
-    } catch(cl::Error err) {
-        std::cerr << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) 
-                  << std::endl;
-        throw;
-    }
-
-    // Turn these into kernels
-    rowDecimateFilterKernel = cl::Kernel(program, "rowDecimateFilter");
-    colDecimateFilterKernel = cl::Kernel(program, "colDecimateFilter");
-    rowFilterKernel = cl::Kernel(program, "rowFilter");
-    colFilterKernel = cl::Kernel(program, "colFilter");
-    quadToComplexKernel = cl::Kernel(program, "quadToComplex");
-    cornernessMapKernel = cl::Kernel(program, "cornernessMap");
-
-    // Ready the command queue on the first device to hand
-    commandQueue = cl::CommandQueue(context, devices[0]);
-}
-    
-
-
-
-cl::Image2D Filterer::createImage2D(cv::Mat& image)
+cl::Image2D createImage2D(cl::Context& context, cv::Mat& image)
 {
     cl::Image2D outImage(context,
                         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
@@ -61,25 +12,28 @@ cl::Image2D Filterer::createImage2D(cv::Mat& image)
                         image.cols, image.rows, 0,
                         image.ptr());
 
-    commandQueue.finish();
+    //commandQueue.finish();
 
     return outImage;
 }
 
 
-cl::Image2D Filterer::createImage2D(int width, int height)
+
+cl::Image2D createImage2D(cl::Context& context,
+                          int width, int height)
 {
     cl::Image2D outImage(context,
                        CL_MEM_READ_WRITE,
                        cl::ImageFormat(CL_RGBA, CL_FLOAT), 
                        width, height);
-    commandQueue.finish();
+    //commandQueue.finish();
     return outImage;
 }
 
 
 
-cv::Mat Filterer::getImage2D(cl::Image2D& image)
+cv::Mat getImage2D(cl::CommandQueue& commandQueue,
+                             cl::Image2D& image)
 {
     // Create a matrix to put the data into
     cv::Mat output(image.getImageInfo<CL_IMAGE_HEIGHT>(), 
@@ -98,8 +52,6 @@ cv::Mat Filterer::getImage2D(cl::Image2D& image)
     extents.push_back(output.rows);
     extents.push_back(1);
 
-
-
     commandQueue.enqueueReadImage(image, CL_TRUE,
                                   origin, extents,                                                                0, 0,
                                   output.ptr());
@@ -107,7 +59,11 @@ cv::Mat Filterer::getImage2D(cl::Image2D& image)
     return output;
 }
 
-cl::Buffer Filterer::createBuffer(const float data[], int length)
+
+
+cl::Buffer createBuffer(cl::Context& context,
+                        cl::CommandQueue& commandQueue, 
+                        const float data[], int length)
 {
     //CL_MEM_COPY_HOST_PTR
     cl::Buffer buffer(context, CL_MEM_READ_WRITE,
@@ -121,21 +77,28 @@ cl::Buffer Filterer::createBuffer(const float data[], int length)
     return buffer;
 }
 
-cl::Sampler Filterer::createSampler()
+
+
+cl::Sampler createSampler(cl::Context& context)
 {
     return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
                        CL_FILTER_NEAREST);
 }
 
 
-void Filterer::rowDecimateFilter(cl::Image2D& output, cl::Image2D& input, 
-                                    cl::Buffer& filter, bool pad)
+
+void rowDecimateFilter(cl::Context& context,
+                       cl::CommandQueue& commandQueue,
+                       cl::Kernel& rowDecimateFilterKernel,
+                       cl::Image2D& output, cl::Image2D& input, 
+                       cl::Buffer& filter, bool pad)
 {
     int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Tell the kernel to use the buffers, and how long they are
     rowDecimateFilterKernel.setArg(0, input);         // input
-    rowDecimateFilterKernel.setArg(1, createSampler());       // inputStride
+    rowDecimateFilterKernel.setArg(1, createSampler(context));    
+    // inputStride
     rowDecimateFilterKernel.setArg(2, filter);     // filter
     rowDecimateFilterKernel.setArg(3, filterLength);     // filterLength
     rowDecimateFilterKernel.setArg(4, output);        // output
@@ -154,14 +117,17 @@ void Filterer::rowDecimateFilter(cl::Image2D& output, cl::Image2D& input,
 }
 
 
-void Filterer::colDecimateFilter(cl::Image2D& output, cl::Image2D& input, 
-                                  cl::Buffer& filter, bool pad)
+void colDecimateFilter(cl::Context& context,
+                       cl::CommandQueue& commandQueue,
+                       cl::Kernel& colDecimateFilterKernel,
+                       cl::Image2D& output, cl::Image2D& input, 
+                       cl::Buffer& filter, bool pad)
 {
     int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Tell the kernel to use the buffers, and how long they are
     colDecimateFilterKernel.setArg(0, input);         // input
-    colDecimateFilterKernel.setArg(1, createSampler());       // inputStride
+    colDecimateFilterKernel.setArg(1, createSampler(context));       // inputStride
     colDecimateFilterKernel.setArg(2, filter);     // filter
     colDecimateFilterKernel.setArg(3, filterLength);     // filterLength
     colDecimateFilterKernel.setArg(4, output);        // output
@@ -179,14 +145,17 @@ void Filterer::colDecimateFilter(cl::Image2D& output, cl::Image2D& input,
 }
 
 
-void Filterer::rowFilter(cl::Image2D& output, cl::Image2D& input, 
-                                    cl::Buffer& filter)
+void rowFilter(cl::Context& context,
+               cl::CommandQueue& commandQueue,
+               cl::Kernel& rowFilterKernel,
+               cl::Image2D& output, cl::Image2D& input, 
+               cl::Buffer& filter)
 {
     int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Tell the kernel to use the buffers, and how long they are
     rowFilterKernel.setArg(0, input);         // input
-    rowFilterKernel.setArg(1, createSampler());       // inputStride
+    rowFilterKernel.setArg(1, createSampler(context));       // inputStride
     rowFilterKernel.setArg(2, filter);     // filter
     rowFilterKernel.setArg(3, filterLength);     // filterLength
     rowFilterKernel.setArg(4, output);        // output
@@ -204,14 +173,17 @@ void Filterer::rowFilter(cl::Image2D& output, cl::Image2D& input,
 }
 
 
-void Filterer::colFilter(cl::Image2D& output, cl::Image2D& input, 
-                                    cl::Buffer& filter)
+void colFilter(cl::Context& context,
+               cl::CommandQueue& commandQueue,
+               cl::Kernel& colFilterKernel,
+               cl::Image2D& output, cl::Image2D& input, 
+               cl::Buffer& filter)
 {
     int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Tell the kernel to use the buffers, and how long they are
     colFilterKernel.setArg(0, input);         // input
-    colFilterKernel.setArg(1, createSampler());       // inputStride
+    colFilterKernel.setArg(1, createSampler(context));       // inputStride
     colFilterKernel.setArg(2, filter);     // filter
     colFilterKernel.setArg(3, filterLength);     // filterLength
     colFilterKernel.setArg(4, output);        // output
@@ -229,12 +201,15 @@ void Filterer::colFilter(cl::Image2D& output, cl::Image2D& input,
 }
 
 
-void Filterer::quadToComplex(cl::Image2D& out1Re, cl::Image2D& out1Im,
-                             cl::Image2D& out2Re, cl::Image2D& out2Im,
-                             cl::Image2D& input)
+void quadToComplex(cl::Context& context,
+                   cl::CommandQueue& commandQueue,
+                   cl::Kernel& quadToComplexKernel,
+                   cl::Image2D& out1Re, cl::Image2D& out1Im,
+                   cl::Image2D& out2Re, cl::Image2D& out2Im,
+                   cl::Image2D& input)
 {
     quadToComplexKernel.setArg(0, input);
-    quadToComplexKernel.setArg(1, createSampler());
+    quadToComplexKernel.setArg(1, createSampler(context));
     quadToComplexKernel.setArg(2, out1Re);
     quadToComplexKernel.setArg(3, out1Im);
     quadToComplexKernel.setArg(4, out2Re);
@@ -251,13 +226,16 @@ void Filterer::quadToComplex(cl::Image2D& out1Re, cl::Image2D& out1Im,
     commandQueue.finish();
 }
 
-void Filterer::cornernessMap(cl::Image2D& output, 
-                                    std::vector<cl::Image2D> subbands)
+void cornernessMap(cl::Context& context,
+                   cl::CommandQueue& commandQueue,
+                   cl::Kernel& cornernessMapKernel,
+                   cl::Image2D& output, 
+                   std::vector<cl::Image2D> subbands)
 {
     // The output is the same size as each of the inputs
     const int width = subbands[0].getImageInfo<CL_IMAGE_WIDTH>();
     const int height = subbands[0].getImageInfo<CL_IMAGE_HEIGHT>();
-    output = createImage2D(width, height);
+    output = createImage2D(context, width, height);
 
     // Send across the real and imaginary components
     cornernessMapKernel.setArg(0,  subbands[0]);
@@ -273,7 +251,7 @@ void Filterer::cornernessMap(cl::Image2D& output,
     cornernessMapKernel.setArg(10, subbands[5]);
     cornernessMapKernel.setArg(11, subbands[5+6]);
 
-    cornernessMapKernel.setArg(12, createSampler());
+    cornernessMapKernel.setArg(12, createSampler(context));
 
     cornernessMapKernel.setArg(13, output);
 
