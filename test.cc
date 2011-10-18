@@ -79,13 +79,13 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 
             // Low-pass filter the rows...
             cl::Image2D lo = 
-                createImage2D(context, width + padW, height);
+                createImage2D(context, commandQueue, width + padW, height);
             rowFilter(context, commandQueue, kernels.rowFilter,
                       lo, input, filters.level1h0);
 
             // ...and the columns
             lolo = 
-                createImage2D(context, width + padW, height + padH);
+                createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       lolo, lo, filters.level1h0);
 
@@ -100,13 +100,13 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 
             // Low-pass filter the rows...
             cl::Image2D lo = 
-                createImage2D(context, width / 2 + padW, height);
+                createImage2D(context, commandQueue, width / 2 + padW, height);
             rowDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               lo, lolo, filters.level2h0, padW);
 
             // ...and the columns
             lolo = 
-                createImage2D(context, width / 2 + padW, height / 2 + padH);
+                createImage2D(context, commandQueue, width / 2 + padW, height / 2 + padH);
             colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               lolo, lo, filters.level2h0, padH);
             
@@ -129,42 +129,42 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 
             // Low (row) - high (cols)
             cl::Image2D lo = 
-                createImage2D(context, width + padW, height);
+                createImage2D(context, commandQueue, width + padW, height);
             rowFilter(context, commandQueue, kernels.rowFilter, 
                       lo, input, filters.level1h0);
 
             
             lohi =
-                createImage2D(context, width + padW, height + padH);
+                createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter, 
                       lohi, lo, filters.level1h1);
 
             // High (row) - low (cols)
             cl::Image2D hi =
-                createImage2D(context, width + padW, height);
+                createImage2D(context, commandQueue, width + padW, height);
             rowFilter(context, commandQueue, kernels.rowFilter,
                       hi, input, filters.level1h1);
 
             hilo =
-                createImage2D(context, width + padW, height + padH);
+                createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       hilo, hi, filters.level1h0);
 
             // Band pass - band pass
             cl::Image2D bp =
-                createImage2D(context, width + padW, height);
+                createImage2D(context, commandQueue, width + padW, height);
             rowFilter(context, commandQueue, kernels.rowFilter,
                       bp, input, filters.level1hbp);
 
             bpbp =
-                createImage2D(context, width + padW, height + padH);
+                createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       bpbp, bp, filters.level1hbp);
 
 
             // Low - low
             lolo = 
-                createImage2D(context, width + padW, height + padH);
+                createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       lolo, lo, filters.level1h0);
 
@@ -185,43 +185,43 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 
             // Low (row) - high (cols)
             cl::Image2D lo = 
-                createImage2D(context, width / 2 + padW, height);
+                createImage2D(context, commandQueue, width / 2 + padW, height);
             rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
                               lo, lolo, filters.level2h0, padW);
 
             lohi =
-                createImage2D(context, width / 2 + padW, height / 2 + padH);
+                createImage2D(context, commandQueue, width / 2 + padW, height / 2 + padH);
             colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               lohi, lo, filters.level2h1, padH);
 
 
             // High (row) - low (cols)
             cl::Image2D hi =
-                createImage2D(context, width / 2 + padW, height);
+                createImage2D(context, commandQueue, width / 2 + padW, height);
             rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
                               hi, lolo, filters.level2h1, padW);
 
             hilo =
-                createImage2D(context, width / 2 + padW, height / 2 + padH);
+                createImage2D(context, commandQueue, width / 2 + padW, height / 2 + padH);
             colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               hilo, hi, filters.level2h0, padH);
 
 
             // Band pass - band pass
             cl::Image2D bp =
-                createImage2D(context, width / 2 + padW, height);
+                createImage2D(context, commandQueue, width / 2 + padW, height);
             rowDecimateFilter(context, commandQueue, kernels.rowDecimateFilter,
                               bp, lolo, filters.level2hbp, padW);
 
             bpbp =
-                createImage2D(context, width / 2 + padW, height / 2 + padH);
+                createImage2D(context, commandQueue, width / 2 + padW, height / 2 + padH);
             colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               bpbp, bp, filters.level2hbp, padH);
 
 
             // Low - low
             lolo = 
-                createImage2D(context, width / 2 + padW, height / 2 + padH);
+                createImage2D(context, commandQueue, width / 2 + padW, height / 2 + padH);
             colDecimateFilter(context, commandQueue, kernels.colDecimateFilter,
                               lolo, lo, filters.level2h0, padH);
 
@@ -234,7 +234,7 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
         int height = hilo.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
 
         for (int n = 0; n < 12; ++n)
-            output[idx].push_back(createImage2D(context, width, height));
+            output[idx].push_back(createImage2D(context, commandQueue, width, height));
 
 
         quadToComplex(context, commandQueue, kernels.quadToComplex,
@@ -469,7 +469,7 @@ int main()
             cv::mixChannels(&inputTmp2, 1, &input, 1, fromTo, 4);
 
             // Send to the graphics card
-            cl::Image2D img(createImage2D(context, input));
+            cl::Image2D img(createImage2D(context, commandQueue, input));
 
             // Do the calculations there
             std::vector<std::vector<cl::Image2D> > results;

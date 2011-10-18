@@ -4,7 +4,9 @@
 #include <fstream>
 
 
-cl::Image2D createImage2D(cl::Context& context, cv::Mat& image)
+cl::Image2D createImage2D(cl::Context& context,
+                          cl::CommandQueue& commandQueue,
+                          cv::Mat& image)
 {
     cl::Image2D outImage(context,
                         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
@@ -12,21 +14,22 @@ cl::Image2D createImage2D(cl::Context& context, cv::Mat& image)
                         image.cols, image.rows, 0,
                         image.ptr());
 
-    //commandQueue.finish();
+    commandQueue.finish();
 
     return outImage;
 }
 
 
 
-cl::Image2D createImage2D(cl::Context& context,
+cl::Image2D createImage2D(cl::Context& context, 
+                          cl::CommandQueue& commandQueue,
                           int width, int height)
 {
     cl::Image2D outImage(context,
                        CL_MEM_READ_WRITE,
                        cl::ImageFormat(CL_RGBA, CL_FLOAT), 
                        width, height);
-    //commandQueue.finish();
+    commandQueue.finish();
     return outImage;
 }
 
@@ -235,7 +238,7 @@ void cornernessMap(cl::Context& context,
     // The output is the same size as each of the inputs
     const int width = subbands[0].getImageInfo<CL_IMAGE_WIDTH>();
     const int height = subbands[0].getImageInfo<CL_IMAGE_HEIGHT>();
-    output = createImage2D(context, width, height);
+    output = createImage2D(context, commandQueue, width, height);
 
     // Send across the real and imaginary components
     cornernessMapKernel.setArg(0,  subbands[0]);

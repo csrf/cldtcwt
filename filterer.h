@@ -45,8 +45,10 @@ void cornernessMap(cl::Context& context,
                    std::vector<cl::Image2D> subbands);
 
 
-cl::Image2D createImage2D(cl::Context&, cv::Mat& image);
-cl::Image2D createImage2D(cl::Context&, int width, int height);
+cl::Image2D createImage2D(cl::Context&, cl::CommandQueue&,
+                          cv::Mat& image);
+cl::Image2D createImage2D(cl::Context&, cl::CommandQueue&,
+                          int width, int height);
 cv::Mat getImage2D(cl::CommandQueue&, cl::Image2D&);
 cl::Sampler createSampler(cl::Context&);
 
