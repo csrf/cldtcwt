@@ -7,8 +7,6 @@
 
 #include "filterer.h"
 
-#include "cv.h"
-#include "highgui.h"
 #include <stdexcept>
 
 struct dtcwtFilters {
@@ -57,11 +55,11 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
     //std::vector<std::vector<cl::Image2D> > output; 
 
     cl::Image2D lolo;
-
-         /*   cv::Mat im = filterer.getImage2D(input);
+/*
+            cv::Mat im = getImage2D(commandQueue, input);
             cv::imshow("Output", im);
-            cv::waitKey();*/
-
+            cv::waitKey();
+*/
 
 
     // Go down the tree until the point where we need to start recording
@@ -80,14 +78,16 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
             // Low-pass filter the rows...
             cl::Image2D lo = 
                 createImage2D(context, commandQueue, width + padW, height);
-            rowFilter(context, commandQueue, kernels.rowFilter,
-                      lo, input, filters.level1h0);
+            //rowFilter(context, commandQueue, kernels.rowFilter,
+            //          lo, input, filters.level1h0);
 
+    std::cout << "Hello" << std::endl;
             // ...and the columns
             lolo = 
                 createImage2D(context, commandQueue, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       lolo, lo, filters.level1h0);
+            std::cout << "Hello 2" << std::endl;
 
         } else {
 
@@ -130,8 +130,8 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
             // Low (row) - high (cols)
             cl::Image2D lo = 
                 createImage2D(context, commandQueue, width + padW, height);
-            rowFilter(context, commandQueue, kernels.rowFilter, 
-                      lo, input, filters.level1h0);
+            //rowFilter(context, commandQueue, kernels.rowFilter, 
+            //          lo, input, filters.level1h0);
 
             
             lohi =
@@ -142,8 +142,8 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
             // High (row) - low (cols)
             cl::Image2D hi =
                 createImage2D(context, commandQueue, width + padW, height);
-            rowFilter(context, commandQueue, kernels.rowFilter,
-                      hi, input, filters.level1h1);
+            //rowFilter(context, commandQueue, kernels.rowFilter,
+            //          hi, input, filters.level1h1);
 
             hilo =
                 createImage2D(context, commandQueue, width + padW, height + padH);
@@ -153,8 +153,8 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
             // Band pass - band pass
             cl::Image2D bp =
                 createImage2D(context, commandQueue, width + padW, height);
-            rowFilter(context, commandQueue, kernels.rowFilter,
-                      bp, input, filters.level1hbp);
+            //rowFilter(context, commandQueue, kernels.rowFilter,
+            //          bp, input, filters.level1hbp);
 
             bpbp =
                 createImage2D(context, commandQueue, width + padW, height + padH);
@@ -389,7 +389,8 @@ dtcwtFilters createFilters(cl::Context& context,
 int main()
 {
     try {
-         // Retrive platform information
+
+        // Retrive platform information
         std::vector<cl::Platform> platforms;
         cl::Platform::get(&platforms);
 
@@ -403,54 +404,66 @@ int main()
         cl::Context context(devices);
 
 
-        // Open the program, find its length and read it out
-        std::ifstream sourceFile("kernel.cl", std::ios::in | std::ios::ate);
-        std::string kernelSource(sourceFile.tellg(), ' ');
-        sourceFile.seekg(0, std::ios::beg);
-        sourceFile.read(&kernelSource[0], kernelSource.length());
-
-        // Create a program compiled from the source code (read in previously)
-        cl::Program::Sources source;
-        source.push_back(std::pair<const char*, size_t>(kernelSource.c_str(),
-                                    kernelSource.length()));
-        cl::Program program(context, source);
-        try {
-            program.build(devices);
-        } catch(cl::Error err) {
-            std::cerr << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]) 
-                      << std::endl;
-            throw;
-        }
-
         // Ready the command queue on the first device to hand
         cl::CommandQueue commandQueue(context, devices[0]);
 
-        std::string displays[] = {"S1", "S2", "S3", "S4", "S5", "S6"};
-
-        // Read the image (forcing to RGB), and convert it to floats ("1")
-        //cv::Mat inImage = cv::imread("~/Download/PVTRA101a01/00003449.jpg", 1);
-        cv::Mat inImage = cv::imread("traffic.bmp", 1);
-
-        // Open the camera for reading
-///*
-        cv::VideoCapture videoIn(0);
-        videoIn.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-        videoIn.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-
-//*/
-
         dtcwtFilters filters = createFilters(context, commandQueue);
-        dtcwtKernels kernels = getKernels(program);
-///*
-        for (int n = 0; n < 6; ++n)
-            cv::namedWindow(displays[n], CV_WINDOW_NORMAL);
-        cv::namedWindow("Cornerness", CV_WINDOW_NORMAL);
-//*/ 
-        cv::Mat vidImage;
-        cv::Mat outImage;
 
         int x = 0;
         int numLevels = 4;
+
+        //-----------------------------------------------------------------
+        // Starting test code
+        const size_t width = 5, height = 10;
+  
+        const cl::ImageFormat imageFormat(CL_LUMINANCE, CL_FLOAT);
+        cl::Image2D inImage(context, 0, imageFormat, width, height);
+        cl::Image2D outImage(context, 0, imageFormat, width, height);
+
+
+        cl::size_t<3> origin, extents;
+        origin.push_back(0);
+        origin.push_back(0);
+        origin.push_back(0);
+        extents.push_back(width);
+        extents.push_back(height);
+        extents.push_back(1);
+
+        float input[width*height] = {0.0f};
+        input[0] = 1.0f;
+        input[5] = 2.0f;
+
+        commandQueue.enqueueWriteImage(inImage, CL_TRUE, origin, extents,
+                                       0, 0, input);
+
+
+        RowFilter rowFilter(context, devices);
+        
+        rowFilter(commandQueue, outImage, inImage, filters.level1h0);
+
+
+
+        float output[width*height];
+
+        commandQueue.enqueueReadImage(outImage, CL_TRUE, origin, extents,
+                                      0, 0, output);
+
+        for (size_t n = 0; n < height; ++n) {
+            for (size_t m = 0; m < width; ++m)
+                std::cout << output[m + width*n] << "\t";
+
+            std::cout << std::endl;
+        }
+
+
+
+
+
+
+
+        //-----------------------------------------------------------------
+
+#if 0
 ///*    
         while (1) {
             videoIn >> vidImage;
@@ -458,18 +471,19 @@ int main()
             vidImage = inImage;
 
             cv::Mat inputTmp;
-            cv::Mat inputTmp2;
             vidImage.convertTo(inputTmp, CV_32F);
-            cvtColor(inputTmp, inputTmp2, CV_RGB2GRAY);
-            cv::Mat input(vidImage.size(), CV_32FC4);
+
+            cv::Mat inputImg;
+            cvtColor(inputTmp, inputImg, CV_RGB2GRAY);
+            //cv::Mat input(vidImage.size(), CV_32FC4);
 
             // Working in BGRA (for ref.)
             // Now, put it into 4 channels
-            int fromTo[] = {0,0, 0,1, 0,2, -1,3};
-            cv::mixChannels(&inputTmp2, 1, &input, 1, fromTo, 4);
+            //int fromTo[] = {0,0, 0,1, 0,2, -1,3};
+            //cv::mixChannels(&inputTmp2, 1, &input, 1, fromTo, 4);
 
             // Send to the graphics card
-            cl::Image2D img(createImage2D(context, commandQueue, input));
+            cl::Image2D img(createImage2D(context, commandQueue, inputImg));
 
             // Do the calculations there
             std::vector<std::vector<cl::Image2D> > results;
@@ -481,10 +495,11 @@ int main()
             int width = results[l][0].getImageInfo<CL_IMAGE_WIDTH>();
             int height = results[l][0].getImageInfo<CL_IMAGE_HEIGHT>();
 
-            cv::Mat disp(height, width, CV_32FC4);
+            cv::Mat disp(height, width, CV_32FC1);
 
             // Read them out
 ///*
+
             for (int n = 0; n < 6; ++n) {
                 cv::Mat re = getImage2D(commandQueue, results[l][n]);
                 cv::Mat im = getImage2D(commandQueue, results[l][n+6]);
@@ -492,17 +507,22 @@ int main()
                 cv::sqrt(re.mul(re) + im.mul(im), disp);
                 cv::imshow(displays[n], disp / 64.0f);
             }
+
 //*/
             cl::Image2D mapImg;
             cornernessMap(context, commandQueue, kernels.cornernessMap, 
                           mapImg, results[l]);
+                          
 ///*
+
             cv::Mat map = getImage2D(commandQueue, mapImg);
             cv::imshow("Cornerness", map / 32.0f);
 
+            cv::waitKey(1);
+            
             // Display
             std::cout << "Displayed! " << x++ <<  std::endl;
-            cv::waitKey(1);
+
 //*/
 ///*    
         }
@@ -525,12 +545,13 @@ int main()
             }
         }
 */
+
+#endif
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
                   << std::endl;
     }
-
                      
     return 0;
 }

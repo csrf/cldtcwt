@@ -3,7 +3,6 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 #include "cl.hpp"
-#include "cv.h"
 #include <vector>
 
 
@@ -25,11 +24,23 @@ void colFilter(cl::Context& context,
                cl::Image2D& output, cl::Image2D& input, 
                cl::Buffer& filter);
 
-void rowFilter(cl::Context& context,
-               cl::CommandQueue& commandQueue,
-               cl::Kernel& rowFilterKernel,
+class RowFilter {
+
+public:
+
+    RowFilter(cl::Context& context,
+              const std::vector<cl::Device>& devices);
+
+    void operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& output, cl::Image2D& input, 
                cl::Buffer& filter);
+
+private:
+    cl::Context context;
+    cl::Kernel kernel;
+    cl::Sampler sampler;
+
+};
 
 void quadToComplex(cl::Context& context,
                    cl::CommandQueue& commandQueue,
@@ -44,12 +55,8 @@ void cornernessMap(cl::Context& context,
                    cl::Image2D& output, 
                    std::vector<cl::Image2D> subbands);
 
-
-cl::Image2D createImage2D(cl::Context&, cl::CommandQueue&,
-                          cv::Mat& image);
 cl::Image2D createImage2D(cl::Context&, cl::CommandQueue&,
                           int width, int height);
-cv::Mat getImage2D(cl::CommandQueue&, cl::Image2D&);
 cl::Sampler createSampler(cl::Context&);
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,

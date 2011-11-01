@@ -13,7 +13,6 @@ if test "X$no_cl" = "Xyes"; then
     AC_MSG_FAILURE([You need OpenCL])
 fi
 
-PKG_CHECK_MODULES([OPENCV], [opencv])
 
 
 AC_CONFIG_FILES([Makefile])
