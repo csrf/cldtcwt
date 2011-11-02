@@ -5,6 +5,86 @@
 #include <fstream>
 
 
+ColFilter::ColFilter(cl::Context& context_,
+                     const std::vector<cl::Device>& devices)
+   : context(context_)
+{
+    // The OpenCL kernel:
+    const std::string sourceCode = 
+        "__kernel void colFilter(__read_only image2d_t input,           \n"
+        "                        sampler_t inputSampler,                \n"
+        "                        __global const float* filter,          \n"
+        "                        const int filterLength,                \n"
+        "                        __write_only image2d_t output)         \n"
+        "{                                                              \n"
+        "    // Row wise filter.  filter must be odd-lengthed           \n"
+        "    // Coordinates in output frame                             \n"
+        "    int x = get_global_id(0);                                  \n"
+        "    int y = get_global_id(1);                                  \n"
+        "                                                               \n"
+        "     // Results for each of the two trees                      \n"
+        "    float out = 0.0f;                                          \n"
+        "                                                               \n"
+        "    // Apply the filter forward                                \n"
+        "    int startY = y - (filterLength-1) / 2;                     \n"
+        "    for (int i = 0; i < filterLength; ++i)                     \n"
+        "        out += filter[filterLength-1-i] *                      \n"
+        "                read_imagef(input, inputSampler,               \n"
+        "                            (int2) (x, startY + i)).x;         \n"
+        "                                                               \n"
+        "    // Output position is r rows down, plus 2*c along (because \n"
+        "    // the outputs from two trees are interleaved)             \n"
+        "    write_imagef(output, (int2) (x, y), out);                  \n"
+        "}                                                              \n"
+        "\n";
+
+    // Bundle the code up
+    cl::Program::Sources source;
+    source.push_back(std::make_pair(sourceCode.c_str(), sourceCode.length()));
+
+    // Compile it...
+    cl::Program program(context, source);
+    program.build(devices);
+        
+    // ...and extract the useful part, viz the kernel
+    kernel = cl::Kernel(program, "colFilter");
+
+    // The sampler, later to be used as a kernel argument
+    sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
+                          CL_FILTER_NEAREST);
+}
+
+
+
+void ColFilter::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& output, cl::Image2D& input, 
+               cl::Buffer& filter)
+{
+    const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
+
+    // Set all the arguments
+    kernel.setArg(0, input);
+    kernel.setArg(1, sampler);
+    kernel.setArg(2, filter);
+    kernel.setArg(3, filterLength);
+    kernel.setArg(4, output);
+
+    // Output size
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>();
+    const int height = output.getImageInfo<CL_IMAGE_HEIGHT>();
+
+    // Execute
+    commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
+                                      cl::NDRange(width, height),
+                                      cl::NullRange);
+
+}
+
+
+
+
+
+
 RowFilter::RowFilter(cl::Context& context_,
                      const std::vector<cl::Device>& devices)
    : context(context_)

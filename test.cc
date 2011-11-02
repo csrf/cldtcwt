@@ -431,15 +431,14 @@ int main()
 
         float input[width*height] = {0.0f};
         input[0] = 1.0f;
-        input[5] = 2.0f;
 
         commandQueue.enqueueWriteImage(inImage, CL_TRUE, origin, extents,
                                        0, 0, input);
 
 
-        RowFilter rowFilter(context, devices);
+        ColFilter colFilter(context, devices);
         
-        rowFilter(commandQueue, outImage, inImage, filters.level1h0);
+        colFilter(commandQueue, outImage, inImage, filters.level1h0);
 
 
 

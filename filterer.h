@@ -24,6 +24,25 @@ void colFilter(cl::Context& context,
                cl::Image2D& output, cl::Image2D& input, 
                cl::Buffer& filter);
 
+class ColFilter {
+
+public:
+
+    ColFilter(cl::Context& context,
+              const std::vector<cl::Device>& devices);
+
+    void operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& output, cl::Image2D& input, 
+               cl::Buffer& filter);
+
+private:
+    cl::Context context;
+    cl::Kernel kernel;
+    cl::Sampler sampler;
+
+};
+
+
 class RowFilter {
 
 public:
