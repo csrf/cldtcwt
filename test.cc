@@ -429,27 +429,28 @@ int main()
         extents.push_back(height);
         extents.push_back(1);
 
-        float input[width*height] = {0.0f};
-        input[0] = 1.0f;
+        float input[height][width] = {0.0f};
+        input[3][2] = 1.0f;
 
         commandQueue.enqueueWriteImage(inImage, CL_TRUE, origin, extents,
-                                       0, 0, input);
+                                       0, 0, &input[0][0]);
 
 
         ColFilter colFilter(context, devices);
         
-        colFilter(commandQueue, outImage, inImage, filters.level1h0);
+        std::vector<cl::Event> waitEvents(1);
 
+        colFilter(commandQueue, outImage, inImage, filters.level1h0,
+                  0, &waitEvents[0]);
 
-
-        float output[width*height];
+        float output[height][width];
 
         commandQueue.enqueueReadImage(outImage, CL_TRUE, origin, extents,
-                                      0, 0, output);
+                                      0, 0, &output[0][0]);
 
-        for (size_t n = 0; n < height; ++n) {
-            for (size_t m = 0; m < width; ++m)
-                std::cout << output[m + width*n] << "\t";
+        for (size_t y = 0; y < height; ++y) {
+            for (size_t x = 0; x < width; ++x)
+                std::cout << output[y][x] << "\t";
 
             std::cout << std::endl;
         }
