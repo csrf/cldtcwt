@@ -140,7 +140,9 @@ RowFilter::RowFilter(cl::Context& context_,
 
 void RowFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter)
+               cl::Buffer& filter,
+               const std::vector<cl::Event>* waitEvents,
+               cl::Event* doneEvent)
 {
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
@@ -158,7 +160,8 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width, height),
-                                      cl::NullRange);
+                                      cl::NullRange,
+                                      waitEvents, doneEvent);
 
 }
 
