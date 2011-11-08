@@ -35,6 +35,31 @@ private:
 };
 
 
+
+class RowDecimateFilter {
+    // Class that provides row decimated filtering capabilities
+
+public:
+
+    RowDecimateFilter(cl::Context& context,
+              const std::vector<cl::Device>& devices);
+
+    void operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& output, cl::Image2D& input, 
+               cl::Buffer& filter,
+               bool pad = false,
+               const std::vector<cl::Event>* waitEvents = 0,
+               cl::Event* doneEvent = 0);
+
+private:
+    cl::Context context;
+    cl::Kernel kernel;
+    cl::Sampler sampler;
+
+};
+
+
+
 void rowDecimateFilter(cl::Context& context,
                        cl::CommandQueue& commandQueue,
                        cl::Kernel& rowDecimateFilterKernel,
