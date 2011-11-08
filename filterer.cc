@@ -4,6 +4,14 @@
 #include <string>
 #include <fstream>
 
+// Central sampler creating function (to make changing the addressing
+// overflow behaviour easy, for upgrade to OpenCL 1.1)
+cl::Sampler createSampler(cl::Context& context)
+{
+    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
+                       CL_FILTER_NEAREST);
+}
+
 
 ColFilter::ColFilter(cl::Context& context_,
                      const std::vector<cl::Device>& devices)
@@ -50,8 +58,7 @@ ColFilter::ColFilter(cl::Context& context_,
     kernel = cl::Kernel(program, "colFilter");
 
     // The sampler, later to be used as a kernel argument
-    sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
-                          CL_FILTER_NEAREST);
+    sampler = createSampler(context);
 }
 
 
@@ -142,8 +149,7 @@ RowFilter::RowFilter(cl::Context& context_,
     kernel = cl::Kernel(program, "rowFilter");
 
     // The sampler, later to be used as a kernel argument
-    sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
-                          CL_FILTER_NEAREST);
+    sampler = createSampler(context);
 }
 
 
@@ -183,13 +189,6 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
 
 }
 
-
-
-cl::Sampler createSampler(cl::Context& context)
-{
-    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
-                       CL_FILTER_NEAREST);
-}
 
 
 ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
@@ -248,8 +247,7 @@ ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
     kernel = cl::Kernel(program, "colDecimateFilter");
 
     // The sampler, later to be used as a kernel argument
-    sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
-                          CL_FILTER_NEAREST);
+    sampler = createSampler(context);
 }
 
 
@@ -348,8 +346,7 @@ RowDecimateFilter::RowDecimateFilter(cl::Context& context_,
     kernel = cl::Kernel(program, "rowDecimateFilter");
 
     // The sampler, later to be used as a kernel argument
-    sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
-                          CL_FILTER_NEAREST);
+    sampler = createSampler(context);
 }
 
 

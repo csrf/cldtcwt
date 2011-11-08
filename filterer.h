@@ -109,7 +109,6 @@ void cornernessMap(cl::Context& context,
                    cl::Image2D& output, 
                    std::vector<cl::Image2D> subbands);
 
-cl::Sampler createSampler(cl::Context&);
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
                         const float data[], int length);
