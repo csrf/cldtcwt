@@ -62,6 +62,15 @@ void ColFilter::operator() (cl::CommandQueue& commandQueue,
                const std::vector<cl::Event>* waitEvents,
                cl::Event* doneEvent)
 {
+    // Run the column filter for each location in output (which determines
+    // the locations to run at) using commandQueue.  input and output are
+    // both single-component float images.  filter is a vector of floats.
+    // The command will not start until all of waitEvents have completed, and
+    // once done will flag doneEvent.
+
+
+    // Need to work out the filter length; if this value is passed directly,
+    // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Set all the arguments
@@ -144,6 +153,15 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
                const std::vector<cl::Event>* waitEvents,
                cl::Event* doneEvent)
 {
+    // Run the row filter for each location in output (which determines
+    // the locations to run at) using commandQueue.  input and output are
+    // both single-component float images.  filter is a vector of floats.
+    // The command will not start until all of waitEvents have completed, and
+    // once done will flag doneEvent.
+
+
+    // Need to work out the filter length; if this value is passed directly,
+    // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
     // Set all the arguments

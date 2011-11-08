@@ -25,6 +25,7 @@ void colFilter(cl::Context& context,
                cl::Buffer& filter);
 
 class ColFilter {
+    // Class that provides column filtering capabilities
 
 public:
 
@@ -46,6 +47,7 @@ private:
 
 
 class RowFilter {
+    // Class that provides row filtering capabilities
 
 public:
 
@@ -57,6 +59,7 @@ public:
                cl::Buffer& filter,
                const std::vector<cl::Event>* waitEvents = 0,
                cl::Event* doneEvent = 0);
+
 private:
     cl::Context context;
     cl::Kernel kernel;
