@@ -416,31 +416,51 @@ int main()
         //-----------------------------------------------------------------
         // Starting test code
         const size_t width = 8, height = 12;
+        const size_t oWidth = 4, oHeight = 6;
   
         cl::Image2D inImage = createImage2D(context, width, height);
-        cl::Image2D outImage = createImage2D(context, width/2, height);
+        cl::Image2D out1Re = createImage2D(context, oWidth, oHeight);
+        cl::Image2D out1Im = createImage2D(context, oWidth, oHeight);
+        cl::Image2D out2Re = createImage2D(context, oWidth, oHeight);
+        cl::Image2D out2Im = createImage2D(context, oWidth, oHeight);
 
         float input[height][width] = {0.0f};
         input[4][2] = 1.0f;
+        input[4][3] = -1.0f;
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
 
 
-        RowDecimateFilter rowDecimateFilter(context, devices);
+        QuadToComplex quadToComplex(context, devices);
         
         std::vector<cl::Event> waitEvents(1);
 
-        rowDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
-                  false, 0, &waitEvents[0]);
 
-        float output[height][width/2];
+        quadToComplex(commandQueue,
+                        out1Re, out1Im, out2Re, out2Im, inImage);
 
-        readImage2D(commandQueue, &output[0][0], outImage);
+        //rowDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
+        //          false, 0, &waitEvents[0]);
 
-        for (size_t y = 0; y < height; ++y) {
-            for (size_t x = 0; x < width/2; ++x)
-                std::cout << output[y][x] << "\t";
+        for (int n = 0; n < 4; ++n) {
+            float output[oHeight][oWidth];
 
+            cl::Image2D* currentImage;
+            switch (n) {
+            case 0: currentImage = &out1Re; break;
+            case 1: currentImage = &out1Im; break;
+            case 2: currentImage = &out2Re; break;
+            case 3: currentImage = &out2Im; break;
+            }
+
+            readImage2D(commandQueue, &output[0][0], *currentImage);
+
+            for (size_t y = 0; y < oHeight; ++y) {
+                for (size_t x = 0; x < oWidth/2; ++x)
+                    std::cout << output[y][x] << "\t";
+
+                std::cout << std::endl;
+            }
             std::cout << std::endl;
         }
 

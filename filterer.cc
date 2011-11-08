@@ -392,31 +392,6 @@ void RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
 
 
-void quadToComplex(cl::Context& context,
-                   cl::CommandQueue& commandQueue,
-                   cl::Kernel& quadToComplexKernel,
-                   cl::Image2D& out1Re, cl::Image2D& out1Im,
-                   cl::Image2D& out2Re, cl::Image2D& out2Im,
-                   cl::Image2D& input)
-{
-    quadToComplexKernel.setArg(0, input);
-    quadToComplexKernel.setArg(1, createSampler(context));
-    quadToComplexKernel.setArg(2, out1Re);
-    quadToComplexKernel.setArg(3, out1Im);
-    quadToComplexKernel.setArg(4, out2Re);
-    quadToComplexKernel.setArg(5, out2Im);
-
-    // Output size
-    const int rows = out1Re.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int cols = out1Re.getImageInfo<CL_IMAGE_WIDTH>();
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(quadToComplexKernel, cl::NullRange,
-                                      cl::NDRange(cols, rows),
-                                      cl::NullRange);
-    commandQueue.finish();
-}
-
 void cornernessMap(cl::Context& context,
                    cl::CommandQueue& commandQueue,
                    cl::Kernel& cornernessMapKernel,
@@ -452,6 +427,87 @@ void cornernessMap(cl::Context& context,
                                       cl::NullRange);
     commandQueue.finish();
 }
+
+
+
+
+QuadToComplex::QuadToComplex(cl::Context& context_,
+                     const std::vector<cl::Device>& devices)
+   : context(context_)
+{
+    // The OpenCL kernel:
+    const std::string sourceCode = 
+"__kernel void quadToComplex(__read_only image2d_t input,                  \n"
+"                          sampler_t inputSampler,                         \n"
+"                          __write_only image2d_t out1Re,                  \n"
+"                          __write_only image2d_t out1Im,                  \n"
+"                          __write_only image2d_t out2Re,                  \n"
+"                          __write_only image2d_t out2Im)                  \n"
+"{                                                                         \n"
+"    int x = get_global_id(0);                                             \n"
+"    int y = get_global_id(1);                                             \n"
+"                                                                          \n"
+"    const float factor = 1.0f / sqrt(2.0f);                               \n"
+"                                                                          \n"
+"    // Sample upper left, upper right, etc                                \n"
+"    float ul = read_imagef(input, inputSampler, (int2) (  2*x,   2*y)).x; \n"
+"    float ur = read_imagef(input, inputSampler, (int2) (2*x+1,   2*y)).x; \n"
+"    float ll = read_imagef(input, inputSampler, (int2) (  2*x, 2*y+1)).x; \n"
+"    float lr = read_imagef(input, inputSampler, (int2) (2*x+1, 2*y+1)).x; \n"
+"                                                                          \n"
+"    write_imagef(out1Re, (int2) (x,y), factor * (ul - lr));               \n"
+"    write_imagef(out1Im, (int2) (x,y), factor * (ur + ll));               \n"
+"    write_imagef(out2Re, (int2) (x,y), factor * (ul + lr));               \n"
+"    write_imagef(out2Im, (int2) (x,y), factor * (ur - ll));               \n"
+"}                                                                         \n"
+"\n";
+
+    // Bundle the code up
+    cl::Program::Sources source;
+    source.push_back(std::make_pair(sourceCode.c_str(), sourceCode.length()));
+
+    // Compile it...
+    cl::Program program(context, source);
+    program.build(devices);
+        
+    // ...and extract the useful part, viz the kernel
+    kernel = cl::Kernel(program, "quadToComplex");
+
+    // The sampler, later to be used as a kernel argument
+    sampler = createSampler(context);
+}
+
+
+
+
+void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& out1Re, cl::Image2D& out1Im,
+               cl::Image2D& out2Re, cl::Image2D& out2Im,
+               cl::Image2D& input,
+               const std::vector<cl::Event>* waitEvents,
+               cl::Event* doneEvent)
+{
+
+    // Set up all the arguments to the kernel
+    kernel.setArg(0, input);
+    kernel.setArg(1, sampler);
+    kernel.setArg(2, out1Re);
+    kernel.setArg(3, out1Im);
+    kernel.setArg(4, out2Re);
+    kernel.setArg(5, out2Im);
+
+    // Output size
+    const int width  = out1Re.getImageInfo<CL_IMAGE_WIDTH>();
+    const int height = out1Re.getImageInfo<CL_IMAGE_HEIGHT>();
+
+    // Execute
+    commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
+                                      cl::NDRange(width, height),
+                                      cl::NullRange,
+                                      waitEvents, doneEvent);
+
+}
+
 
 
 
