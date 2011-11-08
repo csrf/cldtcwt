@@ -6,12 +6,6 @@
 #include <vector>
 
 
-void colDecimateFilter(cl::Context& context,
-                       cl::CommandQueue& commandQueue,
-                       cl::Kernel& colDecimateFilterKernel,
-                       cl::Image2D& output, cl::Image2D& input, 
-                       cl::Buffer& filter, bool pad = false);
-
 class ColDecimateFilter {
     // Class that provides column filtering capabilities
 
@@ -58,19 +52,6 @@ private:
 
 };
 
-
-
-void rowDecimateFilter(cl::Context& context,
-                       cl::CommandQueue& commandQueue,
-                       cl::Kernel& rowDecimateFilterKernel,
-                       cl::Image2D& output, cl::Image2D& input, 
-                       cl::Buffer& filter, bool pad);
- 
-void colFilter(cl::Context& context,
-               cl::CommandQueue& commandQueue,
-               cl::Kernel& colFilterKernel,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter);
 
 class ColFilter {
     // Class that provides column filtering capabilities
@@ -140,4 +121,5 @@ void writeImage2D(cl::CommandQueue& commandQueue,
 
 void readImage2D(cl::CommandQueue& commandQueue,
                  float* outMemory, cl::Image2D& image);
+
 #endif

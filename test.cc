@@ -45,7 +45,7 @@ dtcwtKernels getKernels(cl::Program& program)
     
 
 
-
+#if 0
 void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
                     std::vector<std::vector<cl::Image2D> >& output,
                     cl::Image2D& input, dtcwtFilters& filters,
@@ -256,6 +256,7 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
     //return output;
 
 }
+#endif
 
 
 dtcwtFilters createFilters(cl::Context& context,

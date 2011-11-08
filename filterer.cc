@@ -183,68 +183,6 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
 
 }
 
-#include <iostream>
-
-void rowFilter(cl::Context& context,
-               cl::CommandQueue& commandQueue,
-               cl::Kernel& rowFilterKernel,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter)
-{
-    int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
-
-    // Tell the kernel to use the buffers, and how long they are
-    rowFilterKernel.setArg(0, input);         // input
-    rowFilterKernel.setArg(1, createSampler(context));       // inputStride
-    rowFilterKernel.setArg(2, filter);     // filter
-    rowFilterKernel.setArg(3, filterLength);     // filterLength
-    rowFilterKernel.setArg(4, output);        // output
-
-    std::cout << input.getImageInfo<CL_IMAGE_WIDTH>()
-              << " "
-              << input.getImageInfo<CL_IMAGE_HEIGHT>()
-              << std::endl;
-
-    std::cout << output.getImageInfo<CL_IMAGE_WIDTH>()
-              << " "
-              << output.getImageInfo<CL_IMAGE_HEIGHT>()
-              << std::endl;
-
-    // Output size
-    const int rows = output.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int cols = output.getImageInfo<CL_IMAGE_WIDTH>();
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(rowFilterKernel, cl::NullRange,
-                                      cl::NDRange(360, 500),
-                                      cl::NullRange);
-
-    commandQueue.finish();
-}
-
-
-
-
-
-
-
-
-cl::Buffer createBuffer(cl::Context& context,
-                        cl::CommandQueue& commandQueue, 
-                        const float data[], int length)
-{
-    //CL_MEM_COPY_HOST_PTR
-    cl::Buffer buffer(context, CL_MEM_READ_WRITE,
-                        sizeof(float) * length
-                        );
-
-    commandQueue.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(float) * length,
-                           const_cast<float*>(data));
-    commandQueue.finish();
-
-    return buffer;
-}
-
 
 
 cl::Sampler createSampler(cl::Context& context)
@@ -252,66 +190,6 @@ cl::Sampler createSampler(cl::Context& context)
     return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
                        CL_FILTER_NEAREST);
 }
-
-
-
-void rowDecimateFilter(cl::Context& context,
-                       cl::CommandQueue& commandQueue,
-                       cl::Kernel& rowDecimateFilterKernel,
-                       cl::Image2D& output, cl::Image2D& input, 
-                       cl::Buffer& filter, bool pad)
-{
-    int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
-
-    // Tell the kernel to use the buffers, and how long they are
-    rowDecimateFilterKernel.setArg(0, input);         // input
-    rowDecimateFilterKernel.setArg(1, createSampler(context));    
-    // inputStride
-    rowDecimateFilterKernel.setArg(2, filter);     // filter
-    rowDecimateFilterKernel.setArg(3, filterLength);     // filterLength
-    rowDecimateFilterKernel.setArg(4, output);        // output
-    rowDecimateFilterKernel.setArg(5, pad? -1 : 0);
-
-    // Output size
-    const int rows = output.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int cols = output.getImageInfo<CL_IMAGE_WIDTH>() / 2;
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(rowDecimateFilterKernel, cl::NullRange,
-                                      cl::NDRange(cols, rows),
-                                      cl::NullRange);
-
-    commandQueue.finish();
-}
-
-
-void colDecimateFilter(cl::Context& context,
-                       cl::CommandQueue& commandQueue,
-                       cl::Kernel& colDecimateFilterKernel,
-                       cl::Image2D& output, cl::Image2D& input, 
-                       cl::Buffer& filter, bool pad)
-{
-    int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
-
-    // Tell the kernel to use the buffers, and how long they are
-    colDecimateFilterKernel.setArg(0, input);         // input
-    colDecimateFilterKernel.setArg(1, createSampler(context));       // inputStride
-    colDecimateFilterKernel.setArg(2, filter);     // filter
-    colDecimateFilterKernel.setArg(3, filterLength);     // filterLength
-    colDecimateFilterKernel.setArg(4, output);        // output
-    colDecimateFilterKernel.setArg(5, pad? -1 : 0);
-
-    // Output size
-    const int rows = output.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
-    const int cols = output.getImageInfo<CL_IMAGE_WIDTH>();
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(colDecimateFilterKernel, cl::NullRange,
-                                      cl::NDRange(cols, rows),
-                                      cl::NullRange);
-    commandQueue.finish();
-}
-
 
 
 ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
@@ -517,34 +395,6 @@ void RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
 
 
-void colFilter(cl::Context& context,
-               cl::CommandQueue& commandQueue,
-               cl::Kernel& colFilterKernel,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter)
-{
-    int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
-
-    // Tell the kernel to use the buffers, and how long they are
-    colFilterKernel.setArg(0, input);         // input
-    colFilterKernel.setArg(1, createSampler(context));       // inputStride
-    colFilterKernel.setArg(2, filter);     // filter
-    colFilterKernel.setArg(3, filterLength);     // filterLength
-    colFilterKernel.setArg(4, output);        // output
-
-    // Output size
-    const int rows = output.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int cols = output.getImageInfo<CL_IMAGE_WIDTH>();
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(colFilterKernel, cl::NullRange,
-                                      cl::NDRange(cols, rows),
-                                      cl::NullRange);
-
-    commandQueue.finish();
-}
-
-
 void quadToComplex(cl::Context& context,
                    cl::CommandQueue& commandQueue,
                    cl::Kernel& quadToComplexKernel,
@@ -604,6 +454,24 @@ void cornernessMap(cl::Context& context,
                                       cl::NDRange(width, height),
                                       cl::NullRange);
     commandQueue.finish();
+}
+
+
+
+cl::Buffer createBuffer(cl::Context& context,
+                        cl::CommandQueue& commandQueue, 
+                        const float data[], int length)
+{
+    //CL_MEM_COPY_HOST_PTR
+    cl::Buffer buffer(context, CL_MEM_READ_WRITE,
+                        sizeof(float) * length
+                        );
+
+    commandQueue.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(float) * length,
+                           const_cast<float*>(data));
+    commandQueue.finish();
+
+    return buffer;
 }
 
 
