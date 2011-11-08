@@ -414,29 +414,29 @@ int main()
 
         //-----------------------------------------------------------------
         // Starting test code
-        const size_t width = 5, height = 12;
+        const size_t width = 6, height = 12;
   
         cl::Image2D inImage = createImage2D(context, width, height);
-        cl::Image2D outImage = createImage2D(context, width, height);
+        cl::Image2D outImage = createImage2D(context, width, height / 2);
 
         float input[height][width] = {0.0f};
-        input[3][2] = 1.0f;
+        input[4][2] = 1.0f;
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
 
 
-        ColFilter colFilter(context, devices);
+        ColDecimateFilter colDecimateFilter(context, devices);
         
         std::vector<cl::Event> waitEvents(1);
 
-        colFilter(commandQueue, outImage, inImage, filters.level1h0,
-                  0, &waitEvents[0]);
+        colDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
+                  false, 0, &waitEvents[0]);
 
-        float output[height][width];
+        float output[height / 2][width];
 
         readImage2D(commandQueue, &output[0][0], outImage);
 
-        for (size_t y = 0; y < height; ++y) {
+        for (size_t y = 0; y < height/2; ++y) {
             for (size_t x = 0; x < width; ++x)
                 std::cout << output[y][x] << "\t";
 

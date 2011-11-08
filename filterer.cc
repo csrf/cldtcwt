@@ -367,7 +367,7 @@ ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
     program.build(devices);
         
     // ...and extract the useful part, viz the kernel
-    kernel = cl::Kernel(program, "rowFilter");
+    kernel = cl::Kernel(program, "colDecimateFilter");
 
     // The sampler, later to be used as a kernel argument
     sampler = cl::Sampler(context, false, CL_ADDRESS_CLAMP_TO_EDGE,
@@ -409,7 +409,7 @@ void ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
-                                      cl::NDRange(width, height),
+                                      cl::NDRange(width, height / 2),
                                       cl::NullRange,
                                       waitEvents, doneEvent);
 
