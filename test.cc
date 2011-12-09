@@ -262,7 +262,7 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 dtcwtFilters createFilters(cl::Context& context,
                            cl::CommandQueue& commandQueue)
 {
-    const float level1h0[13] = {
+    const std::vector<float> level1h0 = {
        -0.0018,
              0,
         0.0223,
@@ -278,7 +278,7 @@ dtcwtFilters createFilters(cl::Context& context,
        -0.0018
     };
 
-    const float level1h1[19] = {
+    const std::vector<float> level1h1 = {
        -0.0001,
              0,
         0.0013,
@@ -300,7 +300,7 @@ dtcwtFilters createFilters(cl::Context& context,
        -0.0001
     };
 
-    const float level1hbp[19] = {
+    const std::vector<float> level1hbp = {
        -0.0004,
        -0.0006,
        -0.0001,
@@ -323,7 +323,7 @@ dtcwtFilters createFilters(cl::Context& context,
     };
 
 
-    const float level2h0[14] = {
+    const std::vector<float> level2h0 = {
        -0.0046,
        -0.0054,
         0.0170,
@@ -340,7 +340,7 @@ dtcwtFilters createFilters(cl::Context& context,
         0.0033
     };
 
-    const float level2h1[14] = {
+    const std::vector<float> level2h1 = {
        -0.0033,
        -0.0039,
        -0.0347,
@@ -357,7 +357,7 @@ dtcwtFilters createFilters(cl::Context& context,
        -0.0046
     };
 
-    const float level2hbp[14] = {
+    const std::vector<float> level2hbp = {
        -0.0028,
        -0.0004,
         0.0210,
@@ -375,13 +375,13 @@ dtcwtFilters createFilters(cl::Context& context,
     };
 
     dtcwtFilters filters;
-    filters.level1h0 = createBuffer(context, commandQueue, level1h0, 13);
-    filters.level1h1 = createBuffer(context, commandQueue, level1h1, 19);
-    filters.level1hbp = createBuffer(context, commandQueue, level1hbp, 19);
+    filters.level1h0 = createBuffer(context, commandQueue, level1h0);
+    filters.level1h1 = createBuffer(context, commandQueue, level1h1);
+    filters.level1hbp = createBuffer(context, commandQueue, level1hbp);
 
-    filters.level2h0 = createBuffer(context, commandQueue, level2h0, 14);
-    filters.level2h1 = createBuffer(context, commandQueue, level2h1, 14);
-    filters.level2hbp = createBuffer(context, commandQueue, level2hbp, 14);
+    filters.level2h0 = createBuffer(context, commandQueue, level2h0);
+    filters.level2h1 = createBuffer(context, commandQueue, level2h1);
+    filters.level2hbp = createBuffer(context, commandQueue, level2hbp);
 
     return filters;
 }

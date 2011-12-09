@@ -513,15 +513,15 @@ void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
 
 cl::Buffer createBuffer(cl::Context& context,
                         cl::CommandQueue& commandQueue, 
-                        const float data[], int length)
+                        const std::vector<float>& data)
 {
     //CL_MEM_COPY_HOST_PTR
     cl::Buffer buffer(context, CL_MEM_READ_WRITE,
-                        sizeof(float) * length
-                        );
+                      sizeof(float) * data.size());
 
-    commandQueue.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(float) * length,
-                           const_cast<float*>(data));
+    commandQueue.enqueueWriteBuffer(buffer, CL_TRUE, 0,
+                                    sizeof(float) * data.size(),
+                                    &(*(data.begin())));
     commandQueue.finish();
 
     return buffer;

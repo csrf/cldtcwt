@@ -129,7 +129,7 @@ void cornernessMap(cl::Context& context,
 
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
-                        const float data[], int length);
+                        const std::vector<float>& data);
 
 cl::Image2D createImage2D(cl::Context&, int width, int height);
 
