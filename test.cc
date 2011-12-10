@@ -55,12 +55,6 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
     //std::vector<std::vector<cl::Image2D> > output; 
 
     cl::Image2D lolo;
-/*
-            cv::Mat im = getImage2D(commandQueue, input);
-            cv::imshow("Output", im);
-            cv::waitKey();
-*/
-
 
     // Go down the tree until the point where we need to start recording
     // the results
@@ -81,13 +75,11 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
             //rowFilter(context, commandQueue, kernels.rowFilter,
             //          lo, input, filters.level1h0);
 
-    std::cout << "Hello" << std::endl;
             // ...and the columns
             lolo = 
                 createImage2D(context, width + padW, height + padH);
             colFilter(context, commandQueue, kernels.colFilter,
                       lolo, lo, filters.level1h0);
-            std::cout << "Hello 2" << std::endl;
 
         } else {
 
@@ -171,10 +163,6 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 
 
         } else {
-
-            /*cv::Mat im = filterer.getImage2D(lolo);
-            cv::imshow("Output", im);
-            cv::waitKey();*/
 
             int width = lolo.getImageInfo<CL_IMAGE_WIDTH>();
             int height = lolo.getImageInfo<CL_IMAGE_HEIGHT>();
@@ -262,126 +250,33 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 dtcwtFilters createFilters(cl::Context& context,
                            cl::CommandQueue& commandQueue)
 {
-    const std::vector<float> level1h0 = {
-       -0.0018,
-             0,
-        0.0223,
-       -0.0469,
-       -0.0482,
-        0.2969,
-        0.5555,
-        0.2969,
-       -0.0482,
-       -0.0469,
-        0.0223,
-             0,
-       -0.0018
-    };
-
-    const std::vector<float> level1h1 = {
-       -0.0001,
-             0,
-        0.0013,
-       -0.0019,
-       -0.0072,
-        0.0239,
-        0.0556,
-       -0.0517,
-       -0.2998,
-        0.5594,
-       -0.2998,
-       -0.0517,
-        0.0556,
-        0.0239,
-       -0.0072,
-       -0.0019,
-        0.0013,
-             0,
-       -0.0001
-    };
-
-    const std::vector<float> level1hbp = {
-       -0.0004,
-       -0.0006,
-       -0.0001,
-        0.0042,
-        0.0082,
-       -0.0074,
-       -0.0615,
-       -0.1482,
-       -0.1171,
-        0.6529,
-       -0.1171,
-       -0.1482,
-       -0.0615,
-       -0.0074,
-        0.0082,
-        0.0042,
-       -0.0001,
-       -0.0006,
-       -0.0004
-    };
-
-
-    const std::vector<float> level2h0 = {
-       -0.0046,
-       -0.0054,
-        0.0170,
-        0.0238,
-       -0.1067,
-        0.0119,
-        0.5688,
-        0.7561,
-        0.2753,
-       -0.1172,
-       -0.0389,
-        0.0347,
-       -0.0039,
-        0.0033
-    };
-
-    const std::vector<float> level2h1 = {
-       -0.0033,
-       -0.0039,
-       -0.0347,
-       -0.0389,
-        0.1172,
-        0.2753,
-       -0.7561,
-        0.5688,
-       -0.0119,
-       -0.1067,
-       -0.0238,
-        0.0170,
-        0.0054,
-       -0.0046
-    };
-
-    const std::vector<float> level2hbp = {
-       -0.0028,
-       -0.0004,
-        0.0210,
-        0.0614,
-        0.1732,
-       -0.0448,
-       -0.8381,
-        0.4368,
-        0.2627,
-       -0.0076,
-       -0.0264,
-       -0.0255,
-       -0.0096,
-       -0.0000
-    };
-
     dtcwtFilters filters;
-    filters.level1h0 = createBuffer(context, commandQueue, level1h0);
-    filters.level1h1 = createBuffer(context, commandQueue, level1h1);
-    filters.level1hbp = createBuffer(context, commandQueue, level1hbp);
 
-    filters.level2h0 = createBuffer(context, commandQueue, level2h0);
-    filters.level2h1 = createBuffer(context, commandQueue, level2h1);
-    filters.level2hbp = createBuffer(context, commandQueue, level2hbp);
+    filters.level1h0 = createBuffer(context, commandQueue,
+           { -0.0018, 0, 0.0223, -0.0469, -0.0482, 0.2969, 0.5555, 0.2969,
+             -0.0482, -0.0469, 0.0223, 0, -0.0018} );
+
+    filters.level1h1 = createBuffer(context, commandQueue, 
+           { -0.0001, 0, 0.0013, -0.0019, -0.0072, 0.0239, 0.0556, -0.0517,
+             -0.2998, 0.5594, -0.2998, -0.0517, 0.0556, 0.0239, -0.0072,
+             -0.0019, 0.0013, 0, -0.0001 } );
+    
+    filters.level1hbp = createBuffer(context, commandQueue, 
+           { -0.0004, -0.0006, -0.0001, 0.0042, 0.0082, -0.0074, -0.0615,
+             -0.1482, -0.1171, 0.6529, -0.1171, -0.1482, -0.0615, -0.0074, 
+             0.0082, 0.0042, -0.0001, -0.0006, -0.0004 } );
+
+    filters.level2h0 = createBuffer(context, commandQueue, 
+           { -0.0046, -0.0054, 0.0170, 0.0238, -0.1067, 0.0119, 0.5688,
+             0.7561, 0.2753, -0.1172, -0.0389, 0.0347, -0.0039, 0.0033 } );
+
+    filters.level2h1 = createBuffer(context, commandQueue, 
+           { -0.0033, -0.0039, -0.0347, -0.0389, 0.1172, 0.2753, -0.7561,
+             0.5688, -0.0119, -0.1067, -0.0238, 0.0170, 0.0054, -0.0046 } );
+
+    filters.level2hbp = createBuffer(context, commandQueue, 
+           { -0.0028, -0.0004, 0.0210, 0.0614, 0.1732, -0.0448, -0.8381,
+             0.4368, 0.2627, -0.0076, -0.0264, -0.0255, -0.0096, -0.0000 } );
 
     return filters;
 }
