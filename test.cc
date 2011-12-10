@@ -6,6 +6,7 @@
 #include "cl.hpp"
 
 #include "filterer.h"
+#include "clUtil.h"
 
 #include <stdexcept>
 
