@@ -192,9 +192,9 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
 
 
 
-ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
+ColDecimateFilter::ColDecimateFilter(cl::Context& contextArg,
                      const std::vector<cl::Device>& devices)
-   : context(context_)
+    : context(contextArg)
 {
     // The OpenCL kernel:
     const std::string sourceCode = 
@@ -253,11 +253,9 @@ ColDecimateFilter::ColDecimateFilter(cl::Context& context_,
 
 
 
-void ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter,
-               bool pad,
-               const std::vector<cl::Event>* waitEvents,
+cl::Image2D ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& input, cl::Buffer& filter,
+               const std::vector<cl::Event>& waitEvents,
                cl::Event* doneEvent)
 {
     // Run the column decimation filter for each location in output (which
@@ -271,24 +269,31 @@ void ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
     // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
+    // Make sure the resulting image is an even height, i.e. it has the
+    // same length for both the trees
+    int inHeight = input.getImageInfo<CL_IMAGE_HEIGHT>();
+    bool pad = (inHeight % 4) != 0;
+
+    // Create the output at the right size
+    const int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = inHeight / 2 + (pad? 1 : 0);
+    cl::Image2D output = createImage2D(context, width, height);
+
     // Tell the kernel to use the buffers, and how long they are
     kernel.setArg(0, input);         // input
-    kernel.setArg(1, createSampler(context));       
-                                     // inputStride
+    kernel.setArg(1, sampler);       
     kernel.setArg(2, filter);        // filter
     kernel.setArg(3, filterLength);  // filterLength
     kernel.setArg(4, output);        // output
-    kernel.setArg(5, pad? -1 : 0);
-
-    // Output size
-    const int height = output.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int width  = output.getImageInfo<CL_IMAGE_WIDTH>();
+    kernel.setArg(5, pad? -1 : 0);   // Offset to start reading input from
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width, height / 2),
                                       cl::NullRange,
-                                      waitEvents, doneEvent);
+                                      &waitEvents, doneEvent);
+
+    return output;
 
 }
 
