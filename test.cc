@@ -315,11 +315,6 @@ int main()
         const size_t oWidth = 8, oHeight = 12;
   
         cl::Image2D inImage = createImage2D(context, width, height);
-        cl::Image2D out1Re = createImage2D(context, oWidth, oHeight);
-        cl::Image2D out1Im = createImage2D(context, oWidth, oHeight);
-        cl::Image2D out2Re = createImage2D(context, oWidth, oHeight);
-        cl::Image2D out2Im = createImage2D(context, oWidth, oHeight);
-
         float input[height][width] = {0.0f};
         input[4][2] = 1.0f;
         input[4][3] = -1.0f;
@@ -343,13 +338,15 @@ int main()
             = rowFilter(commandQueue, outImage, filters.level1h0,
                                 {decEvent});
         
+        cl::Image2D out1Re, out1Im, out2Re, out2Im;
 
-        //quadToComplex(commandQueue, out1Re, out1Im, out2Re, out2Im, inImage);
+        std::tie(out1Re, out1Im, out2Re, out2Im)
+            = quadToComplex(commandQueue, inImage);
 
         //rowDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
         //          false, 0, &waitEvents[0]);
 
-        /*for (int n = 0; n < 4; ++n) {
+        for (int n = 0; n < 4; ++n) {
             float output[oHeight][oWidth];
 
             cl::Image2D* currentImage;
@@ -369,7 +366,7 @@ int main()
                 std::cout << std::endl;
             }
             std::cout << std::endl;
-        }*/
+        }
 
         float output[oHeight][oWidth];
         readImage2D(commandQueue, &output[0][0], outImage2);

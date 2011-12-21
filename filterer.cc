@@ -500,13 +500,20 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
 
 
 
-void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& out1Re, cl::Image2D& out1Im,
-               cl::Image2D& out2Re, cl::Image2D& out2Im,
+std::tuple<cl::Image2D, cl::Image2D, cl::Image2D, cl::Image2D>
+QuadToComplex::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input,
-               const std::vector<cl::Event>* waitEvents,
+               const std::vector<cl::Event>& waitEvents,
                cl::Event* doneEvent)
 {
+    // Create outputs of the correct size
+    const int width  = input.getImageInfo<CL_IMAGE_WIDTH>() / 2;
+    const int height = input.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
+
+    cl::Image2D out1Re = createImage2D(context, width, height), 
+                out1Im = createImage2D(context, width, height),
+                out2Re = createImage2D(context, width, height), 
+                out2Im = createImage2D(context, width, height);
 
     // Set up all the arguments to the kernel
     kernel.setArg(0, input);
@@ -516,16 +523,13 @@ void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
     kernel.setArg(4, out2Re);
     kernel.setArg(5, out2Im);
 
-    // Output size
-    const int width  = out1Re.getImageInfo<CL_IMAGE_WIDTH>();
-    const int height = out1Re.getImageInfo<CL_IMAGE_HEIGHT>();
-
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width, height),
                                       cl::NullRange,
-                                      waitEvents, doneEvent);
+                                      &waitEvents, doneEvent);
 
+    return std::make_tuple(out1Re, out1Im, out2Re, out2Im);
 }
 
 

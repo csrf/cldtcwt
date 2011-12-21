@@ -6,6 +6,7 @@
 #endif
 #include "cl.hpp"
 #include <vector>
+#include <tuple>
 
 
 class ColDecimateFilter {
@@ -102,12 +103,11 @@ public:
     QuadToComplex(cl::Context& context,
               const std::vector<cl::Device>& devices);
 
-    void operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& out1Re, cl::Image2D& out1Im,
-               cl::Image2D& out2Re, cl::Image2D& out2Im,
-               cl::Image2D& input,
-               const std::vector<cl::Event>* waitEvents = 0,
-               cl::Event* doneEvent = 0);
+    std::tuple<cl::Image2D, cl::Image2D, cl::Image2D, cl::Image2D>
+    operator() (cl::CommandQueue& commandQueue,
+           cl::Image2D& input,
+           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+           cl::Event* doneEvent = 0);
 
 private:
     cl::Context context;
