@@ -357,11 +357,10 @@ RowDecimateFilter::RowDecimateFilter(cl::Context& context_,
 
 
 
-void RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
+cl::Image2D RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& input, 
                cl::Buffer& filter,
-               bool pad,
-               const std::vector<cl::Event>* waitEvents,
+               const std::vector<cl::Event>& waitEvents,
                cl::Event* doneEvent)
 {
     // Run the row decimation filter for each location in output (which
@@ -370,6 +369,15 @@ void RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
     // floats. The command will not start until all of waitEvents have 
     // completed, and once done will flag doneEvent.
 
+    // Make sure the resulting image is an even height, i.e. it has the
+    // same length for both the trees
+    int inWidth = input.getImageInfo<CL_IMAGE_WIDTH>();
+    bool pad = (inWidth % 4) != 0;
+
+    // Create the output at the right size
+    const int width = inWidth / 2 + (pad? 1 : 0),
+              height = input.getImageInfo<CL_IMAGE_WIDTH>();
+    cl::Image2D output = createImage2D(context, width, height);
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
@@ -377,23 +385,19 @@ void RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
     // Tell the kernel to use the buffers, and how long they are
     kernel.setArg(0, input);         // input
-    kernel.setArg(1, createSampler(context));       
-                                     // inputStride
+    kernel.setArg(1, sampler);       
     kernel.setArg(2, filter);        // filter
     kernel.setArg(3, filterLength);  // filterLength
     kernel.setArg(4, output);        // output
     kernel.setArg(5, pad? -1 : 0);
 
-    // Output size
-    const int height = output.getImageInfo<CL_IMAGE_HEIGHT>();
-    const int width  = output.getImageInfo<CL_IMAGE_WIDTH>();
-
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width / 2, height),
                                       cl::NullRange,
-                                      waitEvents, doneEvent);
+                                      &waitEvents, doneEvent);
 
+    return output;
 }
 
 
