@@ -312,7 +312,7 @@ int main()
         //-----------------------------------------------------------------
         // Starting test code
         const size_t width = 8, height = 12;
-        const size_t oWidth = 4, oHeight = 6;
+        const size_t oWidth = 8, oHeight = 12;
   
         cl::Image2D inImage = createImage2D(context, width, height);
         cl::Image2D out1Re = createImage2D(context, oWidth, oHeight);
@@ -328,19 +328,19 @@ int main()
 
 
         QuadToComplex quadToComplex(context, devices);
-        ColDecimateFilter colDecimateFilter(context, devices);
-        RowDecimateFilter rowDecimateFilter(context, devices);
+        ColFilter colFilter(context, devices);
+        RowFilter rowFilter(context, devices);
 
         std::vector<cl::Event> waitEvents(1);
 
         cl::Event decEvent;
 
         cl::Image2D outImage
-            = colDecimateFilter(commandQueue, inImage, filters.level2h0,
+            = colFilter(commandQueue, inImage, filters.level1h0,
                                 {}, &decEvent);
 
         cl::Image2D outImage2
-            = rowDecimateFilter(commandQueue, outImage, filters.level2h0,
+            = rowFilter(commandQueue, outImage, filters.level1h0,
                                 {decEvent});
         
 

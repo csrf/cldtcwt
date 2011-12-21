@@ -59,11 +59,10 @@ public:
     ColFilter(cl::Context& context,
               const std::vector<cl::Device>& devices);
 
-    void operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter,
-               const std::vector<cl::Event>* waitEvents = 0,
-               cl::Event* doneEvent = 0);
+    cl::Image2D operator() (cl::CommandQueue& commandQueue,
+           cl::Image2D& input, cl::Buffer& filter,
+           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+           cl::Event* doneEvent = 0);
 
 private:
     cl::Context context;
@@ -81,11 +80,10 @@ public:
     RowFilter(cl::Context& context,
               const std::vector<cl::Device>& devices);
 
-    void operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter,
-               const std::vector<cl::Event>* waitEvents = 0,
-               cl::Event* doneEvent = 0);
+    cl::Image2D operator() (cl::CommandQueue& commandQueue,
+           cl::Image2D& input, cl::Buffer& filter,
+           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+           cl::Event* doneEvent = 0);
 
 private:
     cl::Context context;

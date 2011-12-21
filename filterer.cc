@@ -64,10 +64,9 @@ ColFilter::ColFilter(cl::Context& context_,
 
 
 
-void ColFilter::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter,
-               const std::vector<cl::Event>* waitEvents,
+cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& input, cl::Buffer& filter,
+               const std::vector<cl::Event>& waitEvents,
                cl::Event* doneEvent)
 {
     // Run the column filter for each location in output (which determines
@@ -76,6 +75,14 @@ void ColFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
+    // Output size
+    int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
+        height = input.getImageInfo<CL_IMAGE_HEIGHT>();
+
+    // Pad if an odd height
+    height += height % 2;
+
+    cl::Image2D output = createImage2D(context, width, height);
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
@@ -88,16 +95,14 @@ void ColFilter::operator() (cl::CommandQueue& commandQueue,
     kernel.setArg(3, filterLength);
     kernel.setArg(4, output);
 
-    // Output size
-    const int width = output.getImageInfo<CL_IMAGE_WIDTH>();
-    const int height = output.getImageInfo<CL_IMAGE_HEIGHT>();
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width, height),
                                       cl::NullRange,
-                                      waitEvents, doneEvent);
+                                      &waitEvents, doneEvent);
 
+    return output;
 }
 
 
@@ -154,10 +159,9 @@ RowFilter::RowFilter(cl::Context& context_,
 }
 
 
-void RowFilter::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& output, cl::Image2D& input, 
-               cl::Buffer& filter,
-               const std::vector<cl::Event>* waitEvents,
+cl::Image2D RowFilter::operator() (cl::CommandQueue& commandQueue,
+               cl::Image2D& input, cl::Buffer& filter,
+               const std::vector<cl::Event>& waitEvents,
                cl::Event* doneEvent)
 {
     // Run the row filter for each location in output (which determines
@@ -166,6 +170,14 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
+    // Output size
+    int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
+        height = input.getImageInfo<CL_IMAGE_HEIGHT>();
+
+    // Pad if an odd width
+    width += width % 2;
+
+    cl::Image2D output = createImage2D(context, width, height);
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
@@ -178,15 +190,13 @@ void RowFilter::operator() (cl::CommandQueue& commandQueue,
     kernel.setArg(3, filterLength);
     kernel.setArg(4, output);
 
-    // Output size
-    const int width = output.getImageInfo<CL_IMAGE_WIDTH>();
-    const int height = output.getImageInfo<CL_IMAGE_HEIGHT>();
-
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
                                       cl::NDRange(width, height),
                                       cl::NullRange,
-                                      waitEvents, doneEvent);
+                                      &waitEvents, doneEvent);
+
+    return output;
 
 }
 
