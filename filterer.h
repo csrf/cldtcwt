@@ -20,7 +20,8 @@ public:
     cl::Image2D operator() (cl::CommandQueue& commandQueue,
          cl::Image2D& input, cl::Buffer& filter,
          const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-         cl::Event* doneEvent = 0);
+         cl::Event* doneEvent = nullptr,
+         cl::Image2D* targetImage = nullptr);
 
 private:
     cl::Kernel kernel;
@@ -42,7 +43,8 @@ public:
     cl::Image2D operator() (cl::CommandQueue& commandQueue,
            cl::Image2D& input, cl::Buffer& filter,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = 0);
+           cl::Event* doneEvent = nullptr,
+           cl::Image2D* targetImage = nullptr);
 
 private:
     cl::Context context;
@@ -63,7 +65,8 @@ public:
     cl::Image2D operator() (cl::CommandQueue& commandQueue,
            cl::Image2D& input, cl::Buffer& filter,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = 0);
+           cl::Event* doneEvent = nullptr,
+           cl::Image2D* targetImage = nullptr);
 
 private:
     cl::Context context;
@@ -84,7 +87,8 @@ public:
     cl::Image2D operator() (cl::CommandQueue& commandQueue,
            cl::Image2D& input, cl::Buffer& filter,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = 0);
+           cl::Event* doneEvent = nullptr,
+           cl::Image2D* targetImage = nullptr);
 
 private:
     cl::Context context;

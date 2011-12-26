@@ -67,7 +67,8 @@ ColFilter::ColFilter(cl::Context& context_,
 cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent)
+               cl::Event* doneEvent,
+               cl::Image2D* targetImage)
 {
     // Run the column filter for each location in output (which determines
     // the locations to run at) using commandQueue.  input and output are
@@ -75,15 +76,20 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
-    // Output size
-    int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
-        height = input.getImageInfo<CL_IMAGE_HEIGHT>();
+    // Input's height
+    const int inHeight = input.getImageInfo<CL_IMAGE_HEIGHT>();
 
-    // Pad if an odd height
-    height += height % 2;
+    // Use the pre-allocated output, if given; otherwise, create a new
+    // output of appropriate size
+    cl::Image2D output
+        = (targetImage != nullptr)?
+            *targetImage :
+            createImage2D(context, input.getImageInfo<CL_IMAGE_WIDTH>(), 
+                                   inHeight + inHeight % 2);
 
-    cl::Image2D output = createImage2D(context, width, height);
-
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
+ 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
@@ -162,7 +168,8 @@ RowFilter::RowFilter(cl::Context& context_,
 cl::Image2D RowFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent)
+               cl::Event* doneEvent,
+               cl::Image2D* targetImage)
 {
     // Run the row filter for each location in output (which determines
     // the locations to run at) using commandQueue.  input and output are
@@ -170,14 +177,20 @@ cl::Image2D RowFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
-    // Output size
-    int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
-        height = input.getImageInfo<CL_IMAGE_HEIGHT>();
+    // Input size
+    const int inWidth = input.getImageInfo<CL_IMAGE_WIDTH>();
 
-    // Pad if an odd width
-    width += width % 2;
+    // Use the pre-allocated output, if given; otherwise, create a new
+    // output of appropriate size
+    cl::Image2D output
+        = (targetImage != nullptr)?
+            *targetImage :
+            createImage2D(context, inWidth + inWidth % 2,
+                          input.getImageInfo<CL_IMAGE_HEIGHT>());
 
-    cl::Image2D output = createImage2D(context, width, height);
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
+
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
@@ -266,7 +279,8 @@ ColDecimateFilter::ColDecimateFilter(cl::Context& contextArg,
 cl::Image2D ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent)
+               cl::Event* doneEvent,
+               cl::Image2D* targetImage)
 {
     // Run the column decimation filter for each location in output (which
     // determines the locations to run at) using commandQueue.  input and 
@@ -284,10 +298,16 @@ cl::Image2D ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
     int inHeight = input.getImageInfo<CL_IMAGE_HEIGHT>();
     bool pad = (inHeight % 4) != 0;
 
-    // Create the output at the right size
-    const int width = input.getImageInfo<CL_IMAGE_WIDTH>(),
-              height = inHeight / 2 + (pad? 1 : 0);
-    cl::Image2D output = createImage2D(context, width, height);
+    // Use the pre-allocated output, if given; otherwise, create a new
+    // output of appropriate size
+    cl::Image2D output
+        = (targetImage != nullptr)?
+            *targetImage :
+            createImage2D(context, input.getImageInfo<CL_IMAGE_WIDTH>(), 
+                                   inHeight / 2 + (pad? 1 : 0));
+
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
 
     // Tell the kernel to use the buffers, and how long they are
     kernel.setArg(0, input);         // input
@@ -371,7 +391,8 @@ cl::Image2D RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, 
                cl::Buffer& filter,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent)
+               cl::Event* doneEvent,
+               cl::Image2D* targetImage)
 {
     // Run the row decimation filter for each location in output (which
     // determines the locations to run at) using commandQueue.  input and 
@@ -384,10 +405,14 @@ cl::Image2D RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
     int inWidth = input.getImageInfo<CL_IMAGE_WIDTH>();
     bool pad = (inWidth % 4) != 0;
 
-    // Create the output at the right size
-    const int width = inWidth / 2 + (pad? 1 : 0),
-              height = input.getImageInfo<CL_IMAGE_WIDTH>();
-    cl::Image2D output = createImage2D(context, width, height);
+    cl::Image2D output
+        = (targetImage != nullptr) ?
+            *targetImage :
+            createImage2D(context, inWidth / 2 + (pad? 1 : 0),
+                                   input.getImageInfo<CL_IMAGE_HEIGHT>());
+
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
