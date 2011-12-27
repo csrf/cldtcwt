@@ -1,15 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <tuple>
 
 #define __CL_ENABLE_EXCEPTIONS
 #include "cl.hpp"
 
 #include "filterer.h"
 #include "clUtil.h"
+#include "dtcwt.h"
 
 #include <stdexcept>
-
 struct dtcwtFilters {
     cl::Buffer level1h0;
     cl::Buffer level1h1;
@@ -248,38 +249,38 @@ void dtcwtTransform(cl::Context& context, cl::CommandQueue& commandQueue,
 #endif
 
 
-dtcwtFilters createFilters(cl::Context& context,
-                           cl::CommandQueue& commandQueue)
+std::tuple<Filters, Filters>
+        createFilters(cl::Context& context, cl::CommandQueue& commandQueue)
 {
-    dtcwtFilters filters;
+    Filters level1, level2;
 
-    filters.level1h0 = createBuffer(context, commandQueue,
+    level1.h0 = createBuffer(context, commandQueue,
            { -0.0018, 0, 0.0223, -0.0469, -0.0482, 0.2969, 0.5555, 0.2969,
              -0.0482, -0.0469, 0.0223, 0, -0.0018} );
 
-    filters.level1h1 = createBuffer(context, commandQueue, 
+    level1.h1 = createBuffer(context, commandQueue, 
            { -0.0001, 0, 0.0013, -0.0019, -0.0072, 0.0239, 0.0556, -0.0517,
              -0.2998, 0.5594, -0.2998, -0.0517, 0.0556, 0.0239, -0.0072,
              -0.0019, 0.0013, 0, -0.0001 } );
     
-    filters.level1hbp = createBuffer(context, commandQueue, 
+    level1.hbp = createBuffer(context, commandQueue, 
            { -0.0004, -0.0006, -0.0001, 0.0042, 0.0082, -0.0074, -0.0615,
              -0.1482, -0.1171, 0.6529, -0.1171, -0.1482, -0.0615, -0.0074, 
              0.0082, 0.0042, -0.0001, -0.0006, -0.0004 } );
 
-    filters.level2h0 = createBuffer(context, commandQueue, 
+    level2.h0 = createBuffer(context, commandQueue, 
            { -0.0046, -0.0054, 0.0170, 0.0238, -0.1067, 0.0119, 0.5688,
              0.7561, 0.2753, -0.1172, -0.0389, 0.0347, -0.0039, 0.0033 } );
 
-    filters.level2h1 = createBuffer(context, commandQueue, 
+    level2.h1 = createBuffer(context, commandQueue, 
            { -0.0033, -0.0039, -0.0347, -0.0389, 0.1172, 0.2753, -0.7561,
              0.5688, -0.0119, -0.1067, -0.0238, 0.0170, 0.0054, -0.0046 } );
 
-    filters.level2hbp = createBuffer(context, commandQueue, 
+    level2.hbp = createBuffer(context, commandQueue, 
            { -0.0028, -0.0004, 0.0210, 0.0614, 0.1732, -0.0448, -0.8381,
              0.4368, 0.2627, -0.0076, -0.0264, -0.0255, -0.0096, -0.0000 } );
 
-    return filters;
+    return std::make_tuple(level1, level2);
 }
 
 
@@ -304,7 +305,8 @@ int main()
         // Ready the command queue on the first device to hand
         cl::CommandQueue commandQueue(context, devices[0]);
 
-        dtcwtFilters filters = createFilters(context, commandQueue);
+        Filters level1, level2;
+        std::tie(level1, level2) = createFilters(context, commandQueue);
 
         int x = 0;
         int numLevels = 4;
@@ -331,37 +333,36 @@ int main()
         cl::Event decEvent;
 
         cl::Image2D outImage
-            = colFilter(commandQueue, inImage, filters.level1h0,
+            = colFilter(commandQueue, inImage, level1.h0,
                                 {}, &decEvent);
 
         cl::Image2D outImage2
-            = rowFilter(commandQueue, outImage, filters.level1h0,
+            = rowFilter(commandQueue, outImage, level1.h0,
                                 {decEvent});
         
-        cl::Image2D out1Re, out1Im, out2Re, out2Im;
-
-        std::tie(out1Re, out1Im, out2Re, out2Im)
-            = quadToComplex(commandQueue, inImage);
+        cl::Image2D out1, out2;
+        std::tie(out1, out2) = quadToComplex(commandQueue, inImage);
 
         //rowDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
         //          false, 0, &waitEvents[0]);
 
-        for (int n = 0; n < 4; ++n) {
-            float output[oHeight][oWidth];
+        for (int n = 0; n < 2; ++n) {
+            const size_t width = out1.getImageInfo<CL_IMAGE_WIDTH>(),
+                         height = out1.getImageInfo<CL_IMAGE_HEIGHT>();
+            float output[height][width][2];
 
+            
             cl::Image2D* currentImage;
             switch (n) {
-            case 0: currentImage = &out1Re; break;
-            case 1: currentImage = &out1Im; break;
-            case 2: currentImage = &out2Re; break;
-            case 3: currentImage = &out2Im; break;
+            case 0: currentImage = &out1; break;
+            case 1: currentImage = &out2; break;
             }
 
-            readImage2D(commandQueue, &output[0][0], *currentImage);
+            readImage2D(commandQueue, &output[0][0][0], *currentImage);
 
             for (size_t y = 0; y < oHeight; ++y) {
                 for (size_t x = 0; x < oWidth/2; ++x)
-                    std::cout << output[y][x] << "\t";
+                    std::cout << output[y][x][0] << "\t";
 
                 std::cout << std::endl;
             }

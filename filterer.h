@@ -107,11 +107,11 @@ public:
     QuadToComplex(cl::Context& context,
               const std::vector<cl::Device>& devices);
 
-    std::tuple<cl::Image2D, cl::Image2D, cl::Image2D, cl::Image2D>
+    std::tuple<cl::Image2D, cl::Image2D>
     operator() (cl::CommandQueue& commandQueue,
            cl::Image2D& input,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = 0);
+           cl::Event* doneEvent = nullptr);
 
 private:
     cl::Context context;

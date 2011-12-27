@@ -484,15 +484,11 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
     const std::string sourceCode = 
 "__kernel void quadToComplex(__read_only image2d_t input,                  \n"
 "                          sampler_t inputSampler,                         \n"
-"                          __write_only image2d_t out1Re,                  \n"
-"                          __write_only image2d_t out1Im,                  \n"
-"                          __write_only image2d_t out2Re,                  \n"
-"                          __write_only image2d_t out2Im)                  \n"
+"                          __write_only image2d_t out1,                    \n"
+"                          __write_only image2d_t out2)                    \n"
 "{                                                                         \n"
 "    int x = get_global_id(0);                                             \n"
 "    int y = get_global_id(1);                                             \n"
-"                                                                          \n"
-"    const float factor = 1.0f / sqrt(2.0f);                               \n"
 "                                                                          \n"
 "    // Sample upper left, upper right, etc                                \n"
 "    float ul = read_imagef(input, inputSampler, (int2) (  2*x,   2*y)).x; \n"
@@ -500,10 +496,13 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
 "    float ll = read_imagef(input, inputSampler, (int2) (  2*x, 2*y+1)).x; \n"
 "    float lr = read_imagef(input, inputSampler, (int2) (2*x+1, 2*y+1)).x; \n"
 "                                                                          \n"
-"    write_imagef(out1Re, (int2) (x,y), factor * (ul - lr));               \n"
-"    write_imagef(out1Im, (int2) (x,y), factor * (ur + ll));               \n"
-"    write_imagef(out2Re, (int2) (x,y), factor * (ul + lr));               \n"
-"    write_imagef(out2Im, (int2) (x,y), factor * (ur - ll));               \n"
+"    const float factor = 1.0f / sqrt(2.0f);                               \n"
+"                                                                          \n"
+"    // Combine into complex pairs                                         \n"
+"    write_imagef(out1, (int2) (x, y),                                     \n"
+"                       factor * (float4) (ul - lr, ur + ll, 0, 0));             \n"
+"    write_imagef(out2, (int2) (x, y),                                     \n"
+"                       factor * (float4) (ul + lr, ur - ll, 0, 0));             \n"
 "}                                                                         \n"
 "\n";
 
@@ -525,7 +524,7 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
 
 
 
-std::tuple<cl::Image2D, cl::Image2D, cl::Image2D, cl::Image2D>
+std::tuple<cl::Image2D, cl::Image2D>
 QuadToComplex::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input,
                const std::vector<cl::Event>& waitEvents,
@@ -535,18 +534,16 @@ QuadToComplex::operator() (cl::CommandQueue& commandQueue,
     const int width  = input.getImageInfo<CL_IMAGE_WIDTH>() / 2;
     const int height = input.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
 
-    cl::Image2D out1Re = createImage2D(context, width, height), 
-                out1Im = createImage2D(context, width, height),
-                out2Re = createImage2D(context, width, height), 
-                out2Im = createImage2D(context, width, height);
+    // Outputs are images with two floats per location: (real, imag)
+    cl::ImageFormat format = {CL_RG, CL_FLOAT}; 
+    cl::Image2D out1 = {context, 0, format, width, height},
+                out2 = {context, 0, format, width, height};
 
     // Set up all the arguments to the kernel
     kernel.setArg(0, input);
     kernel.setArg(1, sampler);
-    kernel.setArg(2, out1Re);
-    kernel.setArg(3, out1Im);
-    kernel.setArg(4, out2Re);
-    kernel.setArg(5, out2Im);
+    kernel.setArg(2, out1);
+    kernel.setArg(3, out2);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
@@ -554,7 +551,7 @@ QuadToComplex::operator() (cl::CommandQueue& commandQueue,
                                       cl::NullRange,
                                       &waitEvents, doneEvent);
 
-    return std::make_tuple(out1Re, out1Im, out2Re, out2Im);
+    return std::make_tuple(out1, out2);
 }
 
 
