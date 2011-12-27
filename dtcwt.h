@@ -10,6 +10,12 @@
 
 #include <vector>
 
+struct Filters {
+    // Low pass, high pass and band pass coefficients (respectively)
+    cl::Buffer h0, h1, hbp;
+};
+
+
 class Dtcwt {
 private:
 
@@ -29,7 +35,10 @@ public:
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices);
 
     std::vector<std::vector<cl::Image2D> >
-        operator() (cl::Image2D& image);
+        operator() (cl::CommandQueue& commandQueue,
+                    cl::Image2D& image, 
+                    Filters level1, Filters level2,
+                    int numLevels, int startLevel);
 };
 
 #endif
