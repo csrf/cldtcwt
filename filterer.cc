@@ -63,6 +63,18 @@ ColFilter::ColFilter(cl::Context& context_,
 }
 
 
+cl::Image2D ColFilter::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
+
+cl::Image2D ColFilter::dummyRun(size_t inWidth, size_t inHeight)
+{
+    return createImage2D(context, inWidth, inHeight + inHeight % 2);
+}
+
+
 
 cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
@@ -76,16 +88,11 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
-    // Input's height
-    const int inHeight = input.getImageInfo<CL_IMAGE_HEIGHT>();
-
     // Use the pre-allocated output, if given; otherwise, create a new
     // output of appropriate size
     cl::Image2D output
-        = (targetImage != nullptr)?
-            *targetImage :
-            createImage2D(context, input.getImageInfo<CL_IMAGE_WIDTH>(), 
-                                   inHeight + inHeight % 2);
+        = (targetImage != nullptr)? 
+              *targetImage : dummyRun(input);
 
     const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
               height = output.getImageInfo<CL_IMAGE_HEIGHT>();
@@ -165,6 +172,20 @@ RowFilter::RowFilter(cl::Context& context_,
 }
 
 
+cl::Image2D RowFilter::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
+
+cl::Image2D RowFilter::dummyRun(size_t inWidth, size_t inHeight)
+{
+    return createImage2D(context, inWidth + inWidth % 2, inHeight);
+}
+
+
+
+
 cl::Image2D RowFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
                const std::vector<cl::Event>& waitEvents,
@@ -177,16 +198,12 @@ cl::Image2D RowFilter::operator() (cl::CommandQueue& commandQueue,
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
-    // Input size
-    const int inWidth = input.getImageInfo<CL_IMAGE_WIDTH>();
 
     // Use the pre-allocated output, if given; otherwise, create a new
     // output of appropriate size
     cl::Image2D output
         = (targetImage != nullptr)?
-            *targetImage :
-            createImage2D(context, inWidth + inWidth % 2,
-                          input.getImageInfo<CL_IMAGE_HEIGHT>());
+            *targetImage : dummyRun(input);
 
     const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
               height = output.getImageInfo<CL_IMAGE_HEIGHT>();
@@ -275,6 +292,20 @@ ColDecimateFilter::ColDecimateFilter(cl::Context& contextArg,
 }
 
 
+cl::Image2D ColDecimateFilter::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
+
+
+cl::Image2D ColDecimateFilter::dummyRun(size_t inWidth, size_t inHeight)
+{
+    bool pad = (inHeight % 4) != 0;
+
+    return createImage2D(context, inWidth, inHeight / 2 + (pad? 1 : 0));
+}
+
 
 cl::Image2D ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, cl::Buffer& filter,
@@ -295,16 +326,13 @@ cl::Image2D ColDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
     // Make sure the resulting image is an even height, i.e. it has the
     // same length for both the trees
-    int inHeight = input.getImageInfo<CL_IMAGE_HEIGHT>();
-    bool pad = (inHeight % 4) != 0;
+    bool pad = (input.getImageInfo<CL_IMAGE_HEIGHT>() % 4) != 0;
 
     // Use the pre-allocated output, if given; otherwise, create a new
     // output of appropriate size
     cl::Image2D output
         = (targetImage != nullptr)?
-            *targetImage :
-            createImage2D(context, input.getImageInfo<CL_IMAGE_WIDTH>(), 
-                                   inHeight / 2 + (pad? 1 : 0));
+            *targetImage : dummyRun(input);
 
     const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
               height = output.getImageInfo<CL_IMAGE_HEIGHT>();
@@ -386,6 +414,21 @@ RowDecimateFilter::RowDecimateFilter(cl::Context& context_,
 }
 
 
+cl::Image2D RowDecimateFilter::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
+
+cl::Image2D RowDecimateFilter::dummyRun(size_t inWidth, size_t inHeight)
+{
+    bool pad = (inWidth % 4) != 0;
+
+    return createImage2D(context, inWidth / 2 + (pad? 1 : 0), inHeight);
+}
+
+
+
 
 cl::Image2D RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input, 
@@ -402,14 +445,11 @@ cl::Image2D RowDecimateFilter::operator() (cl::CommandQueue& commandQueue,
 
     // Make sure the resulting image is an even height, i.e. it has the
     // same length for both the trees
-    int inWidth = input.getImageInfo<CL_IMAGE_WIDTH>();
-    bool pad = (inWidth % 4) != 0;
+    bool pad = (input.getImageInfo<CL_IMAGE_WIDTH>() % 4) != 0;
 
     cl::Image2D output
         = (targetImage != nullptr) ?
-            *targetImage :
-            createImage2D(context, inWidth / 2 + (pad? 1 : 0),
-                                   input.getImageInfo<CL_IMAGE_HEIGHT>());
+            *targetImage : dummyRun(input);
 
     const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
               height = output.getImageInfo<CL_IMAGE_HEIGHT>();
@@ -522,28 +562,41 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
 }
 
 
+cl::Image2D QuadToComplex::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
+
+cl::Image2D QuadToComplex::dummyRun(size_t inWidth, size_t inHeight)
+{
+    return {context, 0, {CL_RG, CL_FLOAT}, inWidth / 2, inHeight / 2};
+}
+
+
 
 
 std::tuple<cl::Image2D, cl::Image2D>
 QuadToComplex::operator() (cl::CommandQueue& commandQueue,
                cl::Image2D& input,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent)
+               cl::Event* doneEvent,
+               cl::Image2D* target1, cl::Image2D* target2)
 {
-    // Create outputs of the correct size
-    const int width  = input.getImageInfo<CL_IMAGE_WIDTH>() / 2;
-    const int height = input.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
-
     // Outputs are images with two floats per location: (real, imag)
-    cl::ImageFormat format = {CL_RG, CL_FLOAT}; 
-    cl::Image2D out1 = {context, 0, format, width, height},
-                out2 = {context, 0, format, width, height};
+    // Allocate new output images if they weren't passed in
+    cl::Image2D out1 = target1? *target1 : dummyRun(input);
+    cl::Image2D out2 = target2? *target2 : dummyRun(input);
 
     // Set up all the arguments to the kernel
     kernel.setArg(0, input);
     kernel.setArg(1, sampler);
     kernel.setArg(2, out1);
     kernel.setArg(3, out2);
+
+    // Create outputs of the correct size
+    const int width  = out1.getImageInfo<CL_IMAGE_WIDTH>();
+    const int height = out1.getImageInfo<CL_IMAGE_HEIGHT>();
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
