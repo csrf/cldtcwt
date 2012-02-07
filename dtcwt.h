@@ -9,11 +9,34 @@
 #include "filterer.h"
 
 #include <vector>
+#include <tuple>
 
 struct Filters {
     // Low pass, high pass and band pass coefficients (respectively)
     cl::Buffer h0, h1, hbp;
 };
+
+
+struct NoOutputTemps {
+    cl::Image2D xlo, lolo;
+};
+
+
+struct OutputTemps {
+    cl::Image2D lox, lohi, hilo, xbp, bpbp;
+};
+
+
+struct DtcwtParams {
+    size_t width, height;
+    int numLevels, startLevel;
+
+    std::vector<NoOutputTemps>;
+    std::vector<OutputTemps>;
+
+    std::vector<std::vector<cl::Image2D>>;
+};
+
 
 
 class Dtcwt {
@@ -25,14 +48,23 @@ private:
     RowDecimateFilter rowDecimateFilter;
     QuadToComplex quadToComplex;
 
-    cl::Image2D colPadAndFilter(cl::Image2D&);
-    cl::Image2D colPadAndDecFilter(cl::Image2D&);
-    cl::Image2D rowPadAndFilter(cl::Image2D&);
-    cl::Image2D rowPadAndDecFilter(cl::Image2D&);
-    
+
+    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+        dummyFilter(cl::Image2D xx, cl::Image2D xlo);
+
+    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+        dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo);
+
+
 public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices);
+
+    std::tuple<std::vector<std::vector<cl::Image2D>>,
+               std::vector<OutputTemps>,
+               std::vector<NoOutputTemps>>
+        dummyRun(cl::Image2D image, int numLevels, int startLevel);
+
 
     std::vector<std::vector<cl::Image2D> >
         operator() (cl::CommandQueue& commandQueue,

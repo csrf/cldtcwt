@@ -347,9 +347,6 @@ int main()
         //          false, 0, &waitEvents[0]);
 
         for (int n = 0; n < 2; ++n) {
-            const size_t width = out1.getImageInfo<CL_IMAGE_WIDTH>(),
-                         height = out1.getImageInfo<CL_IMAGE_HEIGHT>();
-            float output[height][width][2];
 
             
             cl::Image2D* currentImage;
@@ -358,11 +355,15 @@ int main()
             case 1: currentImage = &out2; break;
             }
 
+            const size_t width = currentImage->getImageInfo<CL_IMAGE_WIDTH>(),
+                        height = currentImage->getImageInfo<CL_IMAGE_HEIGHT>();
+            float output[height][width][2];
             readImage2D(commandQueue, &output[0][0][0], *currentImage);
 
-            for (size_t y = 0; y < oHeight; ++y) {
-                for (size_t x = 0; x < oWidth/2; ++x)
-                    std::cout << output[y][x][0] << "\t";
+            for (size_t y = 0; y < height; ++y) {
+                for (size_t x = 0; x < width; ++x)
+                    std::cout << output[y][x][0] 
+                              << "+i*" << output[y][x][1]<< "\t";
 
                 std::cout << std::endl;
             }
