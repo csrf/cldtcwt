@@ -156,6 +156,67 @@ Dtcwt::dummyFilter(cl::Image2D xx, cl::Image2D xlo)
 }
 
 
+
+std::vector<cl::Event> Dtcwt::filter(cl::CommandQueue& commandQueue,
+                           cl::Image2D& xx, 
+                           const std::vector<cl::Event>& xxEvents,
+                           cl::Image2D& xlo, 
+                           const std::vector<cl::Event>& xloEvents,
+                           cl::Image2D* out, 
+                           OutputTemps* outputTemps,
+                           Filters& filters)
+{
+    // Low pass one way then high pass the other...
+    cl::Event loxEvent, lohiEvent;
+
+    rowFilter(commandQueue, xx, filters.h0, 
+              xxEvents, &loxEvent,
+              &(outputTemps->lox));
+
+    colFilter(commandQueue, outputTemps->lox, filters.h1, 
+              {loxEvent}, &lohiEvent,
+              &(outputTemps->lohi));
+
+    // High pass the image that had been low-passed the other way...
+    cl::Event hiloEvent;
+
+    rowFilter(commandQueue, xlo, filters.h1, 
+                      xloEvents, &hiloEvent,
+                      &(outputTemps->hilo));
+
+    // Band pass both ways...
+    cl::Event xbpEvent, bpbpEvent;
+
+    colFilter(commandQueue, xx, filters.hbp, 
+              xxEvents, &xbpEvent,
+              &(outputTemps->xbp));
+
+    rowFilter(commandQueue, outputTemps->xbp, filters.hbp, 
+              {xbpEvent}, &bpbpEvent,
+              &(outputTemps->bpbp));
+
+    // Create events that, when all done signify everything about this stage
+    // is complete
+    std::vector<cl::Event> completedEvents(3);
+
+    // ...and generate subband outputs.
+    quadToComplex(commandQueue, outputTemps->lohi, 
+                  {lohiEvent}, &completedEvents[0], 
+                  &out[2], &out[3]);
+
+    quadToComplex(commandQueue, outputTemps->hilo, 
+                  {hiloEvent}, &completedEvents[1], 
+                  &out[0], &out[5]);
+
+    quadToComplex(commandQueue, outputTemps->bpbp, 
+                  {bpbpEvent}, &completedEvents[2], 
+                  &out[4], &out[1]);
+
+    return completedEvents;
+}
+
+
+
 std::tuple<OutputTemps, std::vector<cl::Image2D>>
 Dtcwt::dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo)
 {
@@ -257,34 +318,5 @@ std::vector<cl::Event> Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
 
 
-/*cl::Image2D Dtcwt::filter(cl::Image2D& xx, cl::Image2D xlo
-                                      )
-{
-    cl::Event loxEvent, lohiEvent;
-    cl::Image2D lox = rowFilter(commandQueue, image, level1.h0,
-                                {}, &loxEvent);
-    cl::Image2D lohi = colFilter(commandQueue, lox, level1.h1,
-                                 {loxEvent} &lohiEvent);
-
-    std::tie(out[2], out[3]) = quadToComplex(commandQueue, lohi, 
-                                           {lohiEvent});
-
-    cl::Event hiloEvent;
-    cl::Image2D hilo = rowFilter(commandQueue, xlo, level1.h1,
-                                 {loEvent}, &hiloEvent);
-
-    std::tie(out[0], out[5]) = quadToComplex(commandQueue, hilo, 
-                                           {hiloEvent});
-
-    cl::Event xbpEvent, bpbpEvent;
-    cl::Image2D xbp = colFilter(commandQueue, image, level1.hbp,
-                                {}, &xbpEvent);
-    cl::Image2D bpbp = rowFilter(commandQueue, xbp, level1.hbp,
-                                 {xbpEvent}, &bpbpEvent);
-
-    std::tie(out[4], out[1]) = quadToComplex(commandQueue, bpbp, 
-                                           {bpbpEvent});
-
-}*/
 
 

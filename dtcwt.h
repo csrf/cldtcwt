@@ -63,6 +63,16 @@ private:
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
         dummyFilter(cl::Image2D xx, cl::Image2D xlo);
 
+    std::vector<cl::Event> 
+        filter(cl::CommandQueue& commandQueue,
+               cl::Image2D& xx, 
+               const std::vector<cl::Event>& xxEvents,
+               cl::Image2D& xlo, 
+               const std::vector<cl::Event>& xloEvents,
+               cl::Image2D* out, 
+               OutputTemps* outputTemps,
+               Filters& filters)
+
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
         dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
