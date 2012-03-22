@@ -17,24 +17,29 @@ struct Filters {
 };
 
 
+// Temporary images used whether the level produces an output or not
 struct NoOutputTemps {
     cl::Image2D xlo, lolo;
 };
 
 
+// Temporary images needed only when the level produces an output 
 struct OutputTemps {
     cl::Image2D lox, lohi, hilo, xbp, bpbp;
 };
 
 
-struct DtcwtParams {
+struct DtcwtContext {
     size_t width, height;
     int numLevels, startLevel;
 
-    std::vector<NoOutputTemps>;
-    std::vector<OutputTemps>;
+    std::vector<NoOutputTemps> noOutputTemps;
+    std::vector<OutputTemps>   outputTemps;
 
-    std::vector<std::vector<cl::Image2D>>;
+    Filters level1, level2;
+
+    // Outputs
+    std::vector<std::vector<cl::Image2D>> outputs;
 };
 
 
@@ -48,29 +53,45 @@ private:
     RowDecimateFilter rowDecimateFilter;
     QuadToComplex quadToComplex;
 
+    std::tuple<std::vector<std::vector<cl::Image2D>>,
+               std::vector<OutputTemps>,
+               std::vector<NoOutputTemps>>
+        dummyRun(size_t width, size_t height, int numLevels, int startLevel);
 
+    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+        dummyFilter(size_t width, size_t height, cl::Image2D xlo);
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
         dummyFilter(cl::Image2D xx, cl::Image2D xlo);
 
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
+        dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
+    std::tuple<OutputTemps, std::vector<cl::Image2D>>
         dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo);
 
+    std::vector<cl::Event>
+        decimateFilter(cl::CommandQueue& commandQueue,
+                       cl::Image2D& xx, 
+                       const std::vector<cl::Event>& xxEvents,
+                       cl::Image2D& xlo, 
+                       const std::vector<cl::Event>& xloEvent,
+                       cl::Image2D* out, 
+                       OutputTemps* outputTemps,
+                       Filters& filters);
 
 public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices);
-
-    std::tuple<std::vector<std::vector<cl::Image2D>>,
-               std::vector<OutputTemps>,
-               std::vector<NoOutputTemps>>
-        dummyRun(cl::Image2D image, int numLevels, int startLevel);
-
 
     std::vector<std::vector<cl::Image2D> >
         operator() (cl::CommandQueue& commandQueue,
                     cl::Image2D& image, 
                     Filters level1, Filters level2,
                     int numLevels, int startLevel);
+
+    // Create the set of images etc needed to perform a DTCWT calculation
+    DtcwtContext createContext(size_t imageWidth, size_t imageHeight, 
+                               size_t numLevels, size_t startLevel);
+
 };
 
 #endif
