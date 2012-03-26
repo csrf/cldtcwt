@@ -34,39 +34,60 @@ DtcwtContext Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 
 
 
-std::vector<std::vector<cl::Image2D> >
-    Dtcwt::operator() (cl::CommandQueue& commandQueue,
-                       cl::Image2D& image, 
-                       int numLevels, int startLevel)
+void Dtcwt::operator() (cl::CommandQueue& commandQueue,
+                        cl::Image2D& image, 
+                        DtcwtContext& env)
 {
-    std::vector<std::vector<cl::Image2D> > result;
+    cl::Event xloEvent, loloEvent;
 
-    cl::Event loEvent, loloEvent;
+    // Apply the non-decimating, special low pass filters that must be needed
+    colFilter(commandQueue, image, env.level1.h0, {},
+              &xloEvent, &env.noOutputTemps[0].xlo);
+    rowFilter(commandQueue, env.noOutputTemps[0].xlo, env.level1.h0, {xloEvent},
+              &loloEvent, &env.noOutputTemps[0].lolo);  
 
-    cl::Image2D xlo = colFilter(commandQueue, image, level1.h0,
-                                {}, &loEvent);
-
-    if (startLevel == 0) {
+    if (env.startLevel == 0) {
+        // Optionally create the parts that are needed, if an output is
+        // required
+        std::vector<cl::Event> outEvents(
+            filter(commandQueue, 
+                   image, {},
+                   env.noOutputTemps[0].xlo, {xloEvent},
+                   &env.outputs[0][0],
+                   &env.outputTemps[0],
+                   env.level1)
+        );
     }
 
-    cl::Image2D lolo = rowFilter(commandQueue, xlo, level1.h0, 
-                                 {loEvent}, &loloEvent);
 
-    for (int l = 1; l < numLevels; ++l) {
+    for (int l = 1; l < env.numLevels; ++l) {
 
-        xlo = colDecimateFilter(commandQueue, lolo, level2.h0,
-                                {loloEvent}, &loEvent);
+        // The previous low-low has become the new base input
+        cl::Event xxEvent = loloEvent;
 
-        // High pass only when interested in the outcome
-        if (l >= startLevel) {
-                    }
+        // Apply the low pass filters, normal version
+        colDecimateFilter(commandQueue, 
+                          env.noOutputTemps[l-1].lolo, env.level2.h0, {xxEvent},
+                          &xloEvent, &env.noOutputTemps[l].xlo);
 
-        lolo = rowDecimateFilter(commandQueue, xlo, level2.h0,
-                                 {loEvent}, &loloEvent);
+        rowDecimateFilter(commandQueue, 
+                          env.noOutputTemps[l].xlo, env.level2.h0, {xloEvent},
+                          &loloEvent, &env.noOutputTemps[l].lolo);  
+
+
+        // Produce outputs only when interested in the outcome
+        if (l >= env.startLevel) 
+            std::vector<cl::Event> outEvents(
+                decimateFilter(commandQueue, 
+                               env.noOutputTemps[l-1].lolo, {loloEvent},
+                               env.noOutputTemps[l].xlo, {xloEvent},
+                               &env.outputs[l-env.startLevel][0],
+                               &env.outputTemps[l-env.startLevel],
+                               env.level2)
+            );
 
     }
 
-    return result;
 }
 
 

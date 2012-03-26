@@ -92,11 +92,9 @@ public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices);
 
-    std::vector<std::vector<cl::Image2D> >
-        operator() (cl::CommandQueue& commandQueue,
-                    cl::Image2D& image, 
-                    Filters level1, Filters level2,
-                    int numLevels, int startLevel);
+    void operator() (cl::CommandQueue& commandQueue,
+                     cl::Image2D& image, 
+                     DtcwtContext& env);
 
     // Create the set of images etc needed to perform a DTCWT calculation
     DtcwtContext createContext(size_t imageWidth, size_t imageHeight, 
