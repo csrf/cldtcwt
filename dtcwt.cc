@@ -90,6 +90,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 
 }
 
+#include <iostream>
 
 
 std::tuple<std::vector<std::vector<cl::Image2D>>,
@@ -145,7 +146,7 @@ Dtcwt::dummyFilter(size_t width, size_t height, cl::Image2D xlo)
 {
     // Take in the unfiltered and one-way filtered images
     OutputTemps outputTemps;
-    std::vector<cl::Image2D> out;
+    std::vector<cl::Image2D> out(6);
 
     // Allocate space for the results of filtering
     outputTemps.lox = rowFilter.dummyRun(width, height);
@@ -244,7 +245,7 @@ Dtcwt::dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo)
     // Take in the unfiltered and one-way filtered images
 
     OutputTemps outputTemps;
-    std::vector<cl::Image2D> out;
+    std::vector<cl::Image2D> out(6);
 
     // Allocate space for the results of filtering
     outputTemps.lox = rowDecimateFilter.dummyRun(width, height);
