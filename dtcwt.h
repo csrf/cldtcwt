@@ -71,7 +71,7 @@ private:
                const std::vector<cl::Event>& xloEvents,
                cl::Image2D* out, 
                OutputTemps* outputTemps,
-               Filters& filters)
+               Filters& filters);
 
     std::tuple<OutputTemps, std::vector<cl::Image2D>>
         dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
