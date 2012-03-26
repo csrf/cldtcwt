@@ -284,6 +284,26 @@ std::tuple<Filters, Filters>
 }
 
 
+
+void displayComplexImage(cl::CommandQueue& cq, cl::Image2D& image)
+{
+    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
+                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
+    float output[height][width][2];
+    readImage2D(cq, &output[0][0][0], image);
+
+    for (size_t y = 0; y < height; ++y) {
+        for (size_t x = 0; x < width; ++x)
+            std::cout << output[y][x][0] 
+                      << "+i*" << output[y][x][1]<< "\t";
+
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+}
+
+
 int main()
 {
     try {
@@ -309,7 +329,9 @@ int main()
         std::tie(level1, level2) = createFilters(context, commandQueue);
 
         int x = 0;
-        int numLevels = 4;
+        const int numLevels = 2;
+        const int startLevel = 0;
+
 
         //-----------------------------------------------------------------
         // Starting test code
@@ -323,155 +345,16 @@ int main()
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
 
+        Dtcwt dtcwt(context, devices);
 
-        QuadToComplex quadToComplex(context, devices);
-        ColFilter colFilter(context, devices);
-        RowFilter rowFilter(context, devices);
+        DtcwtContext env = dtcwt.createContext(width, height,
+                                               numLevels, startLevel);
 
-        std::vector<cl::Event> waitEvents(1);
+        dtcwt(commandQueue, inImage, env);
 
-        cl::Event decEvent;
-
-        cl::Image2D outImage
-            = colFilter(commandQueue, inImage, level1.h0,
-                                {}, &decEvent);
-
-        cl::Image2D outImage2
-            = rowFilter(commandQueue, outImage, level1.h0,
-                                {decEvent});
-        
-        cl::Image2D out1, out2;
-        std::tie(out1, out2) = quadToComplex(commandQueue, inImage);
-
-        //rowDecimateFilter(commandQueue, outImage, inImage, filters.level2h0,
-        //          false, 0, &waitEvents[0]);
-
-        for (int n = 0; n < 2; ++n) {
-
-            
-            cl::Image2D* currentImage;
-            switch (n) {
-            case 0: currentImage = &out1; break;
-            case 1: currentImage = &out2; break;
-            }
-
-            const size_t width = currentImage->getImageInfo<CL_IMAGE_WIDTH>(),
-                        height = currentImage->getImageInfo<CL_IMAGE_HEIGHT>();
-            float output[height][width][2];
-            readImage2D(commandQueue, &output[0][0][0], *currentImage);
-
-            for (size_t y = 0; y < height; ++y) {
-                for (size_t x = 0; x < width; ++x)
-                    std::cout << output[y][x][0] 
-                              << "+i*" << output[y][x][1]<< "\t";
-
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
-
-        float output[oHeight][oWidth];
-        readImage2D(commandQueue, &output[0][0], outImage2);
-
-        for (size_t y = 0; y < oHeight; ++y) {
-            for (size_t x = 0; x < oWidth/2; ++x)
-                std::cout << output[y][x] << "\t";
-
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
+        displayComplexImage(commandQueue, env.outputs[0][0]);
 
 
-
-
-
-
-        //-----------------------------------------------------------------
-
-#if 0
-///*    
-        while (1) {
-            videoIn >> vidImage;
-//*/
-            vidImage = inImage;
-
-            cv::Mat inputTmp;
-            vidImage.convertTo(inputTmp, CV_32F);
-
-            cv::Mat inputImg;
-            cvtColor(inputTmp, inputImg, CV_RGB2GRAY);
-            //cv::Mat input(vidImage.size(), CV_32FC4);
-
-            // Working in BGRA (for ref.)
-            // Now, put it into 4 channels
-            //int fromTo[] = {0,0, 0,1, 0,2, -1,3};
-            //cv::mixChannels(&inputTmp2, 1, &input, 1, fromTo, 4);
-
-            // Send to the graphics card
-            cl::Image2D img(createImage2D(context, inputImg));
-
-            // Do the calculations there
-            std::vector<std::vector<cl::Image2D> > results;
-            dtcwtTransform(context, commandQueue,
-                           results, img, filters, kernels,
-                           numLevels, 2);
-
-            const int l = 0;
-            int width = results[l][0].getImageInfo<CL_IMAGE_WIDTH>();
-            int height = results[l][0].getImageInfo<CL_IMAGE_HEIGHT>();
-
-            cv::Mat disp(height, width, CV_32FC1);
-
-            // Read them out
-///*
-
-            for (int n = 0; n < 6; ++n) {
-                cv::Mat re = getImage2D(commandQueue, results[l][n]);
-                cv::Mat im = getImage2D(commandQueue, results[l][n+6]);
-                //cv::Mat outArea = disp.colRange(n*width, (n+1)*width-1);
-                cv::sqrt(re.mul(re) + im.mul(im), disp);
-                cv::imshow(displays[n], disp / 64.0f);
-            }
-
-//*/
-            cl::Image2D mapImg;
-            cornernessMap(context, commandQueue, kernels.cornernessMap, 
-                          mapImg, results[l]);
-                          
-///*
-
-            cv::Mat map = getImage2D(commandQueue, mapImg);
-            cv::imshow("Cornerness", map / 32.0f);
-
-            cv::waitKey(1);
-            
-            // Display
-            std::cout << "Displayed! " << x++ <<  std::endl;
-
-//*/
-///*    
-        }
-//*/
-/*
-        for (int n = 0; n < numLevels; ++n) {
-            for (int m = 0; m < 6; ++m) {
-                cv::Mat re = filterer.getImage2D(results[n][m]);
-                cv::Mat im = filterer.getImage2D(results[n][m+6]);
-
-                //cv::imshow("Output", filteredImage + 0.5f);
-            
-                cv::imshow("Output", re);
-                cv::waitKey();
-
-                cv::imshow("Output", im);
-                cv::waitKey();
-                cv::imwrite("out.bmp", re);
-
-            }
-        }
-*/
-
-#endif
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
