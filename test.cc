@@ -9,6 +9,7 @@
 #include "filterer.h"
 #include "clUtil.h"
 #include "dtcwt.h"
+#include <iomanip>
 
 #include <stdexcept>
 struct dtcwtFilters {
@@ -330,7 +331,7 @@ int main()
 
         int x = 0;
         const int numLevels = 2;
-        const int startLevel = 0;
+        const int startLevel = 1;
 
 
         //-----------------------------------------------------------------
@@ -340,8 +341,12 @@ int main()
   
         cl::Image2D inImage = createImage2D(context, width, height);
         float input[height][width] = {0.0f};
-        input[4][2] = 1.0f;
-        input[4][3] = -1.0f;
+        for (int x = 4; x < width; ++x)
+            for (int y = 0; y < height; ++y)
+                input[x][y] = 1.0f;
+        //input[4][2] = 1.0f;
+        //
+        //input[4][3] = -1.0f;
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
         std::cout << "Creating Dtcwt" << std::endl;
@@ -356,7 +361,13 @@ int main()
         dtcwt(commandQueue, inImage, env);
 
         std::cout << "Displaying image" << std::endl;
-        displayComplexImage(commandQueue, env.outputs[0][0]);
+
+        std::cout << std::setiosflags(std::ios_base::right
+                        | std::ios_base::fixed)
+                  << std::setprecision(2);
+
+        for (auto& img: env.outputs[0])
+            displayComplexImage(commandQueue, img);
 
 
     }
