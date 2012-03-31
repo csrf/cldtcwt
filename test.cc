@@ -343,7 +343,7 @@ int main()
         float input[height][width] = {0.0f};
         for (int x = 4; x < width; ++x)
             for (int y = 0; y < height; ++y)
-                input[x][y] = 1.0f;
+                input[y][x] = 1.0f;
         //input[4][2] = 1.0f;
         //
         //input[4][3] = -1.0f;
