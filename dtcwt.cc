@@ -12,7 +12,8 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices)
 
 // Create the set of images etc needed to perform a DTCWT calculation
 DtcwtContext Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
-                                  size_t numLevels, size_t startLevel)
+                                  size_t numLevels, size_t startLevel,
+                                  Filters level1In, Filters level2In)
 {
     DtcwtContext context;
 
@@ -28,6 +29,12 @@ DtcwtContext Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
              context.outputTemps,
              context.noOutputTemps)
         = dummyRun(imageWidth, imageHeight, numLevels, startLevel);
+
+
+    // Take copies of the filters
+    context.level1 = level1In;
+    context.level2 = level2In;
+
 
     return context;
 }

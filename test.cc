@@ -345,12 +345,19 @@ int main()
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
 
+        std::cout << "Width:\t"
+                  << inImage.getImageInfo<CL_IMAGE_WIDTH>()
+                  << "\nHeight:\t"
+                  << inImage.getImageInfo<CL_IMAGE_HEIGHT>()
+                  << std::endl;
+
         std::cout << "Creating Dtcwt" << std::endl;
         Dtcwt dtcwt(context, devices);
 
         std::cout << "Creating environment" << std::endl;
         DtcwtContext env = dtcwt.createContext(width, height,
-                                               numLevels, startLevel);
+                                               numLevels, startLevel,
+                                               level1, level2);
 
         std::cout << "Running DTCWT" << std::endl;
         dtcwt(commandQueue, inImage, env);

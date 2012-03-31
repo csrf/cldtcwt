@@ -98,7 +98,8 @@ public:
 
     // Create the set of images etc needed to perform a DTCWT calculation
     DtcwtContext createContext(size_t imageWidth, size_t imageHeight, 
-                               size_t numLevels, size_t startLevel);
+                               size_t numLevels, size_t startLevel,
+                               Filters level1, Filters level2);
 
 };
 
