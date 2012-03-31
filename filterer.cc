@@ -9,7 +9,7 @@
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
 cl::Sampler createSampler(cl::Context& context)
 {
-    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
+    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_MIRRORED_REPEAT,
                        CL_FILTER_NEAREST);
 }
 
