@@ -40,7 +40,6 @@ DtcwtContext Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 }
 
 
-#include <iostream>
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                         cl::Image2D& image, 
@@ -48,15 +47,12 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 {
     cl::Event xloEvent, loloEvent;
 
-    std::cout << "0" << std::endl;
     // Apply the non-decimating, special low pass filters that must be needed
     colFilter(commandQueue, image, env.level1.h0, {},
               &xloEvent, &env.noOutputTemps[0].xlo);
-    std::cout << "1" << std::endl;
     rowFilter(commandQueue, env.noOutputTemps[0].xlo, env.level1.h0, {xloEvent},
               &loloEvent, &env.noOutputTemps[0].lolo);  
 
-    std::cout << "a" << std::endl;
 
     if (env.startLevel == 0) {
         // Optionally create the parts that are needed, if an output is
@@ -71,7 +67,6 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
         );
     }
 
-    std::cout << "b" << std::endl;
 
     for (int l = 1; l < env.numLevels; ++l) {
 

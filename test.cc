@@ -344,13 +344,6 @@ int main()
         input[4][3] = -1.0f;
 
         writeImage2D(commandQueue, inImage, &input[0][0]);
-
-        std::cout << "Width:\t"
-                  << inImage.getImageInfo<CL_IMAGE_WIDTH>()
-                  << "\nHeight:\t"
-                  << inImage.getImageInfo<CL_IMAGE_HEIGHT>()
-                  << std::endl;
-
         std::cout << "Creating Dtcwt" << std::endl;
         Dtcwt dtcwt(context, devices);
 
