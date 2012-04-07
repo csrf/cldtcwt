@@ -91,23 +91,19 @@ int main()
         // Ready the command queue on the first device to hand
         cl::CommandQueue commandQueue(context, devices[0]);
 
-        Filters level1, level2;
-        std::tie(level1, level2) = createFilters(context, commandQueue);
 
-        int x = 0;
         const int numLevels = 2;
         const int startLevel = 0;
 
 
         //-----------------------------------------------------------------
         // Starting test code
-        const size_t width = 8, height = 12;
-        const size_t oWidth = 8, oHeight = 12;
+        const size_t width = 640, height = 480;
   
         cl::Image2D inImage = createImage2D(context, width, height);
         float input[height][width] = {0.0f};
-        for (int x = 4; x < width; ++x)
-            for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            for (int y = x; y < height; ++y)
                 input[y][x] = 1.0f;
         //input[4][2] = 1.0f;
         //
@@ -118,6 +114,10 @@ int main()
         Dtcwt dtcwt(context, devices);
 
         std::cout << "Creating environment" << std::endl;
+
+        Filters level1, level2;
+        std::tie(level1, level2) = createFilters(context, commandQueue);
+
         DtcwtContext env = dtcwt.createContext(width, height,
                                                numLevels, startLevel,
                                                level1, level2);
