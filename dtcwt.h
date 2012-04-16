@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <tuple>
+#include <array>
 
 struct Filters {
     // Low pass, high pass and band pass coefficients (respectively)
@@ -28,6 +29,7 @@ struct OutputTemps {
     cl::Image2D lox, lohi, hilo, xbp, bpbp;
 };
 
+typedef std::array<cl::Image2D, 6> Subbands;
 
 struct DtcwtContext {
     size_t width, height;
@@ -39,7 +41,7 @@ struct DtcwtContext {
     Filters level1, level2;
 
     // Outputs
-    std::vector<std::vector<cl::Image2D>> outputs;
+    std::vector<Subbands> outputs;
 };
 
 
@@ -53,14 +55,14 @@ private:
     RowDecimateFilter rowDecimateFilter;
     QuadToComplex quadToComplex;
 
-    std::tuple<std::vector<std::vector<cl::Image2D>>,
+    std::tuple<std::vector<Subbands>,
                std::vector<OutputTemps>,
                std::vector<NoOutputTemps>>
         dummyRun(size_t width, size_t height, int numLevels, int startLevel);
 
-    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+    std::tuple<OutputTemps, Subbands>
         dummyFilter(size_t width, size_t height, cl::Image2D xlo);
-    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+    std::tuple<OutputTemps, Subbands>
         dummyFilter(cl::Image2D xx, cl::Image2D xlo);
 
     std::vector<cl::Event> 
@@ -73,9 +75,9 @@ private:
                OutputTemps* outputTemps,
                Filters& filters);
 
-    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+    std::tuple<OutputTemps, Subbands>
         dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
-    std::tuple<OutputTemps, std::vector<cl::Image2D>>
+    std::tuple<OutputTemps, Subbands>
         dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo);
 
     std::vector<cl::Event>

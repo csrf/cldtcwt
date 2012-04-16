@@ -100,12 +100,12 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 
 
 
-std::tuple<std::vector<std::vector<cl::Image2D>>,
+std::tuple<std::vector<Subbands>,
            std::vector<OutputTemps>,
            std::vector<NoOutputTemps>>
 Dtcwt::dummyRun(size_t width, size_t height, int numLevels, int startLevel)
 {
-    std::vector<std::vector<cl::Image2D>> out;
+    std::vector<Subbands> out;
     std::vector<OutputTemps> outTemps;
     std::vector<NoOutputTemps> noOutTemps;
 
@@ -118,7 +118,7 @@ Dtcwt::dummyRun(size_t width, size_t height, int numLevels, int startLevel)
         // Optionally create the parts that are needed, if an output is
         // required
         outTemps.push_back(OutputTemps());
-        out.push_back(std::vector<cl::Image2D>(6));
+        out.push_back(Subbands());
         std::tie(outTemps.back(), out.back())
             = dummyFilter(width, height, noOutTemps.back().xlo);
     }
@@ -136,7 +136,7 @@ Dtcwt::dummyRun(size_t width, size_t height, int numLevels, int startLevel)
         // Produce outputs only when interested in the outcome
         if (l >= startLevel) {
             outTemps.push_back(OutputTemps());
-            out.push_back(std::vector<cl::Image2D>(6));
+            out.push_back(Subbands());
             std::tie(outTemps.back(), out.back())
                 = dummyDecimateFilter((noOutTemps.end()-2)->lolo, 
                                       noOutTemps.back().xlo);
@@ -148,12 +148,12 @@ Dtcwt::dummyRun(size_t width, size_t height, int numLevels, int startLevel)
 
 
 
-std::tuple<OutputTemps, std::vector<cl::Image2D>>
+std::tuple<OutputTemps, Subbands>
 Dtcwt::dummyFilter(size_t width, size_t height, cl::Image2D xlo)
 {
     // Take in the unfiltered and one-way filtered images
     OutputTemps outputTemps;
-    std::vector<cl::Image2D> out(6);
+    Subbands out;
 
     // Allocate space for the results of filtering
     outputTemps.lox = rowFilter.dummyRun(width, height);
@@ -175,7 +175,7 @@ Dtcwt::dummyFilter(size_t width, size_t height, cl::Image2D xlo)
 }
 
 
-std::tuple<OutputTemps, std::vector<cl::Image2D>>
+std::tuple<OutputTemps, Subbands>
 Dtcwt::dummyFilter(cl::Image2D xx, cl::Image2D xlo)
 {
     // Version for when we are given all images
@@ -246,13 +246,13 @@ std::vector<cl::Event> Dtcwt::filter(cl::CommandQueue& commandQueue,
 
 
 
-std::tuple<OutputTemps, std::vector<cl::Image2D>>
+std::tuple<OutputTemps, Subbands>
 Dtcwt::dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo)
 {
     // Take in the unfiltered and one-way filtered images
 
     OutputTemps outputTemps;
-    std::vector<cl::Image2D> out(6);
+    Subbands out;
 
     // Allocate space for the results of filtering
     outputTemps.lox = rowDecimateFilter.dummyRun(width, height);
@@ -274,7 +274,7 @@ Dtcwt::dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo)
 }
 
 
-std::tuple<OutputTemps, std::vector<cl::Image2D>>
+std::tuple<OutputTemps, Subbands>
 Dtcwt::dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo)
 {
     // Version for when we are given all images
