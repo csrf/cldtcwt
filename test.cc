@@ -13,7 +13,15 @@
 
 #include <stdexcept>
 
+#include <cv.h>
+#include <highgui.h>
 
+
+std::tuple<cl::Platform, std::vector<cl::Device>, 
+           cl::Context, cl::CommandQueue> 
+    initOpenCL();
+
+cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
 
 std::tuple<Filters, Filters>
         createFilters(cl::Context& context, cl::CommandQueue& commandQueue)
@@ -74,65 +82,44 @@ int main()
 {
     try {
 
-        // Retrive platform information
-        std::vector<cl::Platform> platforms;
-        cl::Platform::get(&platforms);
-
-        if (platforms.size() == 0)
-            throw std::runtime_error("No platforms!");
-
+        cl::Platform platform;
         std::vector<cl::Device> devices;
-        platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        cl::Context context;
+        cl::CommandQueue commandQueue; 
+        std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
-        // Create a context to work in 
-        cl::Context context(devices);
-
-
-        // Ready the command queue on the first device to hand
-        cl::CommandQueue commandQueue(context, devices[0]);
-
-
-        const int numLevels = 2;
-        const int startLevel = 0;
+        const int numLevels = 8;
+        const int startLevel = 1;
 
 
         //-----------------------------------------------------------------
         // Starting test code
-        const size_t width = 640, height = 480;
   
-        cl::Image2D inImage = createImage2D(context, width, height);
-        float input[height][width] = {0.0f};
-        for (int x = 0; x < width; ++x)
-            for (int y = x; y < height; ++y)
-                input[y][x] = 1.0f;
-        //input[4][2] = 1.0f;
-        //
-        //input[4][3] = -1.0f;
+        // Read in image
+        cv::Mat bmp = cv::imread("test.bmp", 0);
+        cl::Image2D inImage = createImage2D(context, bmp);
 
-        writeImage2D(commandQueue, inImage, &input[0][0]);
+        std::cout << bmp.rows << " " << bmp.cols << std::endl;
         std::cout << "Creating Dtcwt" << std::endl;
         Dtcwt dtcwt(context, devices);
-
-        std::cout << "Creating environment" << std::endl;
 
         Filters level1, level2;
         std::tie(level1, level2) = createFilters(context, commandQueue);
 
-        DtcwtContext env = dtcwt.createContext(width, height,
+        DtcwtContext env = dtcwt.createContext(bmp.cols, bmp.rows,
                                                numLevels, startLevel,
                                                level1, level2);
 
         std::cout << "Running DTCWT" << std::endl;
-        dtcwt(commandQueue, inImage, env);
+        for (int n = 0; n < 100; ++n) {
+            dtcwt(commandQueue, inImage, env);
+            commandQueue.finish();
+        }
 
         std::cout << "Displaying image" << std::endl;
 
-        std::cout << std::setiosflags(std::ios_base::right
-                        | std::ios_base::fixed)
-                  << std::setprecision(2);
-
-        for (auto& img: env.outputs[0])
-            displayComplexImage(commandQueue, img);
+        //for (auto& img: env.outputs[0])
+        //    displayComplexImage(commandQueue, img);
 
 
     }
@@ -144,5 +131,55 @@ int main()
     return 0;
 }
 
+
+std::tuple<cl::Platform, std::vector<cl::Device>, 
+           cl::Context, cl::CommandQueue> 
+initOpenCL()
+{
+    // Get platform, devices, command queue
+
+    // Retrive platform information
+    std::vector<cl::Platform> platforms;
+    cl::Platform::get(&platforms);
+
+    if (platforms.size() == 0)
+        throw std::runtime_error("No platforms!");
+
+    std::vector<cl::Device> devices;
+    platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+    // Create a context to work in 
+    cl::Context context(devices);
+
+    // Ready the command queue on the first device to hand
+    cl::CommandQueue commandQueue(context, devices[0]);
+
+    return std::make_tuple(platforms[0], devices, context, commandQueue);
+}
+
+
+cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat)
+{
+    if (mat.type() == CV_32F) {
+        // If in the right format already, just create the image and point
+        // it to the data
+        return cl::Image2D(context, 
+                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                           cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+                           mat.cols, mat.rows, 0,
+                           mat.ptr());
+    } else {
+        // We need to get it into the right format first.  Convert then
+        // send
+        cv::Mat floatedMat;
+        mat.convertTo(floatedMat, CV_32F);
+
+        return cl::Image2D(context, 
+                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                           cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+                           floatedMat.cols, floatedMat.rows, 0,
+                           floatedMat.ptr());
+    }
+}
 
 
