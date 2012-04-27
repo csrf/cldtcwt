@@ -11,6 +11,8 @@
 #include "dtcwt.h"
 #include <iomanip>
 
+#include <ctime>
+
 #include <stdexcept>
 
 #include <cv.h>
@@ -111,10 +113,16 @@ int main()
                                                level1, level2);
 
         std::cout << "Running DTCWT" << std::endl;
-        for (int n = 0; n < 100; ++n) {
+
+	time_t start, end;
+	time(&start);
+        for (int n = 0; n < 1000; ++n) {
             dtcwt(commandQueue, inImage, env);
             commandQueue.finish();
         }
+	time(&end);
+	std::cout << "1000 iterations in " << difftime(end, start)
+		  << "s" << std::endl;
 
         std::cout << "Displaying image" << std::endl;
 
