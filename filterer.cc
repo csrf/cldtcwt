@@ -23,6 +23,7 @@ ColFilter::ColFilter(cl::Context& context_,
         "__kernel void colFilter(__read_only image2d_t input,           \n"
         "                        sampler_t inputSampler,                \n"
         "                        __global const float* filter,          \n"
+        "                        __local float* filterLocal,      \n"
         "                        const int filterLength,                \n"
         "                        __write_only image2d_t output)         \n"
         "{                                                              \n"
@@ -31,13 +32,20 @@ ColFilter::ColFilter(cl::Context& context_,
         "    int x = get_global_id(0);                                  \n"
         "    int y = get_global_id(1);                                  \n"
         "                                                               \n"
-        "     // Results for each of the two trees                      \n"
+        "    if (y >= get_image_height(output))                         \n"
+        "         return;                                               \n"
+        "                                                               \n"
+        "    for (int j = 0; j < filterLength; ++j)                     \n"
+        "    filterLocal[j] = filter[j];				\n"
+    	"    barrier(CLK_LOCAL_MEM_FENCE);				\n"
+        "								\n"
+        "    // Results for each of the two trees                       \n"
         "    float out = 0.0f;                                          \n"
         "                                                               \n"
         "    // Apply the filter forward                                \n"
         "    int startY = y - (filterLength-1) / 2;                     \n"
         "    for (int i = 0; i < filterLength; ++i)                     \n"
-        "        out += filter[filterLength-1-i] *                      \n"
+        "        out += filterLocal[filterLength-1-i] *                 \n"
         "                read_imagef(input, inputSampler,               \n"
         "                            (int2) (x, startY + i)).x;         \n"
         "                                                               \n"
@@ -53,7 +61,14 @@ ColFilter::ColFilter(cl::Context& context_,
 
     // Compile it...
     cl::Program program(context, source);
-    program.build(devices);
+    try {
+	program.build(devices);
+    } catch(cl::Error err) {
+	    std::cerr 
+		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
+		    << std::endl;
+	    throw;
+    } 
         
     // ...and extract the useful part, viz the kernel
     kernel = cl::Kernel(program, "colFilter");
@@ -97,6 +112,7 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
     const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
               height = output.getImageInfo<CL_IMAGE_HEIGHT>();
  
+
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
@@ -105,14 +121,19 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
     kernel.setArg(0, input);
     kernel.setArg(1, sampler);
     kernel.setArg(2, filter);
-    kernel.setArg(3, filterLength);
-    kernel.setArg(4, output);
+    kernel.setArg(3, cl::__local(sizeof(float) * filterLength));
+    kernel.setArg(4, filterLength);
+    kernel.setArg(5, output);
 
+    int heightWG = 32;
+    cl::NDRange WorkgroupSize = {1, heightWG};
+    int numVertWGs = height / heightWG + (height % heightWG) ? 1 : 0; 
+    cl::NDRange GlobalSize = {width, heightWG * numVertWGs }; 
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
-                                      cl::NDRange(width, height),
-                                      cl::NullRange,
+                                      GlobalSize,
+                                      WorkgroupSize,
                                       &waitEvents, doneEvent);
 
     return output;
