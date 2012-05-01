@@ -24,6 +24,7 @@ ColFilter::ColFilter(cl::Context& context_,
         "                        sampler_t inputSampler,                \n"
         "                        __global const float* filter,          \n"
         "                        __local float* filterLocal,      \n"
+        "                        __local float* inputLocal,      \n"
         "                        const int filterLength,                \n"
         "                        __write_only image2d_t output)         \n"
         "{                                                              \n"
@@ -32,25 +33,34 @@ ColFilter::ColFilter(cl::Context& context_,
         "    int x = get_global_id(0);                                  \n"
         "    int y = get_global_id(1);                                  \n"
         "                                                               \n"
-        "    if (y >= get_image_height(output))                         \n"
-        "         return;                                               \n"
         "                                                               \n"
         "    for (int j = 0; j < filterLength; ++j)                     \n"
-        "    filterLocal[j] = filter[j];				\n"
-    	"    barrier(CLK_LOCAL_MEM_FENCE);				\n"
-        "								\n"
+        "       filterLocal[j] = filter[j];				                \n"
+        "                                                               \n"
+        "    int startRange = get_group_id(1) * get_local_size(1)       \n"
+        "                       - (filterLength-1) / 2;                 \n"
+        "    int stopRange = (get_group_id(1)+1) * get_local_size(1)    \n"
+        "                       - (filterLength-1) / 2                  \n"
+        "                       + filterLength;                         \n"
+        "                                                               \n"
+        "    for (int i = startRange; i < stopRange; ++i)               \n"
+        "        inputLocal[i-startRange]                               \n"
+        "              = read_imagef(input, inputSampler,       \n"
+        "                            (int2) (x, i)).x;                  \n"
+        "                                                               \n"
+    	"    barrier(CLK_LOCAL_MEM_FENCE);				                \n"
+        "							                                	\n"
         "    // Results for each of the two trees                       \n"
         "    float out = 0.0f;                                          \n"
         "                                                               \n"
         "    // Apply the filter forward                                \n"
-        "    int startY = y - (filterLength-1) / 2;                     \n"
         "    for (int i = 0; i < filterLength; ++i)                     \n"
         "        out += filterLocal[filterLength-1-i] *                 \n"
-        "                read_imagef(input, inputSampler,               \n"
-        "                            (int2) (x, startY + i)).x;         \n"
+        "                inputLocal[get_group_id(1) + i];               \n"  
         "                                                               \n"
         "    // Output position is r rows down, plus 2*c along (because \n"
         "    // the outputs from two trees are interleaved)             \n"
+        "    if (y < get_image_height(output))                         \n"
         "    write_imagef(output, (int2) (x, y), out);                  \n"
         "}                                                              \n"
         "\n";
@@ -117,18 +127,20 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
     // the setArg function doesn't understand its type properly.
     const int filterLength = filter.getInfo<CL_MEM_SIZE>() / sizeof(float);
 
+    int heightWG = 16;
+    cl::NDRange WorkgroupSize = {1, heightWG};
+    int numVertWGs = height / heightWG + (height % heightWG) ? 1 : 0; 
+    cl::NDRange GlobalSize = {width, heightWG * numVertWGs }; 
+
+
     // Set all the arguments
     kernel.setArg(0, input);
     kernel.setArg(1, sampler);
     kernel.setArg(2, filter);
     kernel.setArg(3, cl::__local(sizeof(float) * filterLength));
-    kernel.setArg(4, filterLength);
-    kernel.setArg(5, output);
-
-    int heightWG = 32;
-    cl::NDRange WorkgroupSize = {1, heightWG};
-    int numVertWGs = height / heightWG + (height % heightWG) ? 1 : 0; 
-    cl::NDRange GlobalSize = {width, heightWG * numVertWGs }; 
+    kernel.setArg(4, cl::__local(sizeof(float) * (filterLength + heightWG)));
+    kernel.setArg(5, filterLength);
+    kernel.setArg(6, output);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
