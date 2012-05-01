@@ -61,22 +61,29 @@ std::tuple<Filters, Filters>
 
 
 
-void displayComplexImage(cl::CommandQueue& cq, cl::Image2D& image)
+void saveComplexImage(std::string filename,
+                      cl::CommandQueue& cq, cl::Image2D& image)
 {
     const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
                 height = image.getImageInfo<CL_IMAGE_HEIGHT>();
     float output[height][width][2];
     readImage2D(cq, &output[0][0][0], image);
 
+    // Open the file for output
+    std::ofstream out(filename, std::ios_base::trunc | std::ios_base::out);
+
+    // Produce the output in a file readable by MATLAB dlmread
     for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x)
-            std::cout << output[y][x][0] 
-                      << "+i*" << output[y][x][1]<< "\t";
+        for (size_t x = 0; x < width; ++x) {
+            out << output[y][x][0]
+                << (output[y][x] >= 0? "+" : "")
+                << output[y][x][1] << "j"
+                << ((x+1) < width? "," : "");
+        }
 
-        std::cout << std::endl;
+        if ((y+1) < height)
+            out << "\n";
     }
-
-    std::cout << std::endl;
 }
 
 
@@ -114,22 +121,17 @@ int main()
 
         std::cout << "Running DTCWT" << std::endl;
 
-	time_t start, end;
-    const int numFrames = 500;
-	time(&start);
-        for (int n = 0; n < numFrames; ++n) {
-            dtcwt(commandQueue, inImage, env);
-            commandQueue.finish();
-        }
-	time(&end);
-	std::cout << (numFrames / difftime(end, start))
-		  << " fps" << std::endl;
+        dtcwt(commandQueue, inImage, env);
+        commandQueue.finish();
 
-        std::cout << "Displaying image" << std::endl;
+        std::cout << "Saving image" << std::endl;
 
-        //for (auto& img: env.outputs[0])
-        //    displayComplexImage(commandQueue, img);
-
+        saveComplexImage("sb0.dat", commandQueue, env.outputs[0][0]);
+        saveComplexImage("sb1.dat", commandQueue, env.outputs[0][1]);
+        saveComplexImage("sb2.dat", commandQueue, env.outputs[0][2]);
+        saveComplexImage("sb3.dat", commandQueue, env.outputs[0][3]);
+        saveComplexImage("sb4.dat", commandQueue, env.outputs[0][4]);
+        saveComplexImage("sb5.dat", commandQueue, env.outputs[0][5]);
 
     }
     catch (cl::Error err) {
