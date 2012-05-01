@@ -90,7 +90,7 @@ int main()
         cl::CommandQueue commandQueue; 
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
-        const int numLevels = 8;
+        const int numLevels = 6;
         const int startLevel = 1;
 
 
@@ -115,14 +115,15 @@ int main()
         std::cout << "Running DTCWT" << std::endl;
 
 	time_t start, end;
+    const int numFrames = 500;
 	time(&start);
-        for (int n = 0; n < 1000; ++n) {
+        for (int n = 0; n < numFrames; ++n) {
             dtcwt(commandQueue, inImage, env);
             commandQueue.finish();
         }
 	time(&end);
-	std::cout << "1000 iterations in " << difftime(end, start)
-		  << "s" << std::endl;
+	std::cout << (numFrames / difftime(end, start))
+		  << " fps" << std::endl;
 
         std::cout << "Displaying image" << std::endl;
 
