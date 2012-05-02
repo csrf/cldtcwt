@@ -114,16 +114,18 @@ int main()
 
         std::cout << "Running DTCWT" << std::endl;
 
-	time_t start, end;
-    const int numFrames = 500;
-	time(&start);
-        for (int n = 0; n < numFrames; ++n) {
-            dtcwt(commandQueue, inImage, env);
-            commandQueue.finish();
-        }
-	time(&end);
-	std::cout << (numFrames / difftime(end, start))
+        time_t start, end;
+        const int numFrames = 500;
+        time(&start);
+            for (int n = 0; n < numFrames; ++n) {
+                dtcwt(commandQueue, inImage, env);
+                commandQueue.finish();
+            }
+        time(&end);
+        std::cout << (numFrames / difftime(end, start))
 		  << " fps" << std::endl;
+        std::cout << numFrames << " frames in " 
+                  << difftime(end, start) << "s" << std::endl;
 
         std::cout << "Displaying image" << std::endl;
 
