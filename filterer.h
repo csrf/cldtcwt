@@ -62,6 +62,41 @@ private:
 };
 
 
+
+
+class Filter {
+// Class that provides filtering capabilities
+
+public:
+
+    Filter(cl::Context& context,
+           const std::vector<cl::Device>& devices,
+           cl::Buffer coefficients,
+           int dimension);
+
+    // The filter operation
+    void operator() (cl::CommandQueue& commandQueue,
+           const cl::Image2D& input,
+           cl::Image2D& output,
+           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+           cl::Event* doneEvent = nullptr);
+
+    // Create an image with the right size to hold the output
+    cl::Image2D dummyRun(const cl::Image2D& input);
+    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
+
+private:
+    cl::Context context_;
+    cl::Kernel kernel_;
+    cl::Buffer coefficients_;
+    const int dimension_;
+
+    const int wgSize0_;
+    const int wgSize1_;
+};
+
+
+
 class ColFilter {
     // Class that provides column filtering capabilities
 
