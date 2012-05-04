@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <fstream>
 
 // Central sampler creating function (to make changing the addressing
@@ -19,8 +20,10 @@ ColFilter::ColFilter(cl::Context& context_,
    : context(context_)
 {
     // The OpenCL kernel:
-    const std::string sourceCode = 
-        "__kernel void colFilter(__read_only image2d_t input,           \n"
+    std::ostringstream kernelInput;
+
+    kernelInput
+    << "__kernel void colFilter(__read_only image2d_t input,           \n"
         "                        sampler_t inputSampler,                \n"
         "                        __constant float* filter,          \n"
         "                        __local float* inputLocal,      \n"
@@ -64,6 +67,8 @@ ColFilter::ColFilter(cl::Context& context_,
         "    write_imagef(output, (int2) (x, y), out);                  \n"
         "}                                                              \n"
         "\n";
+
+    const std::string sourceCode = kernelInput.str();
 
     // Bundle the code up
     cl::Program::Sources source;
