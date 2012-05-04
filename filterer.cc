@@ -24,12 +24,16 @@ ColFilter::ColFilter(cl::Context& context_,
 
     kernelInput
     << "__kernel void colFilter(__read_only image2d_t input,           \n"
-        "                        sampler_t inputSampler,                \n"
         "                        __constant float* filter,          \n"
         "                        __local float* inputLocal,      \n"
         "                        const int filterLength,                \n"
         "                        __write_only image2d_t output)         \n"
         "{                                                              \n"
+        "sampler_t inputSampler ="
+            "CLK_NORMALIZED_COORDS_FALSE"
+            "| CLK_ADDRESS_MIRRORED_REPEAT"
+            "| CLK_FILTER_NEAREST;"
+
         "    // Row wise filter.  filter must be odd-lengthed           \n"
         "    // Coordinates in output frame                             \n"
         "    int x = get_global_id(0);                                  \n"
@@ -139,11 +143,10 @@ cl::Image2D ColFilter::operator() (cl::CommandQueue& commandQueue,
 
     // Set all the arguments
     kernel.setArg(0, input);
-    kernel.setArg(1, sampler);
-    kernel.setArg(2, filter);
-    kernel.setArg(3, cl::__local(sizeof(float) * (filterLength + heightWG)));
-    kernel.setArg(4, filterLength);
-    kernel.setArg(5, output);
+    kernel.setArg(1, filter);
+    kernel.setArg(2, cl::__local(sizeof(float) * (filterLength + heightWG)));
+    kernel.setArg(3, filterLength);
+    kernel.setArg(4, output);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange,
