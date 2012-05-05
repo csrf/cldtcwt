@@ -23,72 +23,103 @@ Filter::Filter(cl::Context& context,
                cl::Buffer coefficients,
                int dimension)
    : context_(context), coefficients_(coefficients), dimension_(dimension),
-     wgSize0_(1), wgSize1_(16)
+     wgSize0_(16), wgSize1_(16)
 {
     // The OpenCL kernel:
     std::ostringstream kernelInput;
+
+    // Filter must be odd-lengthed
 
     // Need to work out the filter length; if this value is passed directly,
     // the setArg function doesn't understand its type properly.
     const int filterLength = coefficients_.getInfo<CL_MEM_SIZE>() 
                                 / sizeof(float);
 
-    const int inputLocalSize =        
-        (dimension == 0) ?
-            ((wgSize0_ + filterLength - 1) * wgSize1_)
-           :((wgSize1_ + filterLength - 1) * wgSize0_);
+    const int offset = (filterLength-1) / 2;
+
+    const int inputLocalSize0 = wgSize0_
+                          + ((dimension == 0) ? (filterLength - 1) : 0);
+    const int inputLocalSize1 = wgSize1_
+                          + ((dimension == 1) ? (filterLength - 1) : 0);
 
     kernelInput
     << "__kernel void filter(__read_only image2d_t input,           \n"
         "                        __write_only image2d_t output,         \n"
         "                        __constant float* filter)          \n"
         "{                                                              \n"
-        "sampler_t inputSampler ="
-            "CLK_NORMALIZED_COORDS_FALSE"
-            "| CLK_ADDRESS_MIRRORED_REPEAT"
-            "| CLK_FILTER_NEAREST;"
+            "sampler_t inputSampler ="
+                "CLK_NORMALIZED_COORDS_FALSE"
+                "| CLK_ADDRESS_MIRRORED_REPEAT"
+                "| CLK_FILTER_NEAREST;"
 
-        "__local float inputLocal[" << inputLocalSize << "];"
+            "__local float inputLocal[" << inputLocalSize1 << "]"
+                                    "[" << inputLocalSize0 << "];"
 
-        "const int filterLength = " << filterLength << ";"
+            "const int filterLength = " << filterLength << ";"
 
-        "    // Row wise filter.  filter must be odd-lengthed           \n"
-        "    // Coordinates in output frame                             \n"
-        "    int x = get_global_id(0);                                  \n"
-        "    int y = get_global_id(1);                                  \n"
-        "                                                               \n"
-        "    const int offset = (filterLength-1) / 2;                 \n"
-        "    const int l = get_local_id(1);                             \n"
-        "                                                               \n"
-        "    if (l >= (get_local_size(1) - offset))                    \n"
-        "       inputLocal[l - (get_local_size(1) - offset)]             \n"
-        "          = read_imagef(input, inputSampler,                   \n"
-        "                        (int2) (x, y - get_local_size(1))).x; \n"
-        "                                                               \n"
-        "    inputLocal[l]             \n"
-        "       = read_imagef(input, inputSampler, (int2) (x, y)).x; \n"
-        "                                                               \n"
-        "    if (l < (filterLength - offset))                    \n"
-        "       inputLocal[l + get_local_size(1) + offset]             \n"
-        "          = read_imagef(input, inputSampler,                   \n"
-        "                        (int2) (x, y + get_local_size(1))).x; \n"
-        "                                                               \n"
-    	"    barrier(CLK_LOCAL_MEM_FENCE);				                \n"
-        "							                                	\n"
-        "    // Results for each of the two trees                       \n"
-        "    float out = 0.0f;                                          \n"
-        "                                                               \n"
-        "    // Apply the filter forward                                \n"
-        "    for (int i = 0; i < filterLength; ++i)                     \n"
-        "        out += filter[filterLength-1-i] *                 \n"
-        "                inputLocal[get_group_id(1) + i];               \n"  
-        "                                                               \n"
-        "    // Output position is r rows down, plus 2*c along (because \n"
-        "    // the outputs from two trees are interleaved)             \n"
-        "    if (y < get_image_height(output))                         \n"
-        "    write_imagef(output, (int2) (x, y), out);                  \n"
-        "}                                                              \n"
-        "\n";
+            "const int g0 = get_global_id(0),"
+                      "g1 = get_global_id(1),"
+                      "l0 = get_local_id(0),"
+                      "l1 = get_local_id(1);\n";
+
+    if (dimension_ == 1) {
+
+        kernelInput << 
+            // Load the local store
+            "if (l1 >= " << wgSize1_ - offset << ")"
+                "inputLocal[l1 - " << (wgSize1_ - offset) << "][l0]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (g0, g1 - " << wgSize1_ << ")).x;\n"
+
+            "inputLocal[l1 + " << offset << "][l0]"
+                "= read_imagef(input, inputSampler, (int2) (g0, g1)).x;\n"
+
+            "if (l1 < " << offset << ")"
+                "inputLocal[l1 + " << (offset + wgSize1_) << "][l0]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (g0, g1 + " << wgSize1_ << ")).x;"
+
+            "barrier(CLK_LOCAL_MEM_FENCE);"
+
+            // Do the filtering
+            "float out = 0.0f;"
+            "for (int i = 0; i < filterLength; ++i)"
+                 "out += filter[filterLength-1-i] *"
+                         "inputLocal[l1 + i][l0];";
+
+    } else if (dimension_ == 0) {
+
+        kernelInput << 
+            // Load the local store
+            "if (l0 >= " << wgSize1_ - offset << ")"
+                "inputLocal[l1][l0 - " << (wgSize0_ - offset) << "]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (g0 - " << wgSize0_ << ", g1)).x;\n"
+
+            "inputLocal[l1][l0 + " << offset << "]"
+                "= read_imagef(input, inputSampler, (int2) (g0, g1)).x;\n"
+
+            "if (l0 < " << offset << ")"
+                "inputLocal[l1][l0 + " << (offset + wgSize0_) << "]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (g0 + " << wgSize0_ << ", g1)).x;"
+
+            "barrier(CLK_LOCAL_MEM_FENCE);"
+
+            // Do the filtering
+            "float out = 0.0f;"
+            "for (int i = 0; i < filterLength; ++i)"
+                 "out += filter[filterLength-1-i] *"
+                         "inputLocal[l1][l0+i];";  
+ 
+    }
+            
+    kernelInput <<
+            // Write the result
+            "if (g0 < get_image_width(output)"
+             "&& g1 < get_image_height(output))"
+                "write_imagef(output, (int2) (g0, g1), out);"
+        "}";
 
     const std::string sourceCode = kernelInput.str();
 
@@ -114,7 +145,10 @@ Filter::Filter(cl::Context& context,
     kernel_.setArg(2, coefficients_);
 }
 
-
+static int roundWGs(int l, int lWG)
+{
+    return lWG * (l / lWG + ((l % lWG) ? 1 : 0)); 
+}
 
 void Filter::operator() 
       (cl::CommandQueue& commandQueue,
@@ -137,10 +171,9 @@ void Filter::operator()
     const int filterLength = coefficients_.getInfo<CL_MEM_SIZE>() 
                                 / sizeof(float);
 
-    int heightWG = 64;
-    cl::NDRange WorkgroupSize = {1, heightWG};
-    int numVertWGs = height / heightWG + ((height % heightWG) ? 1 : 0); 
-    cl::NDRange GlobalSize = {width, heightWG * numVertWGs }; 
+    cl::NDRange WorkgroupSize = {wgSize0_, wgSize1_};
+    cl::NDRange GlobalSize = {roundWGs(width, wgSize0_), 
+                              roundWGs(height, wgSize1_)}; 
 
     // Set all the arguments
     kernel_.setArg(0, input);

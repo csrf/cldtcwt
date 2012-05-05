@@ -108,6 +108,10 @@ int main()
         Filters level1, level2;
         std::tie(level1, level2) = createFilters(context, commandQueue);
 
+
+        Filter h0 = { context, devices, level1.h0, 1 };
+
+
         DtcwtContext env = dtcwt.createContext(bmp.cols, bmp.rows,
                                                numLevels, startLevel,
                                                level1, level2);
@@ -115,7 +119,7 @@ int main()
         std::cout << "Running DTCWT" << std::endl;
 
         time_t start, end;
-        const int numFrames = 500;
+        const int numFrames = 10;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(commandQueue, inImage, env);
