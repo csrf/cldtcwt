@@ -69,10 +69,11 @@ class Filter {
 
 public:
 
+    enum Direction { x, y };
     Filter(cl::Context& context,
            const std::vector<cl::Device>& devices,
            cl::Buffer coefficients,
-           int dimension);
+           Direction d);
 
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
@@ -85,14 +86,15 @@ public:
     cl::Image2D dummyRun(const cl::Image2D& input);
     cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
 
+
 private:
     cl::Context context_;
     cl::Kernel kernel_;
     cl::Buffer coefficients_;
-    const int dimension_;
+    const Direction dimension_;
 
-    const int wgSize0_;
-    const int wgSize1_;
+    const int wgSizeX_;
+    const int wgSizeY_;
 };
 
 

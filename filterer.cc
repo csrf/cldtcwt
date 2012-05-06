@@ -21,9 +21,9 @@ cl::Sampler createSampler(cl::Context& context)
 Filter::Filter(cl::Context& context,
                const std::vector<cl::Device>& devices,
                cl::Buffer coefficients,
-               int dimension)
+               Direction dimension)
    : context_(context), coefficients_(coefficients), dimension_(dimension),
-     wgSize0_(16), wgSize1_(16)
+     wgSizeX_(16), wgSizeY_(16)
 {
     // The OpenCL kernel:
     std::ostringstream kernelInput;
@@ -37,10 +37,10 @@ Filter::Filter(cl::Context& context,
 
     const int offset = (filterLength-1) / 2;
 
-    const int inputLocalSize0 = wgSize0_
-                          + ((dimension == 0) ? (filterLength - 1) : 0);
-    const int inputLocalSize1 = wgSize1_
-                          + ((dimension == 1) ? (filterLength - 1) : 0);
+    const int inputLocalSizeX = wgSizeX_
+                          + ((dimension_ == x) ? (filterLength - 1) : 0);
+    const int inputLocalSizeY = wgSizeY_
+                          + ((dimension_ == y) ? (filterLength - 1) : 0);
 
     kernelInput
     << "__kernel void filter(__read_only image2d_t input,           \n"
@@ -52,32 +52,32 @@ Filter::Filter(cl::Context& context,
                 "| CLK_ADDRESS_MIRRORED_REPEAT"
                 "| CLK_FILTER_NEAREST;"
 
-            "__local float inputLocal[" << inputLocalSize1 << "]"
-                                    "[" << inputLocalSize0 << "];"
+            "__local float inputLocal[" << inputLocalSizeY << "]"
+                                    "[" << inputLocalSizeX << "];"
 
             "const int filterLength = " << filterLength << ";"
 
-            "const int g0 = get_global_id(0),"
-                      "g1 = get_global_id(1),"
-                      "l0 = get_local_id(0),"
-                      "l1 = get_local_id(1);\n";
+            "const int gx = get_global_id(0),"
+                      "gy = get_global_id(1),"
+                      "lx = get_local_id(0),"
+                      "ly = get_local_id(1);\n";
 
-    if (dimension_ == 1) {
+    if (dimension_ == y) {
 
         kernelInput << 
             // Load the local store
-            "if (l1 >= " << wgSize1_ - offset << ")"
-                "inputLocal[l1 - " << (wgSize1_ - offset) << "][l0]"
+            "if (ly >= " << wgSizeY_ - offset << ")"
+                "inputLocal[ly - " << (wgSizeY_ - offset) << "][lx]"
                 "= read_imagef(input, inputSampler,"
-                              "(int2) (g0, g1 - " << wgSize1_ << ")).x;\n"
+                              "(int2) (gx, gy - " << wgSizeY_ << ")).x;\n"
 
-            "inputLocal[l1 + " << offset << "][l0]"
-                "= read_imagef(input, inputSampler, (int2) (g0, g1)).x;\n"
+            "inputLocal[ly + " << offset << "][lx]"
+                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
 
-            "if (l1 < " << offset << ")"
-                "inputLocal[l1 + " << (offset + wgSize1_) << "][l0]"
+            "if (ly < " << offset << ")"
+                "inputLocal[ly + " << (offset + wgSizeY_) << "][lx]"
                 "= read_imagef(input, inputSampler,"
-                              "(int2) (g0, g1 + " << wgSize1_ << ")).x;"
+                              "(int2) (gx, gy + " << wgSizeY_ << ")).x;"
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
 
@@ -85,24 +85,24 @@ Filter::Filter(cl::Context& context,
             "float out = 0.0f;"
             "for (int i = 0; i < filterLength; ++i)"
                  "out += filter[filterLength-1-i] *"
-                         "inputLocal[l1 + i][l0];";
+                         "inputLocal[ly + i][lx];";
 
-    } else if (dimension_ == 0) {
+    } else if (dimension_ == x) {
 
         kernelInput << 
             // Load the local store
-            "if (l0 >= " << wgSize1_ - offset << ")"
-                "inputLocal[l1][l0 - " << (wgSize0_ - offset) << "]"
+            "if (lx >= " << wgSizeY_ - offset << ")"
+                "inputLocal[ly][lx - " << (wgSizeX_ - offset) << "]"
                 "= read_imagef(input, inputSampler,"
-                              "(int2) (g0 - " << wgSize0_ << ", g1)).x;\n"
+                              "(int2) (gx - " << wgSizeX_ << ", gy)).x;\n"
 
-            "inputLocal[l1][l0 + " << offset << "]"
-                "= read_imagef(input, inputSampler, (int2) (g0, g1)).x;\n"
+            "inputLocal[ly][lx + " << offset << "]"
+                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
 
-            "if (l0 < " << offset << ")"
-                "inputLocal[l1][l0 + " << (offset + wgSize0_) << "]"
+            "if (lx < " << offset << ")"
+                "inputLocal[ly][lx + " << (offset + wgSizeX_) << "]"
                 "= read_imagef(input, inputSampler,"
-                              "(int2) (g0 + " << wgSize0_ << ", g1)).x;"
+                              "(int2) (gx + " << wgSizeX_ << ", gy)).x;"
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
 
@@ -110,15 +110,15 @@ Filter::Filter(cl::Context& context,
             "float out = 0.0f;"
             "for (int i = 0; i < filterLength; ++i)"
                  "out += filter[filterLength-1-i] *"
-                         "inputLocal[l1][l0+i];";  
+                         "inputLocal[ly][lx+i];";  
  
     }
             
     kernelInput <<
             // Write the result
-            "if (g0 < get_image_width(output)"
-             "&& g1 < get_image_height(output))"
-                "write_imagef(output, (int2) (g0, g1), out);"
+            "if (gx < get_image_width(output)"
+             "&& gy < get_image_height(output))"
+                "write_imagef(output, (int2) (gx, gy), out);"
         "}";
 
     const std::string sourceCode = kernelInput.str();
@@ -163,17 +163,12 @@ void Filter::operator()
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
-    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
-              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
+    cl::NDRange WorkgroupSize = {wgSizeX_, wgSizeY_};
 
-    // Need to work out the filter length; if this value is passed directly,
-    // the setArg function doesn't understand its type properly.
-    const int filterLength = coefficients_.getInfo<CL_MEM_SIZE>() 
-                                / sizeof(float);
-
-    cl::NDRange WorkgroupSize = {wgSize0_, wgSize1_};
-    cl::NDRange GlobalSize = {roundWGs(width, wgSize0_), 
-                              roundWGs(height, wgSize1_)}; 
+    cl::NDRange GlobalSize = {
+        roundWGs(output.getImageInfo<CL_IMAGE_WIDTH>(), wgSizeX_), 
+        roundWGs(output.getImageInfo<CL_IMAGE_HEIGHT>(), wgSizeY_)
+    }; 
 
     // Set all the arguments
     kernel_.setArg(0, input);
@@ -196,7 +191,7 @@ cl::Image2D Filter::dummyRun(const cl::Image2D& input)
 
 cl::Image2D Filter::dummyRun(size_t inWidth, size_t inHeight)
 {
-    if (dimension_ == 0)
+    if (dimension_ == x)
         return createImage2D(context_, inWidth + inWidth % 2, inHeight);
     else
         return createImage2D(context_, inWidth, inHeight + inHeight % 2);
