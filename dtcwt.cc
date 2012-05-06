@@ -1,13 +1,24 @@
 #include "dtcwt.h"
 #include "clUtil.h"
 
-Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices)
+Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
+             Filters level1, Filters leveln)
     : colFilter(context, devices),
       rowFilter(context, devices),
       colDecimateFilter(context, devices),
       rowDecimateFilter(context, devices),
-      quadToComplex(context, devices)
-{}
+      quadToComplex(context, devices),
+      h0x { context, devices, level1.h0, Filter::x },
+      h0y { context, devices, level1.h0, Filter::y },
+      h1x { context, devices, level1.h1, Filter::x },
+      h1y { context, devices, level1.h1, Filter::y },
+      hbpx { context, devices, level1.hbp, Filter::x },
+      hbpy { context, devices, level1.hbp, Filter::y }
+
+{
+   
+}
+
 
 
 // Create the set of images etc needed to perform a DTCWT calculation
@@ -48,10 +59,11 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
     cl::Event xloEvent, loloEvent;
 
     // Apply the non-decimating, special low pass filters that must be needed
-    colFilter(commandQueue, image, env.level1.h0, {},
-              &xloEvent, &env.noOutputTemps[0].xlo);
-    rowFilter(commandQueue, env.noOutputTemps[0].xlo, env.level1.h0, {xloEvent},
-              &loloEvent, &env.noOutputTemps[0].lolo);  
+    h0y(commandQueue, image, env.noOutputTemps[0].xlo, 
+        {}, &xloEvent);
+
+    h0x(commandQueue, env.noOutputTemps[0].xlo, env.noOutputTemps[0].lolo,
+        {xloEvent}, &loloEvent);
 
 
     if (env.startLevel == 0) {

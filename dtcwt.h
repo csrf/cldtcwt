@@ -49,6 +49,9 @@ struct DtcwtContext {
 class Dtcwt {
 private:
 
+    Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
+    //Filter g0x, g0y, g1x, g1y, gbpx, gbpy;
+
     ColFilter colFilter;
     RowFilter rowFilter;
     ColDecimateFilter colDecimateFilter;
@@ -92,7 +95,8 @@ private:
 
 public:
 
-    Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices);
+    Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
+          Filters level1, Filters leveln);
 
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image2D& image, 

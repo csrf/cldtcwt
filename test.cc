@@ -103,14 +103,12 @@ int main()
 
         std::cout << bmp.rows << " " << bmp.cols << std::endl;
         std::cout << "Creating Dtcwt" << std::endl;
-        Dtcwt dtcwt(context, devices);
 
         Filters level1, level2;
         std::tie(level1, level2) = createFilters(context, commandQueue);
 
+        Dtcwt dtcwt(context, devices, level1, level2);
 
-        Filter h0 = { context, devices, level1.h0, Filter::y };
-        cl::Image2D outImage = h0.dummyRun(inImage);
 
 
         DtcwtContext env = dtcwt.createContext(bmp.cols, bmp.rows,
@@ -125,9 +123,6 @@ int main()
         const int numFrames = 10;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
-                h0(commandQueue, inImage, outImage);
-                commandQueue.finish();
-
                 dtcwt(commandQueue, inImage, env);
                 commandQueue.finish();
             }
