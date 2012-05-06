@@ -110,6 +110,7 @@ int main()
 
 
         Filter h0 = { context, devices, level1.h0, Filter::y };
+        cl::Image2D outImage = h0.dummyRun(inImage);
 
 
         DtcwtContext env = dtcwt.createContext(bmp.cols, bmp.rows,
@@ -118,10 +119,15 @@ int main()
 
         std::cout << "Running DTCWT" << std::endl;
 
+
+
         time_t start, end;
         const int numFrames = 10;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
+                h0(commandQueue, inImage, outImage);
+                commandQueue.finish();
+
                 dtcwt(commandQueue, inImage, env);
                 commandQueue.finish();
             }
