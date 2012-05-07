@@ -90,9 +90,21 @@ int main()
 
         h(commandQueue, inImage, outImage);
 
+
+        DecimateFilter hd = { 
+            context, devices, 
+            createBuffer(context, commandQueue, {0.5, 1.0, 1.0, 0.5}),
+            DecimateFilter::y 
+        };
+
+        cl::Image2D outImageD = hd.dummyRun(inImage);
+
+        hd(commandQueue, inImage, outImageD);
+
         commandQueue.finish();
 
         displayRealImage(commandQueue, outImage);
+        displayRealImage(commandQueue, outImageD);
 
     }
     catch (cl::Error err) {

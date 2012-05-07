@@ -206,25 +206,204 @@ cl::Image2D Filter::dummyRun(size_t inWidth, size_t inHeight)
 
 
 
+DecimateFilter::DecimateFilter(cl::Context& context,
+               const std::vector<cl::Device>& devices,
+               cl::Buffer coefficients,
+               Direction dimension)
+   : context_(context), coefficients_(coefficients), dimension_(dimension),
+     wgSizeX_(16), wgSizeY_(16)
+{
+    // The OpenCL kernel:
+    std::ostringstream kernelInput;
+
+    // Filter must be odd-lengthed
+
+    // Need to work out the filter length; if this value is passed directly,
+    // the setArg function doesn't understand its type properly.
+    const int filterLength = coefficients_.getInfo<CL_MEM_SIZE>() 
+                                / sizeof(float);
+
+    const int offset = (filterLength-1) / 2;
+
+    const int inputLocalSizeX = wgSizeX_;
+    const int inputLocalSizeY = 4 * (wgSizeY_ - 1) + 2 * filterLength;
+
+    kernelInput
+    << "__kernel void decimateFilter(__read_only image2d_t input,"
+                                    "__write_only image2d_t output,"
+                                    "__constant float* filter,"
+                                    "int offset)"
+        "{"
+            "sampler_t inputSampler ="
+                "CLK_NORMALIZED_COORDS_FALSE"
+                "| CLK_ADDRESS_MIRRORED_REPEAT"
+                "| CLK_FILTER_NEAREST;"
+
+            "__local float inputLocal[" << inputLocalSizeY << "]"
+                                    "[" << inputLocalSizeX << "];"
+
+            "const int filterLength = " << filterLength << ";"
+
+            "const int gx = get_global_id(0),"
+                      "gy = get_global_id(1),"
+                      "lx = get_local_id(0),"
+                      "ly = get_local_id(1);";
+
+    if (dimension_ == y) {
+
+        kernelInput << 
+            
+            // Load the local store
+
+            // Find the start of the group
+            "int y = get_local_size(1) * get_group_id(1);"
+            "int startY = 4 * y - (" << filterLength << "-2) + offset;"
+
+            "for (int n = 0;"
+                 "(n * " << wgSizeY_ << ") < " << inputLocalSizeY << ";"
+                 "++n) {"
+                 "if ((ly + n * " << wgSizeY_ << ") < " << inputLocalSizeY << ")"
+                    "inputLocal[ly + n * " << wgSizeY_ << "][lx]"
+                        "= read_imagef(input, inputSampler,"
+                          "(int2) (gx, startY + ly + n * " << wgSizeY_ << ")).x;"
+            "}"               
+
+            "barrier(CLK_LOCAL_MEM_FENCE);"
+
+            "if (gx < get_image_width(output)"
+             "&& (2*gy) < get_image_height(output)) {"
+
+                // Do the filtering: start from 4*ly (due to
+                // decimation/interleaved trees) and select 2*i(+1) due to the
+                // interleaved trees
+                "float out1 = 0.0f, out2 = 0.0f;"
+                "for (int i = 0; i < filterLength; ++i) {"
+                     "out1 += filter[filterLength-1-i]"
+                              "* inputLocal[2*(2*ly + i)][lx];"
+                     "out2 += filter[i]"
+                              "* inputLocal[2*(2*ly + i) + 1][lx];"
+                 "}"
+
+                // Write the result
+                "write_imagef(output, (int2) (gx, 2*gy), out1);"
+                "write_imagef(output, (int2) (gx, 2*gy+1), out2);"
+
+            "}"
+        "}";
+
+    } else if (dimension_ == x) {
+
+        kernelInput << 
+            // Load the local store
+            "if (lx >= " << wgSizeY_ - offset << ")"
+                "inputLocal[ly][lx - " << (wgSizeX_ - offset) << "]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (gx - " << wgSizeX_ << ", gy)).x;\n"
+
+            "inputLocal[ly][lx + " << offset << "]"
+                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
+
+            "if (lx < " << offset << ")"
+                "inputLocal[ly][lx + " << (offset + wgSizeX_) << "]"
+                "= read_imagef(input, inputSampler,"
+                              "(int2) (gx + " << wgSizeX_ << ", gy)).x;"
+
+            "barrier(CLK_LOCAL_MEM_FENCE);"
+
+            // Do the filtering
+            "float out = 0.0f;"
+            "for (int i = 0; i < filterLength; ++i)"
+                 "out += filter[filterLength-1-i] *"
+                         "inputLocal[ly][lx+i];";  
+ 
+    }
+            
+
+    const std::string sourceCode = kernelInput.str();
+
+    // Bundle the code up
+    cl::Program::Sources source;
+    source.push_back(std::make_pair(sourceCode.c_str(), sourceCode.length()));
+
+    // Compile it...
+    cl::Program program(context, source);
+    try {
+        program.build(devices);
+    } catch(cl::Error err) {
+	    std::cerr 
+		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
+		    << std::endl;
+	    throw;
+    } 
+        
+    // ...and extract the useful part, viz the kernel
+    kernel_ = cl::Kernel(program, "decimateFilter");
+
+    // We know what the filter argument will be already
+    kernel_.setArg(2, coefficients_);
+}
+
+
+
+void DecimateFilter::operator() (cl::CommandQueue& commandQueue,
+               const cl::Image2D& input,
+               cl::Image2D& output,
+               const std::vector<cl::Event>& waitEvents,
+               cl::Event* doneEvent)
+{
+    // Run the decimation filter for each location in output (which
+    // determines the locations to run at) using commandQueue.  input and 
+    // output are both single-component float images.  filter is a vector of
+    // floats. The command will not start until all of waitEvents have 
+    // completed, and once done will flag doneEvent.
+
+
+    const int width = output.getImageInfo<CL_IMAGE_WIDTH>(),
+              height = output.getImageInfo<CL_IMAGE_HEIGHT>();
+
+    cl::NDRange GlobalSize = {
+        roundWGs(width / (dimension_ == x? 2 : 1), wgSizeX_), 
+        roundWGs(height / (dimension_ == y? 2 : 1), wgSizeY_)
+    }; 
+
+    // Make sure the resulting image is an even height, i.e. it has the
+    // same length for both the trees
+    bool pad = (((dimension_ == x)? width : height) % 4) != 0;
+
+    // Tell the kernel to use the buffers, and how long they are
+    kernel_.setArg(0, input);         // input
+    kernel_.setArg(1, output);        // output
+    kernel_.setArg(3, pad? -1 : 0);   // Offset to start reading input from
+
+    // Execute
+    commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
+                                      GlobalSize,
+                                      {wgSizeX_, wgSizeY_},
+                                      &waitEvents, doneEvent);
+
+}
 
 
 
 
+cl::Image2D DecimateFilter::dummyRun(const cl::Image2D& input)
+{
+    return dummyRun(input.getImageInfo<CL_IMAGE_WIDTH>(),
+                    input.getImageInfo<CL_IMAGE_HEIGHT>());
+}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+cl::Image2D DecimateFilter::dummyRun(size_t inWidth, size_t inHeight)
+{
+    if (dimension_ == x) {
+        bool pad = (inWidth % 4) != 0;
+        return createImage2D(context_, inWidth / 2 + (pad? 1 : 0), inHeight);
+    } else {
+        bool pad = (inHeight % 4) != 0;
+        return createImage2D(context_, inWidth, inHeight / 2 + (pad? 1 : 0));
+    }
+}
 
 
 

@@ -99,6 +99,42 @@ private:
 
 
 
+class DecimateFilter {
+// Class that provides decimation filtering capabilities
+
+public:
+
+    enum Direction { x, y };
+    DecimateFilter(cl::Context& context,
+                   const std::vector<cl::Device>& devices,
+                   cl::Buffer coefficients,
+                   Direction d);
+
+    // The filter operation
+    void operator() (cl::CommandQueue& commandQueue,
+           const cl::Image2D& input,
+           cl::Image2D& output,
+           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+           cl::Event* doneEvent = nullptr);
+
+    // Create an image with the right size to hold the output
+    cl::Image2D dummyRun(const cl::Image2D& input);
+    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
+
+
+private:
+    cl::Context context_;
+    cl::Kernel kernel_;
+    cl::Buffer coefficients_;
+    const Direction dimension_;
+
+    const int wgSizeX_;
+    const int wgSizeY_;
+};
+
+
+
+
 class ColFilter {
     // Class that provides column filtering capabilities
 
