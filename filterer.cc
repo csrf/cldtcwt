@@ -223,10 +223,12 @@ DecimateFilter::DecimateFilter(cl::Context& context,
     const int filterLength = coefficients_.getInfo<CL_MEM_SIZE>() 
                                 / sizeof(float);
 
-    const int offset = (filterLength-1) / 2;
-
-    const int inputLocalSizeX = wgSizeX_;
-    const int inputLocalSizeY = 4 * (wgSizeY_ - 1) + 2 * filterLength;
+    const int inputLocalSizeX = 
+        (dimension_ == x)? 4 * (wgSizeX_ - 1) + 2 * filterLength
+                         : wgSizeX_;
+    const int inputLocalSizeY = 
+        (dimension_ == y)? 4 * (wgSizeY_ - 1) + 2 * filterLength
+                         : wgSizeY_;
 
     kernelInput
     << "__kernel void decimateFilter(__read_only image2d_t input,"
@@ -294,28 +296,44 @@ DecimateFilter::DecimateFilter(cl::Context& context,
     } else if (dimension_ == x) {
 
         kernelInput << 
+            
             // Load the local store
-            "if (lx >= " << wgSizeY_ - offset << ")"
-                "inputLocal[ly][lx - " << (wgSizeX_ - offset) << "]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx - " << wgSizeX_ << ", gy)).x;\n"
 
-            "inputLocal[ly][lx + " << offset << "]"
-                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
+            // Find the start of the group
+            "int x = get_local_size(0) * get_group_id(0);"
+            "int startX = 4 * x - (" << filterLength << "-2) + offset;"
 
-            "if (lx < " << offset << ")"
-                "inputLocal[ly][lx + " << (offset + wgSizeX_) << "]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx + " << wgSizeX_ << ", gy)).x;"
+            "for (int n = 0;"
+                 "(n * " << wgSizeX_ << ") < " << inputLocalSizeX << ";"
+                 "++n) {"
+                 "if ((lx + n * " << wgSizeX_ << ") < " << inputLocalSizeX << ")"
+                    "inputLocal[ly][lx + n * " << wgSizeX_ << "]"
+                        "= read_imagef(input, inputSampler,"
+                          "(int2) (startX + lx + n * " << wgSizeX_ << ", gy)).x;"
+            "}"               
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
 
-            // Do the filtering
-            "float out = 0.0f;"
-            "for (int i = 0; i < filterLength; ++i)"
-                 "out += filter[filterLength-1-i] *"
-                         "inputLocal[ly][lx+i];";  
- 
+            "if ((2*gx) < get_image_width(output)"
+             "&& gy < get_image_height(output)) {"
+
+                // Do the filtering: start from 4*lx (due to
+                // decimation/interleaved trees) and select 2*i(+1) due to the
+                // interleaved trees
+                "float out1 = 0.0f, out2 = 0.0f;"
+                "for (int i = 0; i < filterLength; ++i) {"
+                     "out1 += filter[filterLength-1-i]"
+                              "* inputLocal[ly][2*(2*lx + i)];"
+                     "out2 += filter[i]"
+                              "* inputLocal[ly][2*(2*lx + i) + 1];"
+                 "}"
+
+                // Write the result
+                "write_imagef(output, (int2) (2*gx, gy), out1);"
+                "write_imagef(output, (int2) (2*gx+1, gy), out2);"
+
+            "}"
+        "}";
     }
             
 

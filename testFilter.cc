@@ -94,7 +94,7 @@ int main()
         DecimateFilter hd = { 
             context, devices, 
             createBuffer(context, commandQueue, {0.5, 1.0, 1.0, 0.5}),
-            DecimateFilter::y 
+            DecimateFilter::x 
         };
 
         cl::Image2D outImageD = hd.dummyRun(inImage);
