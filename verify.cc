@@ -110,10 +110,11 @@ int main()
 
         std::cout << bmp.rows << " " << bmp.cols << std::endl;
         std::cout << "Creating Dtcwt" << std::endl;
-        Dtcwt dtcwt(context, devices);
 
         Filters level1, level2;
         std::tie(level1, level2) = createFilters(context, commandQueue);
+
+        Dtcwt dtcwt(context, devices, level1, level2);
 
         DtcwtContext env = dtcwt.createContext(bmp.cols, bmp.rows,
                                                numLevels, startLevel,

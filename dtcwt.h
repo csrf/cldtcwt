@@ -50,7 +50,7 @@ class Dtcwt {
 private:
 
     Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
-    //Filter g0x, g0y, g1x, g1y, gbpx, gbpy;
+    DecimateFilter g0x, g0y, g1x, g1y, gbpx, gbpy;
 
     ColFilter colFilter;
     RowFilter rowFilter;

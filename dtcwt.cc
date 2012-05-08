@@ -13,7 +13,14 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
       h1x { context, devices, level1.h1, Filter::x },
       h1y { context, devices, level1.h1, Filter::y },
       hbpx { context, devices, level1.hbp, Filter::x },
-      hbpy { context, devices, level1.hbp, Filter::y }
+      hbpy { context, devices, level1.hbp, Filter::y },
+      g0x { context, devices, leveln.h0, DecimateFilter::x },
+      g0y { context, devices, leveln.h0, DecimateFilter::y },
+      g1x { context, devices, leveln.h1, DecimateFilter::x },
+      g1y { context, devices, leveln.h1, DecimateFilter::y },
+      gbpx { context, devices, leveln.hbp, DecimateFilter::x },
+      gbpy { context, devices, leveln.hbp, DecimateFilter::y }
+
 
 {
    
@@ -86,13 +93,11 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
         cl::Event xxEvent = loloEvent;
 
         // Apply the low pass filters, normal version
-        colDecimateFilter(commandQueue, 
-                          env.noOutputTemps[l-1].lolo, env.level2.h0, {xxEvent},
-                          &xloEvent, &env.noOutputTemps[l].xlo);
+        g0x(commandQueue, env.noOutputTemps[l-1].lolo, env.noOutputTemps[l].xlo,
+            {xxEvent}, &xloEvent);
 
-        rowDecimateFilter(commandQueue, 
-                          env.noOutputTemps[l].xlo, env.level2.h0, {xloEvent},
-                          &loloEvent, &env.noOutputTemps[l].lolo);  
+        g0y(commandQueue, env.noOutputTemps[l].xlo, env.noOutputTemps[l].lolo,
+            {xloEvent}, &loloEvent);  
 
 
         // Produce outputs only when interested in the outcome
@@ -309,31 +314,26 @@ std::vector<cl::Event> Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
     // Low pass one way then high pass the other...
     cl::Event loxEvent, lohiEvent;
 
-    rowDecimateFilter(commandQueue, xx, filters.h0, 
-                      xxEvents, &loxEvent,
-                      &(outputTemps->lox));
+    g0x(commandQueue, xx, outputTemps->lox,
+        xxEvents, &loxEvent);
 
-    colDecimateFilter(commandQueue, outputTemps->lox, filters.h1, 
-                      {loxEvent}, &lohiEvent,
-                      &(outputTemps->lohi));
+    g1y(commandQueue, outputTemps->lox, outputTemps->lohi,
+        {loxEvent}, &lohiEvent);
 
     // High pass the image that had been low-passed the other way...
     cl::Event hiloEvent;
 
-    rowDecimateFilter(commandQueue, xlo, filters.h1, 
-                      xloEvents, &hiloEvent,
-                      &(outputTemps->hilo));
+    g1x(commandQueue, xlo, outputTemps->hilo,
+        xloEvents, &hiloEvent);
 
     // Band pass both ways...
     cl::Event xbpEvent, bpbpEvent;
 
-    colDecimateFilter(commandQueue, xx, filters.hbp, 
-                      xxEvents, &xbpEvent,
-                      &(outputTemps->xbp));
+    gbpy(commandQueue, xx, outputTemps->xbp,
+         xxEvents, &xbpEvent);
 
-    rowDecimateFilter(commandQueue, outputTemps->xbp, filters.hbp, 
-                      {xbpEvent}, &bpbpEvent,
-                      &(outputTemps->bpbp));
+    gbpx(commandQueue, outputTemps->xbp, outputTemps->bpbp,
+         {xbpEvent}, &bpbpEvent);
 
     // Create events that, when all done signify everything about this stage
     // is complete

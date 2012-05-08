@@ -120,7 +120,7 @@ int main()
 
 
         time_t start, end;
-        const int numFrames = 10;
+        const int numFrames = 1000;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(commandQueue, inImage, env);
