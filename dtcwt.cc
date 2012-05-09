@@ -93,10 +93,10 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
         cl::Event xxEvent = loloEvent;
 
         // Apply the low pass filters, normal version
-        g0x(commandQueue, env.noOutputTemps[l-1].lolo, env.noOutputTemps[l].xlo,
+        g0y(commandQueue, env.noOutputTemps[l-1].lolo, env.noOutputTemps[l].xlo,
             {xxEvent}, &xloEvent);
 
-        g0y(commandQueue, env.noOutputTemps[l].xlo, env.noOutputTemps[l].lolo,
+        g0x(commandQueue, env.noOutputTemps[l].xlo, env.noOutputTemps[l].lolo,
             {xloEvent}, &loloEvent);  
 
 
