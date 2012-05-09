@@ -98,7 +98,7 @@ int main()
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
         const int numLevels = 6;
-        const int startLevel = 0;
+        const int startLevel = 1;
 
 
         //-----------------------------------------------------------------

@@ -215,31 +215,26 @@ std::vector<cl::Event> Dtcwt::filter(cl::CommandQueue& commandQueue,
     // Low pass one way then high pass the other...
     cl::Event loxEvent, lohiEvent;
 
-    rowFilter(commandQueue, xx, filters.h0, 
-              xxEvents, &loxEvent,
-              &(outputTemps->lox));
+    h0x(commandQueue, xx, outputTemps->lox,
+        xxEvents, &loxEvent);
 
-    colFilter(commandQueue, outputTemps->lox, filters.h1, 
-              {loxEvent}, &lohiEvent,
-              &(outputTemps->lohi));
+    h1y(commandQueue, outputTemps->lox, outputTemps->lohi,
+        {loxEvent}, &lohiEvent);
 
     // High pass the image that had been low-passed the other way...
     cl::Event hiloEvent;
 
-    rowFilter(commandQueue, xlo, filters.h1, 
-                      xloEvents, &hiloEvent,
-                      &(outputTemps->hilo));
+    h1x(commandQueue, xlo, outputTemps->hilo,
+        xloEvents, &hiloEvent);
 
     // Band pass both ways...
     cl::Event xbpEvent, bpbpEvent;
 
-    colFilter(commandQueue, xx, filters.hbp, 
-              xxEvents, &xbpEvent,
-              &(outputTemps->xbp));
+    hbpy(commandQueue, xx, outputTemps->xbp,
+         xxEvents, &xbpEvent);
 
-    rowFilter(commandQueue, outputTemps->xbp, filters.hbp, 
-              {xbpEvent}, &bpbpEvent,
-              &(outputTemps->bpbp));
+    hbpx(commandQueue, outputTemps->xbp, outputTemps->bpbp,
+         {xbpEvent}, &bpbpEvent);
 
     // Create events that, when all done signify everything about this stage
     // is complete
