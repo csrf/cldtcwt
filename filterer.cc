@@ -10,12 +10,14 @@
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
 cl::Sampler createSampler(cl::Context& context)
 {
-    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_MIRRORED_REPEAT,
+    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
                        CL_FILTER_NEAREST);
 }
 
 
 
+static const std::string reflectRepeat = "CLK_ADDRESS_CLAMP";
+//"CLK_ADDRESS_MIRRORED_REPEAT";
 
 
 Filter::Filter(cl::Context& context,
@@ -49,7 +51,7 @@ Filter::Filter(cl::Context& context,
         "{                                                              \n"
             "sampler_t inputSampler ="
                 "CLK_NORMALIZED_COORDS_FALSE"
-                "| CLK_ADDRESS_MIRRORED_REPEAT"
+                "| " << reflectRepeat <<
                 "| CLK_FILTER_NEAREST;"
 
             "__local float inputLocal[" << inputLocalSizeY << "]"
@@ -238,7 +240,7 @@ DecimateFilter::DecimateFilter(cl::Context& context,
         "{"
             "sampler_t inputSampler ="
                 "CLK_NORMALIZED_COORDS_FALSE"
-                "| CLK_ADDRESS_MIRRORED_REPEAT"
+                "| " << reflectRepeat <<
                 "| CLK_FILTER_NEAREST;"
 
             "__local float inputLocal[" << inputLocalSizeY << "]"

@@ -120,7 +120,7 @@ int main()
 
 
         time_t start, end;
-        const int numFrames = 1000;
+        const int numFrames = 1;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(commandQueue, inImage, env);
@@ -162,7 +162,7 @@ initOpenCL()
         throw std::runtime_error("No platforms!");
 
     std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    platforms[0].getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
 
     // Create a context to work in 
     cl::Context context(devices);
