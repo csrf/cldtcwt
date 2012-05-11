@@ -68,18 +68,21 @@ Filter::Filter(cl::Context& context,
 
         kernelInput << 
             // Load the local store
-            "if (ly >= " << wgSizeY_ - offset << ")"
-                "inputLocal[ly - " << (wgSizeY_ - offset) << "][lx]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx, gy - " << wgSizeY_ << ")).x;\n"
 
-            "inputLocal[ly + " << offset << "][lx]"
-                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
+            "int startY = get_local_size(1) * get_group_id(1)"
+                            "- " << offset << ";"
 
-            "if (ly < " << offset << ")"
-                "inputLocal[ly + " << (offset + wgSizeY_) << "][lx]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx, gy + " << wgSizeY_ << ")).x;"
+            "for (int n = 0;"
+                 "(n * " << wgSizeY_ << ") < " << inputLocalSizeY << ";"
+                 "++n) {"
+
+                 // Make sure still in range, then read
+                 "if ((ly+n*" << wgSizeY_ << ") < " << inputLocalSizeY << ")"
+                    "inputLocal[ly + n * " << wgSizeY_ << "][lx]"
+                        "= read_imagef(input, inputSampler,"
+                          "(int2) (gx, startY+ly+n*" << wgSizeY_ << ")).x;"
+
+            "}"
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
 
@@ -93,18 +96,21 @@ Filter::Filter(cl::Context& context,
 
         kernelInput << 
             // Load the local store
-            "if (lx >= " << wgSizeY_ - offset << ")"
-                "inputLocal[ly][lx - " << (wgSizeX_ - offset) << "]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx - " << wgSizeX_ << ", gy)).x;\n"
 
-            "inputLocal[ly][lx + " << offset << "]"
-                "= read_imagef(input, inputSampler, (int2) (gx, gy)).x;\n"
+            "int startX = get_local_size(0) * get_group_id(0)"
+                            "- " << offset << ";"
 
-            "if (lx < " << offset << ")"
-                "inputLocal[ly][lx + " << (offset + wgSizeX_) << "]"
-                "= read_imagef(input, inputSampler,"
-                              "(int2) (gx + " << wgSizeX_ << ", gy)).x;"
+            "for (int n = 0;"
+                 "(n * " << wgSizeX_ << ") < " << inputLocalSizeX << ";"
+                 "++n) {"
+
+                 // Make sure still in range, then read
+                 "if ((lx+n*" << wgSizeX_ << ") < " << inputLocalSizeX << ")"
+                    "inputLocal[ly][lx + n * " << wgSizeX_ << "]"
+                        "= read_imagef(input, inputSampler,"
+                          "(int2) (startX+lx+n*" << wgSizeX_ << ", gy)).x;"
+
+            "}"
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
 
