@@ -75,8 +75,7 @@ private:
                cl::Image2D& xlo, 
                const std::vector<cl::Event>& xloEvents,
                cl::Image2D* out, 
-               OutputTemps* outputTemps,
-               Filters& filters);
+               OutputTemps* outputTemps);
 
     std::tuple<OutputTemps, Subbands>
         dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
@@ -90,8 +89,7 @@ private:
                        cl::Image2D& xlo, 
                        const std::vector<cl::Event>& xloEvent,
                        cl::Image2D* out, 
-                       OutputTemps* outputTemps,
-                       Filters& filters);
+                       OutputTemps* outputTemps);
 
 public:
 

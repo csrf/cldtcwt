@@ -81,8 +81,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                    image, {},
                    env.noOutputTemps[0].xlo, {xloEvent},
                    &env.outputs[0][0],
-                   &env.outputTemps[0],
-                   env.level1)
+                   &env.outputTemps[0])
         );
     }
 
@@ -107,8 +106,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                                env.noOutputTemps[l-1].lolo, {loloEvent},
                                env.noOutputTemps[l].xlo, {xloEvent},
                                &env.outputs[l-env.startLevel][0],
-                               &env.outputTemps[l-env.startLevel],
-                               env.level2)
+                               &env.outputTemps[l-env.startLevel])
             );
 
     }
@@ -209,8 +207,7 @@ std::vector<cl::Event> Dtcwt::filter(cl::CommandQueue& commandQueue,
                            cl::Image2D& xlo, 
                            const std::vector<cl::Event>& xloEvents,
                            cl::Image2D* out, 
-                           OutputTemps* outputTemps,
-                           Filters& filters)
+                           OutputTemps* outputTemps)
 {
     // Low pass one way then high pass the other...
     cl::Event loxEvent, lohiEvent;
@@ -303,8 +300,7 @@ std::vector<cl::Event> Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            cl::Image2D& xlo, 
                            const std::vector<cl::Event>& xloEvents,
                            cl::Image2D* out, 
-                           OutputTemps* outputTemps,
-                           Filters& filters)
+                           OutputTemps* outputTemps)
 {
     // Low pass one way then high pass the other...
     cl::Event loxEvent, lohiEvent;
