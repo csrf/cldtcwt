@@ -1,13 +1,51 @@
 #include "dtcwt.h"
 #include "clUtil.h"
 
+
+static size_t decimateDim(size_t inSize)
+{
+    // Decimate the size of a dimension by a factor of two.  If this gives
+    // a non-even number, pad so it is.
+    
+    bool pad = (inSize % 4) != 0;
+
+    return inSize / 2 + (pad? 1 : 0);
+}
+
+
+
+#include <iostream>
+
+SubbandOutputs::SubbandOutputs(const DtcwtEnv& env)
+{
+    for (int l = env.startLevel; l < env.numLevels; ++l) {
+
+        const cl::Image2D& baseImage = env.levelTemps[l].lolo;
+
+        const size_t width = baseImage.getImageInfo<CL_IMAGE_WIDTH>() / 2,
+                    height = baseImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
+
+        Subbands sbs;
+
+        std::cout << width << " " << height << std::endl;
+        // Create all the complex images at the right size
+        for (auto& sb: sbs.sb)
+            sb = {env.context_, 0, {CL_RG, CL_FLOAT}, width, height};
+
+        // Add another set of outputs
+        subbands.push_back(sbs);
+        
+
+    }
+}
+
+
+
+
+
 Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
              Filters level1, Filters leveln)
-    : colFilter(context, devices),
-      rowFilter(context, devices),
-      colDecimateFilter(context, devices),
-      rowDecimateFilter(context, devices),
-      quadToComplex(context, devices),
+    : quadToComplex(context, devices),
       h0x { context, devices, level1.h0, Filter::x },
       h0y { context, devices, level1.h0, Filter::y },
       h1x { context, devices, level1.h1, Filter::x },
@@ -19,8 +57,8 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
       g1x { context, devices, leveln.h1, DecimateFilter::x },
       g1y { context, devices, leveln.h1, DecimateFilter::y },
       gbpx { context, devices, leveln.hbp, DecimateFilter::x },
-      gbpy { context, devices, leveln.hbp, DecimateFilter::y }
-
+      gbpy { context, devices, leveln.hbp, DecimateFilter::y },
+      context_ { context }
 
 {
    
@@ -29,324 +67,210 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
 
 
 // Create the set of images etc needed to perform a DTCWT calculation
-DtcwtContext Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
-                                  size_t numLevels, size_t startLevel,
-                                  Filters level1In, Filters level2In)
+DtcwtEnv Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
+                                  size_t numLevels, size_t startLevel)
 {
-    DtcwtContext context;
+    DtcwtEnv c;
 
     // Copy settings to the saved structure
-    context.width = imageWidth;
-    context.height = imageHeight;
+    c.context_ = context_;
 
-    context.numLevels = numLevels;
-    context.startLevel = startLevel;
+    c.width = imageWidth;
+    c.height = imageHeight;
 
-    // Allocate space on the graphics card
-    std::tie(context.outputs,
-             context.outputTemps,
-             context.noOutputTemps)
-        = dummyRun(imageWidth, imageHeight, numLevels, startLevel);
+    c.numLevels = numLevels;
+    c.startLevel = startLevel;
 
+    // Make space in advance for the temps
+    c.levelTemps.reserve(numLevels);
 
-    // Take copies of the filters
-    context.level1 = level1In;
-    context.level2 = level2In;
+    // Allocate space on the graphics card for each of the levels
+    
+    // 1st level
+    size_t width = imageWidth + imageWidth % 2;
+    size_t height = imageHeight + imageHeight % 2;
 
+    for (int l = 0; l < numLevels; ++l) {
 
-    return context;
+        // Decimate if we're beyond the first stage, otherwise just make
+        // sure we have even width/height
+        size_t newWidth = 
+            (l == 0)? width + width % 2
+                    : decimateDim(width);
+
+        size_t newHeight =
+            (l == 0)? height + height % 2
+                    : decimateDim(height);
+
+        c.levelTemps.push_back(LevelTemps());
+
+        // Temps that will be needed whether there's an output or not
+        c.levelTemps.back().xlo
+            = createImage2D(context_, width, newHeight);
+        c.levelTemps.back().lolo
+            = createImage2D(context_, newWidth, newHeight);
+
+        // Temps only needed when producing subband outputs
+        if  (l >= startLevel) {
+            c.levelTemps.back().lox
+                = createImage2D(context_, newWidth, height);
+            c.levelTemps.back().lohi
+                = createImage2D(context_, newWidth, newHeight);
+            c.levelTemps.back().hilo
+                = createImage2D(context_, newWidth, newHeight);
+            c.levelTemps.back().xbp
+                = createImage2D(context_, width, newHeight);
+            c.levelTemps.back().bpbp
+                = createImage2D(context_, newWidth, newHeight);
+        }
+
+        width = newWidth;
+        height = newHeight;
+    }
+   
+    return c;
 }
 
 
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                         cl::Image2D& image, 
-                        DtcwtContext& env)
+                        DtcwtEnv& env,
+                        SubbandOutputs& subbandOutputs)
 {
-    cl::Event xloEvent, loloEvent;
+    for (int l = 0; l < env.numLevels; ++l) {
 
-    // Apply the non-decimating, special low pass filters that must be needed
-    h0y(commandQueue, image, env.noOutputTemps[0].xlo, 
-        {}, &xloEvent);
+        if (l == 0) {
 
-    h0x(commandQueue, env.noOutputTemps[0].xlo, env.noOutputTemps[0].lolo,
-        {xloEvent}, &loloEvent);
+            filter(commandQueue, image, {},
+                   env.levelTemps[l], 
+                   (env.startLevel == 0) ? 
+                       &subbandOutputs.subbands[0]
+                     : nullptr);
 
+        } else {
 
-    if (env.startLevel == 0) {
-        // Optionally create the parts that are needed, if an output is
-        // required
-        std::vector<cl::Event> outEvents(
-            filter(commandQueue, 
-                   image, {},
-                   env.noOutputTemps[0].xlo, {xloEvent},
-                   &env.outputs[0][0],
-                   &env.outputTemps[0])
-        );
-    }
+            decimateFilter(commandQueue, 
+                           env.levelTemps[l-1].lolo, 
+                               {env.levelTemps[l-1].loloDone},
+                           env.levelTemps[l], 
+                           (l >= env.startLevel == 0) ? 
+                               &subbandOutputs.subbands[l - env.startLevel]
+                             : nullptr);
 
-
-    for (int l = 1; l < env.numLevels; ++l) {
-
-        // The previous low-low has become the new base input
-        cl::Event xxEvent = loloEvent;
-
-        // Apply the low pass filters, normal version
-        g0y(commandQueue, env.noOutputTemps[l-1].lolo, env.noOutputTemps[l].xlo,
-            {xxEvent}, &xloEvent);
-
-        g0x(commandQueue, env.noOutputTemps[l].xlo, env.noOutputTemps[l].lolo,
-            {xloEvent}, &loloEvent);  
-
-
-        // Produce outputs only when interested in the outcome
-        if (l >= env.startLevel) 
-            std::vector<cl::Event> outEvents(
-                decimateFilter(commandQueue, 
-                               env.noOutputTemps[l-1].lolo, {loloEvent},
-                               env.noOutputTemps[l].xlo, {xloEvent},
-                               &env.outputs[l-env.startLevel][0],
-                               &env.outputTemps[l-env.startLevel])
-            );
-
-    }
-
-}
-
-
-
-std::tuple<std::vector<Subbands>,
-           std::vector<OutputTemps>,
-           std::vector<NoOutputTemps>>
-Dtcwt::dummyRun(size_t width, size_t height, int numLevels, int startLevel)
-{
-    std::vector<Subbands> out;
-    std::vector<OutputTemps> outTemps;
-    std::vector<NoOutputTemps> noOutTemps;
-
-    noOutTemps.push_back(NoOutputTemps());
-    // Apply the non-decimating, special low pass filters that must be needed
-    noOutTemps.back().xlo  = colFilter.dummyRun(width, height);
-    noOutTemps.back().lolo = rowFilter.dummyRun(noOutTemps.back().xlo);  
-
-    if (startLevel == 0) {
-        // Optionally create the parts that are needed, if an output is
-        // required
-        outTemps.push_back(OutputTemps());
-        out.push_back(Subbands());
-        std::tie(outTemps.back(), out.back())
-            = dummyFilter(width, height, noOutTemps.back().xlo);
-    }
-
-
-    for (int l = 1; l < numLevels; ++l) {
-
-        noOutTemps.push_back(NoOutputTemps());
-        // Apply the low pass filters, normal version
-        noOutTemps.back().xlo  
-            = colDecimateFilter.dummyRun((noOutTemps.end()-2)->lolo);
-        noOutTemps.back().lolo 
-            = rowDecimateFilter.dummyRun(noOutTemps.back().xlo);  
-
-        // Produce outputs only when interested in the outcome
-        if (l >= startLevel) {
-            outTemps.push_back(OutputTemps());
-            out.push_back(Subbands());
-            std::tie(outTemps.back(), out.back())
-                = dummyDecimateFilter((noOutTemps.end()-2)->lolo, 
-                                      noOutTemps.back().xlo);
         }
+
     }
 
-    return std::make_tuple(out, outTemps, noOutTemps);
 }
 
 
 
-std::tuple<OutputTemps, Subbands>
-Dtcwt::dummyFilter(size_t width, size_t height, cl::Image2D xlo)
+
+void Dtcwt::filter(cl::CommandQueue& commandQueue,
+                   cl::Image2D& xx, 
+                   const std::vector<cl::Event>& xxEvents,
+                   LevelTemps& levelTemps, Subbands* subbands)
 {
-    // Take in the unfiltered and one-way filtered images
-    OutputTemps outputTemps;
-    Subbands out;
+    // Apply the non-decimating, special low pass filters that must be needed
+    h0y(commandQueue, xx, levelTemps.xlo, 
+        xxEvents, &levelTemps.xloDone);
 
-    // Allocate space for the results of filtering
-    outputTemps.lox = rowFilter.dummyRun(width, height);
-    outputTemps.lohi = colFilter.dummyRun(outputTemps.lox);
-    outputTemps.hilo = rowFilter.dummyRun(xlo);
-    outputTemps.xbp = colFilter.dummyRun(width, height);
-    outputTemps.bpbp = rowFilter.dummyRun(outputTemps.xbp);
+    h0x(commandQueue, levelTemps.xlo, levelTemps.lolo,
+        {levelTemps.xloDone}, &levelTemps.loloDone);
 
-    // Space for the subband outputs
-    out[2] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[3] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[0] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[5] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[4] = quadToComplex.dummyRun(outputTemps.bpbp);
-    out[1] = quadToComplex.dummyRun(outputTemps.bpbp);
+    // If we've been given subbands to output to, we need to do more work:
+    if (subbands) {
 
-    // Temporaries and out subband storage
-    return std::tie(outputTemps, out);
+        // Low pass one way then high pass the other...
+        h0x(commandQueue, xx, levelTemps.lox,
+            xxEvents, &levelTemps.loxDone); 
+                                            
+        h1y(commandQueue, levelTemps.lox, levelTemps.lohi,
+            {levelTemps.loxDone}, &levelTemps.lohiDone);
+
+        // High pass the image that had been low-passed the other way...
+        h1x(commandQueue, levelTemps.xlo, levelTemps.hilo,
+            {levelTemps.xloDone}, &levelTemps.hiloDone);
+
+        // Band pass both ways...
+        hbpy(commandQueue, xx, levelTemps.xbp,
+             xxEvents, &levelTemps.xbpDone);
+
+        hbpx(commandQueue, levelTemps.xbp, levelTemps.bpbp,
+             {levelTemps.xbpDone}, &levelTemps.bpbpDone);
+
+        // Create events that, when all done signify everything about this stage
+        // is complete
+        subbands->done = std::vector<cl::Event>(3);
+
+        // ...and generate subband outputs.
+        quadToComplex(commandQueue, levelTemps.lohi, 
+                      {levelTemps.lohiDone}, &subbands->done[0], 
+                      &subbands->sb[2], &subbands->sb[3]);
+
+        quadToComplex(commandQueue, levelTemps.hilo, 
+                      {levelTemps.hiloDone}, &subbands->done[1], 
+                      &subbands->sb[0], &subbands->sb[5]);
+
+        quadToComplex(commandQueue, levelTemps.bpbp, 
+                      {levelTemps.bpbpDone}, &subbands->done[2], 
+                      &subbands->sb[4], &subbands->sb[1]);
+    }
 }
 
 
-std::tuple<OutputTemps, Subbands>
-Dtcwt::dummyFilter(cl::Image2D xx, cl::Image2D xlo)
-{
-    // Version for when we are given all images
-    return dummyFilter(xx.getImageInfo<CL_IMAGE_WIDTH>(),
-                       xx.getImageInfo<CL_IMAGE_HEIGHT>(),
-                       xlo);
-}
-
-
-
-std::vector<cl::Event> Dtcwt::filter(cl::CommandQueue& commandQueue,
+void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            cl::Image2D& xx, 
                            const std::vector<cl::Event>& xxEvents,
-                           cl::Image2D& xlo, 
-                           const std::vector<cl::Event>& xloEvents,
-                           cl::Image2D* out, 
-                           OutputTemps* outputTemps)
+                           LevelTemps& levelTemps, Subbands* subbands)
 {
-    // Low pass one way then high pass the other...
-    cl::Event loxEvent, lohiEvent;
+    // Apply the non-decimating, special low pass filters that must be needed
+    g0y(commandQueue, xx, levelTemps.xlo, 
+        xxEvents, &levelTemps.xloDone);
 
-    h0x(commandQueue, xx, outputTemps->lox,
-        xxEvents, &loxEvent);
+    g0x(commandQueue, levelTemps.xlo, levelTemps.lolo,
+        {levelTemps.xloDone}, &levelTemps.loloDone);
 
-    h1y(commandQueue, outputTemps->lox, outputTemps->lohi,
-        {loxEvent}, &lohiEvent);
+    // If we've been given subbands to output to, we need to do more work:
+    if (subbands) {
 
-    // High pass the image that had been low-passed the other way...
-    cl::Event hiloEvent;
+        // Low pass one way then high pass the other...
+        g0x(commandQueue, xx, levelTemps.lox,
+            xxEvents, &levelTemps.loxDone); 
+                                            
+        g1y(commandQueue, levelTemps.lox, levelTemps.lohi,
+            {levelTemps.loxDone}, &levelTemps.lohiDone);
 
-    h1x(commandQueue, xlo, outputTemps->hilo,
-        xloEvents, &hiloEvent);
+        // High pass the image that had been low-passed the other way...
+        g1x(commandQueue, levelTemps.xlo, levelTemps.hilo,
+            {levelTemps.xloDone}, &levelTemps.hiloDone);
 
-    // Band pass both ways...
-    cl::Event xbpEvent, bpbpEvent;
+        // Band pass both ways...
+        gbpy(commandQueue, xx, levelTemps.xbp,
+             xxEvents, &levelTemps.xbpDone);
 
-    hbpy(commandQueue, xx, outputTemps->xbp,
-         xxEvents, &xbpEvent);
+        gbpx(commandQueue, levelTemps.xbp, levelTemps.bpbp,
+             {levelTemps.xbpDone}, &levelTemps.bpbpDone);
 
-    hbpx(commandQueue, outputTemps->xbp, outputTemps->bpbp,
-         {xbpEvent}, &bpbpEvent);
+        // Create events that, when all done signify everything about this stage
+        // is complete
+        subbands->done = std::vector<cl::Event>(3);
 
-    // Create events that, when all done signify everything about this stage
-    // is complete
-    std::vector<cl::Event> completedEvents(3);
+        // ...and generate subband outputs.
+        quadToComplex(commandQueue, levelTemps.lohi, 
+                      {levelTemps.lohiDone}, &subbands->done[0], 
+                      &subbands->sb[2], &subbands->sb[3]);
 
-    // ...and generate subband outputs.
-    quadToComplex(commandQueue, outputTemps->lohi, 
-                  {lohiEvent}, &completedEvents[0], 
-                  &out[2], &out[3]);
+        quadToComplex(commandQueue, levelTemps.hilo, 
+                      {levelTemps.hiloDone}, &subbands->done[1], 
+                      &subbands->sb[0], &subbands->sb[5]);
 
-    quadToComplex(commandQueue, outputTemps->hilo, 
-                  {hiloEvent}, &completedEvents[1], 
-                  &out[0], &out[5]);
-
-    quadToComplex(commandQueue, outputTemps->bpbp, 
-                  {bpbpEvent}, &completedEvents[2], 
-                  &out[4], &out[1]);
-
-    return completedEvents;
+        quadToComplex(commandQueue, levelTemps.bpbp, 
+                      {levelTemps.bpbpDone}, &subbands->done[2], 
+                      &subbands->sb[4], &subbands->sb[1]);
+    }
 }
-
-
-
-std::tuple<OutputTemps, Subbands>
-Dtcwt::dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo)
-{
-    // Take in the unfiltered and one-way filtered images
-
-    OutputTemps outputTemps;
-    Subbands out;
-
-    // Allocate space for the results of filtering
-    outputTemps.lox = rowDecimateFilter.dummyRun(width, height);
-    outputTemps.lohi = colDecimateFilter.dummyRun(outputTemps.lox);
-    outputTemps.hilo = rowDecimateFilter.dummyRun(xlo);
-    outputTemps.xbp = colDecimateFilter.dummyRun(width, height);
-    outputTemps.bpbp = rowDecimateFilter.dummyRun(outputTemps.xbp);
-
-    // Space for the subband outputs
-    out[2] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[3] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[0] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[5] = quadToComplex.dummyRun(outputTemps.lohi); 
-    out[4] = quadToComplex.dummyRun(outputTemps.bpbp);
-    out[1] = quadToComplex.dummyRun(outputTemps.bpbp);
-
-    // Temporaries and out subband storage
-    return std::tie(outputTemps, out);
-}
-
-
-std::tuple<OutputTemps, Subbands>
-Dtcwt::dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo)
-{
-    // Version for when we are given all images
-    return dummyDecimateFilter(xx.getImageInfo<CL_IMAGE_WIDTH>(),
-                               xx.getImageInfo<CL_IMAGE_HEIGHT>(),
-                               xlo);
-}
-
-
-
-std::vector<cl::Event> Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
-                           cl::Image2D& xx, 
-                           const std::vector<cl::Event>& xxEvents,
-                           cl::Image2D& xlo, 
-                           const std::vector<cl::Event>& xloEvents,
-                           cl::Image2D* out, 
-                           OutputTemps* outputTemps)
-{
-    // Low pass one way then high pass the other...
-    cl::Event loxEvent, lohiEvent;
-
-    g0x(commandQueue, xx, outputTemps->lox,
-        xxEvents, &loxEvent);
-
-    g1y(commandQueue, outputTemps->lox, outputTemps->lohi,
-        {loxEvent}, &lohiEvent);
-
-    // High pass the image that had been low-passed the other way...
-    cl::Event hiloEvent;
-
-    g1x(commandQueue, xlo, outputTemps->hilo,
-        xloEvents, &hiloEvent);
-
-    // Band pass both ways...
-    cl::Event xbpEvent, bpbpEvent;
-
-    gbpy(commandQueue, xx, outputTemps->xbp,
-         xxEvents, &xbpEvent);
-
-    gbpx(commandQueue, outputTemps->xbp, outputTemps->bpbp,
-         {xbpEvent}, &bpbpEvent);
-
-    // Create events that, when all done signify everything about this stage
-    // is complete
-    std::vector<cl::Event> completedEvents(3);
-
-    // ...and generate subband outputs.
-    quadToComplex(commandQueue, outputTemps->lohi, 
-                  {lohiEvent}, &completedEvents[0], 
-                  &out[2], &out[3]);
-
-    quadToComplex(commandQueue, outputTemps->hilo, 
-                  {hiloEvent}, &completedEvents[1], 
-                  &out[0], &out[5]);
-
-    quadToComplex(commandQueue, outputTemps->bpbp, 
-                  {bpbpEvent}, &completedEvents[2], 
-                  &out[4], &out[1]);
-
-    return completedEvents;
-}
-
-
 
 
 

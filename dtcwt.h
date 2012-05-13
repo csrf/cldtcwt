@@ -18,30 +18,38 @@ struct Filters {
 };
 
 
-// Temporary images used whether the level produces an output or not
-struct NoOutputTemps {
-    cl::Image2D xlo, lolo;
-};
-
-
 // Temporary images needed only when the level produces an output 
-struct OutputTemps {
-    cl::Image2D lox, lohi, hilo, xbp, bpbp;
+struct LevelTemps {
+    cl::Image2D xlo, lolo, lox, lohi, hilo, xbp, bpbp;
+    cl::Event xloDone, loloDone, loxDone, lohiDone, hiloDone, xbpDone, bpbpDone;
 };
 
-typedef std::array<cl::Image2D, 6> Subbands;
 
-struct DtcwtContext {
+struct Subbands {
+    // 2-element images
+    std::array<cl::Image2D, 6> sb;
+
+    // List of events: when all done, all of sb are ready to use
+    std::vector<cl::Event> done;
+};
+
+
+struct DtcwtEnv {
     size_t width, height;
     int numLevels, startLevel;
 
-    std::vector<NoOutputTemps> noOutputTemps;
-    std::vector<OutputTemps>   outputTemps;
+    std::vector<LevelTemps> levelTemps;
 
-    Filters level1, level2;
+    cl::Context context_;
+};
 
-    // Outputs
-    std::vector<Subbands> outputs;
+
+struct SubbandOutputs {
+
+    SubbandOutputs(const DtcwtEnv& env);
+
+    std::vector<Subbands> subbands;
+
 };
 
 
@@ -51,46 +59,18 @@ private:
 
     Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
     DecimateFilter g0x, g0y, g1x, g1y, gbpx, gbpy;
+    cl::Context context_;
 
-    ColFilter colFilter;
-    RowFilter rowFilter;
-    ColDecimateFilter colDecimateFilter;
-    RowDecimateFilter rowDecimateFilter;
     QuadToComplex quadToComplex;
 
-    std::tuple<std::vector<Subbands>,
-               std::vector<OutputTemps>,
-               std::vector<NoOutputTemps>>
-        dummyRun(size_t width, size_t height, int numLevels, int startLevel);
+    void filter(cl::CommandQueue& commandQueue,
+                cl::Image2D& xx, const std::vector<cl::Event>& xxEvents,
+                LevelTemps& levelTemps, Subbands* subbands);
 
-    std::tuple<OutputTemps, Subbands>
-        dummyFilter(size_t width, size_t height, cl::Image2D xlo);
-    std::tuple<OutputTemps, Subbands>
-        dummyFilter(cl::Image2D xx, cl::Image2D xlo);
-
-    std::vector<cl::Event> 
-        filter(cl::CommandQueue& commandQueue,
-               cl::Image2D& xx, 
-               const std::vector<cl::Event>& xxEvents,
-               cl::Image2D& xlo, 
-               const std::vector<cl::Event>& xloEvents,
-               cl::Image2D* out, 
-               OutputTemps* outputTemps);
-
-    std::tuple<OutputTemps, Subbands>
-        dummyDecimateFilter(size_t width, size_t height, cl::Image2D xlo);
-    std::tuple<OutputTemps, Subbands>
-        dummyDecimateFilter(cl::Image2D xx, cl::Image2D xlo);
-
-    std::vector<cl::Event>
-        decimateFilter(cl::CommandQueue& commandQueue,
-                       cl::Image2D& xx, 
-                       const std::vector<cl::Event>& xxEvents,
-                       cl::Image2D& xlo, 
-                       const std::vector<cl::Event>& xloEvent,
-                       cl::Image2D* out, 
-                       OutputTemps* outputTemps);
-
+    void decimateFilter(cl::CommandQueue& commandQueue,
+                        cl::Image2D& xx, 
+                        const std::vector<cl::Event>& xxEvents,
+                        LevelTemps& levelTemps, Subbands* subbands);
 public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
@@ -98,12 +78,12 @@ public:
 
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image2D& image, 
-                     DtcwtContext& env);
+                     DtcwtEnv& env,
+                     SubbandOutputs& subbandOutputs);
 
     // Create the set of images etc needed to perform a DTCWT calculation
-    DtcwtContext createContext(size_t imageWidth, size_t imageHeight, 
-                               size_t numLevels, size_t startLevel,
-                               Filters level1, Filters level2);
+    DtcwtEnv createContext(size_t imageWidth, size_t imageHeight, 
+                           size_t numLevels, size_t startLevel);
 
 };
 
