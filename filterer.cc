@@ -16,8 +16,9 @@ cl::Sampler createSampler(cl::Context& context)
 
 
 
-static const std::string reflectRepeat = "CLK_ADDRESS_CLAMP";
-//"CLK_ADDRESS_MIRRORED_REPEAT";
+static const std::string reflectRepeat = "CLK_ADDRESS_MIRRORED_REPEAT";
+//"CLK_ADDRESS_CLAMP";
+
 
 
 Filter::Filter(cl::Context& context,
