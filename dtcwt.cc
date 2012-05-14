@@ -154,7 +154,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                            env.levelTemps[l-1].lolo, 
                                {env.levelTemps[l-1].loloDone},
                            env.levelTemps[l], 
-                           (l >= env.startLevel == 0) ? 
+                           (l >= env.startLevel) ? 
                                &subbandOutputs.subbands[l - env.startLevel]
                              : nullptr);
 
