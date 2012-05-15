@@ -9,61 +9,6 @@
 #include <tuple>
 
 
-class ColDecimateFilter {
-    // Class that provides column filtering capabilities
-
-public:
-
-    ColDecimateFilter(cl::Context& context,
-              const std::vector<cl::Device>& devices);
-
-    cl::Image2D operator() (cl::CommandQueue& commandQueue,
-         cl::Image2D& input, cl::Buffer& filter,
-         const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-         cl::Event* doneEvent = nullptr,
-         cl::Image2D* targetImage = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
-private:
-    cl::Kernel kernel;
-    cl::Context context;
-    cl::Sampler sampler;
-
-};
-
-
-
-class RowDecimateFilter {
-    // Class that provides row decimated filtering capabilities
-
-public:
-
-    RowDecimateFilter(cl::Context& context,
-              const std::vector<cl::Device>& devices);
-
-    cl::Image2D operator() (cl::CommandQueue& commandQueue,
-           cl::Image2D& input, cl::Buffer& filter,
-           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = nullptr,
-           cl::Image2D* targetImage = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
-private:
-    cl::Context context;
-    cl::Kernel kernel;
-    cl::Sampler sampler;
-
-};
-
-
-
-
 class Filter {
 // Class that provides filtering capabilities
 
@@ -81,11 +26,6 @@ public:
            cl::Image2D& output,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
 
 private:
     cl::Context context_;
@@ -117,10 +57,6 @@ public:
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);
 
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
 
 private:
     cl::Context context_;
@@ -133,59 +69,6 @@ private:
 };
 
 
-
-
-class ColFilter {
-    // Class that provides column filtering capabilities
-
-public:
-
-    ColFilter(cl::Context& context,
-              const std::vector<cl::Device>& devices);
-
-    // The filter operation
-    cl::Image2D operator() (cl::CommandQueue& commandQueue,
-           cl::Image2D& input, cl::Buffer& filter,
-           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = nullptr,
-           cl::Image2D* targetImage = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
-private:
-    cl::Context context;
-    cl::Kernel kernel;
-    cl::Sampler sampler;
-
-};
-
-
-class RowFilter {
-    // Class that provides row filtering capabilities
-
-public:
-
-    RowFilter(cl::Context& context,
-              const std::vector<cl::Device>& devices);
-
-    cl::Image2D operator() (cl::CommandQueue& commandQueue,
-           cl::Image2D& input, cl::Buffer& filter,
-           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = nullptr,
-           cl::Image2D* targetImage = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
-
-private:
-    cl::Context context;
-    cl::Kernel kernel;
-    cl::Sampler sampler;
-
-};
 
 
 class QuadToComplex {
@@ -203,10 +86,6 @@ public:
            cl::Image2D& out1, cl::Image2D& out2,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);
-
-    // Create an image with the right size to hold the output
-    cl::Image2D dummyRun(const cl::Image2D& input);
-    cl::Image2D dummyRun(size_t inWidth, size_t inHeight);
 
 private:
     cl::Context context;

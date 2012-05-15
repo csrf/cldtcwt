@@ -86,7 +86,9 @@ int main()
             Filter::y 
         };
 
-        cl::Image2D outImage = h.dummyRun(inImage);
+        cl::Image2D outImage
+            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>(),
+                                     inImage.getImageInfo<CL_IMAGE_HEIGHT>());
 
         h(commandQueue, inImage, outImage);
 
@@ -97,7 +99,9 @@ int main()
             DecimateFilter::x 
         };
 
-        cl::Image2D outImageD = hd.dummyRun(inImage);
+        cl::Image2D outImageD
+            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>() / 2,
+                                     inImage.getImageInfo<CL_IMAGE_HEIGHT>());
 
         hd(commandQueue, inImage, outImageD);
 
