@@ -15,7 +15,7 @@ static size_t decimateDim(size_t inSize)
 
 
 
-SubbandOutputs::SubbandOutputs(const DtcwtEnv& env)
+DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 {
     for (int l = env.startLevel; l < env.numLevels; ++l) {
 
@@ -24,7 +24,7 @@ SubbandOutputs::SubbandOutputs(const DtcwtEnv& env)
         const size_t width = baseImage.getImageInfo<CL_IMAGE_WIDTH>() / 2,
                     height = baseImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
 
-        Subbands sbs;
+        LevelOutput sbs;
 
         // Create all the complex images at the right size
         for (auto& sb: sbs.sb)
@@ -65,10 +65,10 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
 
 
 // Create the set of images etc needed to perform a DTCWT calculation
-DtcwtEnv Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
+DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
                                   size_t numLevels, size_t startLevel)
 {
-    DtcwtEnv c;
+    DtcwtTemps c;
 
     // Copy settings to the saved structure
     c.context_ = context_;
@@ -133,8 +133,8 @@ DtcwtEnv Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                         cl::Image2D& image, 
-                        DtcwtEnv& env,
-                        SubbandOutputs& subbandOutputs)
+                        DtcwtTemps& env,
+                        DtcwtOutput& subbandOutputs)
 {
     for (int l = 0; l < env.numLevels; ++l) {
 
@@ -168,7 +168,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 void Dtcwt::filter(cl::CommandQueue& commandQueue,
                    cl::Image2D& xx, 
                    const std::vector<cl::Event>& xxEvents,
-                   LevelTemps& levelTemps, Subbands* subbands)
+                   LevelTemps& levelTemps, LevelOutput* subbands)
 {
     // Apply the non-decimating, special low pass filters that must be needed
     h0y(commandQueue, xx, levelTemps.xlo, 
@@ -221,7 +221,7 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            cl::Image2D& xx, 
                            const std::vector<cl::Event>& xxEvents,
-                           LevelTemps& levelTemps, Subbands* subbands)
+                           LevelTemps& levelTemps, LevelOutput* subbands)
 {
     // Apply the non-decimating, special low pass filters that must be needed
     g0y(commandQueue, xx, levelTemps.xlo, 

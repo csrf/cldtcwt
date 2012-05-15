@@ -111,18 +111,18 @@ int main()
 
         std::cout << "Creating the DTCWT environment..." << std::endl;
 
-        DtcwtEnv env = dtcwt.createContext(bmp.cols, bmp.rows,
+        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
                                            numLevels, startLevel);
 
         std::cout << "Creating the subband output images..." << std::endl;
-        SubbandOutputs out(env);
+        DtcwtOutput out(env);
 
         std::cout << "Running DTCWT" << std::endl;
 
 
 
         time_t start, end;
-        const int numFrames = 1;
+        const int numFrames = 1000;
         time(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(commandQueue, inImage, env, out);

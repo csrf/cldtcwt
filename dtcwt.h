@@ -25,16 +25,8 @@ struct LevelTemps {
 };
 
 
-struct Subbands {
-    // 2-element images
-    std::array<cl::Image2D, 6> sb;
 
-    // List of events: when all done, all of sb are ready to use
-    std::vector<cl::Event> done;
-};
-
-
-struct DtcwtEnv {
+struct DtcwtTemps {
     size_t width, height;
     int numLevels, startLevel;
 
@@ -44,11 +36,22 @@ struct DtcwtEnv {
 };
 
 
-struct SubbandOutputs {
 
-    SubbandOutputs(const DtcwtEnv& env);
+struct LevelOutput {
+    // 2-element images
+    std::array<cl::Image2D, 6> sb;
 
-    std::vector<Subbands> subbands;
+    // List of events: when all done, all of sb are ready to use
+    std::vector<cl::Event> done;
+};
+
+
+
+struct DtcwtOutput {
+
+    DtcwtOutput(const DtcwtTemps& env);
+
+    std::vector<LevelOutput> subbands;
 
 };
 
@@ -65,12 +68,12 @@ private:
 
     void filter(cl::CommandQueue& commandQueue,
                 cl::Image2D& xx, const std::vector<cl::Event>& xxEvents,
-                LevelTemps& levelTemps, Subbands* subbands);
+                LevelTemps& levelTemps, LevelOutput* subbands);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
                         cl::Image2D& xx, 
                         const std::vector<cl::Event>& xxEvents,
-                        LevelTemps& levelTemps, Subbands* subbands);
+                        LevelTemps& levelTemps, LevelOutput* subbands);
 public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
@@ -78,11 +81,11 @@ public:
 
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image2D& image, 
-                     DtcwtEnv& env,
-                     SubbandOutputs& subbandOutputs);
+                     DtcwtTemps& env,
+                     DtcwtOutput& subbandOutputs);
 
     // Create the set of images etc needed to perform a DTCWT calculation
-    DtcwtEnv createContext(size_t imageWidth, size_t imageHeight, 
+    DtcwtTemps createContext(size_t imageWidth, size_t imageHeight, 
                            size_t numLevels, size_t startLevel);
 
 };

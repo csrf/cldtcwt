@@ -116,10 +116,10 @@ int main()
 
         Dtcwt dtcwt(context, devices, level1, level2);
 
-        DtcwtEnv env = dtcwt.createContext(bmp.cols, bmp.rows,
+        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
                                            numLevels, startLevel);
 
-        SubbandOutputs sbOutputs = {env};
+        DtcwtOutput sbOutputs = {env};
 
         std::cout << "Running DTCWT" << std::endl;
 
