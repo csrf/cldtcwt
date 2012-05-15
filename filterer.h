@@ -6,7 +6,6 @@
 #endif
 #include "cl.hpp"
 #include <vector>
-#include <tuple>
 
 
 class Filter {
