@@ -14,7 +14,6 @@ static size_t decimateDim(size_t inSize)
 
 
 
-#include <iostream>
 
 SubbandOutputs::SubbandOutputs(const DtcwtEnv& env)
 {
@@ -27,7 +26,6 @@ SubbandOutputs::SubbandOutputs(const DtcwtEnv& env)
 
         Subbands sbs;
 
-        std::cout << width << " " << height << std::endl;
         // Create all the complex images at the right size
         for (auto& sb: sbs.sb)
             sb = {env.context_, 0, {CL_RG, CL_FLOAT}, width, height};
