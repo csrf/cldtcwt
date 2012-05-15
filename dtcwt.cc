@@ -204,16 +204,16 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
         // ...and generate subband outputs.
         quadToComplex(commandQueue, levelTemps.lohi, 
-                      {levelTemps.lohiDone}, &subbands->done[0], 
-                      &subbands->sb[2], &subbands->sb[3]);
+                      subbands->sb[2], subbands->sb[3],
+                      {levelTemps.lohiDone}, &subbands->done[0]);
 
         quadToComplex(commandQueue, levelTemps.hilo, 
-                      {levelTemps.hiloDone}, &subbands->done[1], 
-                      &subbands->sb[0], &subbands->sb[5]);
+                      subbands->sb[0], subbands->sb[5],
+                      {levelTemps.hiloDone}, &subbands->done[1]);
 
         quadToComplex(commandQueue, levelTemps.bpbp, 
-                      {levelTemps.bpbpDone}, &subbands->done[2], 
-                      &subbands->sb[4], &subbands->sb[1]);
+                      subbands->sb[4], subbands->sb[1],
+                      {levelTemps.bpbpDone}, &subbands->done[2]);
     }
 }
 
@@ -257,16 +257,16 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // ...and generate subband outputs.
         quadToComplex(commandQueue, levelTemps.lohi, 
-                      {levelTemps.lohiDone}, &subbands->done[0], 
-                      &subbands->sb[2], &subbands->sb[3]);
+                      subbands->sb[2], subbands->sb[3],
+                      {levelTemps.lohiDone}, &subbands->done[0]); 
 
         quadToComplex(commandQueue, levelTemps.hilo, 
-                      {levelTemps.hiloDone}, &subbands->done[1], 
-                      &subbands->sb[0], &subbands->sb[5]);
+                      subbands->sb[0], subbands->sb[5],
+                      {levelTemps.hiloDone}, &subbands->done[1]); 
 
         quadToComplex(commandQueue, levelTemps.bpbp, 
-                      {levelTemps.bpbpDone}, &subbands->done[2], 
-                      &subbands->sb[4], &subbands->sb[1]);
+                      subbands->sb[4], subbands->sb[1],
+                      {levelTemps.bpbpDone}, &subbands->done[2]); 
     }
 }
 

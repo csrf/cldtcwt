@@ -1055,23 +1055,16 @@ cl::Image2D QuadToComplex::dummyRun(size_t inWidth, size_t inHeight)
 
 
 
-std::tuple<cl::Image2D, cl::Image2D>
-QuadToComplex::operator() (cl::CommandQueue& commandQueue,
-               cl::Image2D& input,
+void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
+               const cl::Image2D& input,
+               cl::Image2D& out1, cl::Image2D& out2,
                const std::vector<cl::Event>& waitEvents,
-               cl::Event* doneEvent,
-               cl::Image2D* target1, cl::Image2D* target2)
+               cl::Event* doneEvent)
 {
-    // Outputs are images with two floats per location: (real, imag)
-    // Allocate new output images if they weren't passed in
-    cl::Image2D out1 = target1? *target1 : dummyRun(input);
-    cl::Image2D out2 = target2? *target2 : dummyRun(input);
-
     // Set up all the arguments to the kernel
     kernel.setArg(0, input);
     kernel.setArg(2, out1);
     kernel.setArg(3, out2);
-
 
     const size_t wgSize = 16;
 
@@ -1085,8 +1078,6 @@ QuadToComplex::operator() (cl::CommandQueue& commandQueue,
                                       globalSize,
                                       {wgSize, wgSize},
                                       &waitEvents, doneEvent);
-
-    return std::make_tuple(out1, out2);
 }
 
 

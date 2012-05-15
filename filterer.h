@@ -197,13 +197,12 @@ public:
     QuadToComplex(cl::Context& context,
               const std::vector<cl::Device>& devices);
 
-    std::tuple<cl::Image2D, cl::Image2D>
+    void
     operator() (cl::CommandQueue& commandQueue,
-           cl::Image2D& input,
+           const cl::Image2D& input,
+           cl::Image2D& out1, cl::Image2D& out2,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = nullptr,
-           cl::Image2D* target1 = nullptr,
-           cl::Image2D* target2 = nullptr);
+           cl::Event* doneEvent = nullptr);
 
     // Create an image with the right size to hold the output
     cl::Image2D dummyRun(const cl::Image2D& input);
