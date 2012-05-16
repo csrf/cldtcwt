@@ -8,12 +8,15 @@ AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_PROG_CXX
 
+AX_CHECK_GL
+AX_CHECK_GLUT
+
 AX_CHECK_CL
 if test "X$no_cl" = "Xyes"; then
     AC_MSG_FAILURE([You need OpenCL])
 fi
 
-PKG_CHECK_MODULES([opencv], [opencv])
+PKG_CHECK_MODULES([opencv], [opencv glew])
 
 
 AC_CONFIG_FILES([Makefile])
