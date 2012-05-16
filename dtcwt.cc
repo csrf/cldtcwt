@@ -324,9 +324,9 @@ EnergyMap::EnergyMap(cl::Context& context,
                     " + sqrt(abs_h1_2 * abs_h4_2) "
                     " + sqrt(abs_h2_2 * abs_h5_2))"
                     "/"
-                    "sqrt(1.5 * (  abs_h0_2 + abs_h1_2 + abs_h2_2"
-                               " + abs_h3_2 + abs_h4_2 + abs_h5_2));"
-
+                    "sqrt(0.001 + "
+                    "   1.5 * (  abs_h0_2 + abs_h1_2 + abs_h2_2"
+                               " + abs_h3_2 + abs_h4_2 + abs_h5_2));" 
 
                 // Produce output
                 "write_imagef(out, (int2) (x, y), result);"
