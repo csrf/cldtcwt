@@ -90,4 +90,31 @@ public:
 
 };
 
+
+
+
+class EnergyMap {
+    // Class that converts an interleaved image to two subbands with real
+    // and imaginary components
+
+public:
+
+    EnergyMap(cl::Context& context,
+              const std::vector<cl::Device>& devices);
+
+    void
+    operator() (cl::CommandQueue& commandQueue,
+           const LevelOutput& levelOutput,
+           cl::Image2D& energyMap,
+           cl::Event* doneEvent = nullptr);
+
+private:
+    cl::Context context_;
+    cl::Kernel kernel_;
+
+};
+
+
+
+
 #endif
