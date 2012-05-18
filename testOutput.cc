@@ -87,20 +87,6 @@ void displayComplexImage(cl::CommandQueue& cq, cl::Image2D& image)
     std::cout << std::endl;
 }
 
-void render(void)
-{
-    
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glBegin(GL_TRIANGLES);
-		glVertex3f(-0.5,-0.5,0.0);
-		glVertex3f(0.5,0.0,0.0);
-		glVertex3f(0.0,0.5,0.0);
-	glEnd();
-
-	glutSwapBuffers();
-    std::cout << "Called!" << std::endl;
-}
 
 cl::Platform* gplatform;
 std::vector<cl::Device>* gdevices;
@@ -110,7 +96,29 @@ cl::Image2D* ginImage;
 Dtcwt* gdtcwt;
 DtcwtOutput* gout;
 DtcwtTemps* genv;
+GLuint texture;
 
+
+void render(void)
+{
+    
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(1.0, 1.0, 1.0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    	glBegin(GL_QUADS);
+
+
+        glTexCoord2f(1.0f, 1.0f); glVertex2f( 1, 1);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(-1, 1);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(-1,-1);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f( 1,-1);
+	glEnd();
+
+	glutSwapBuffers();
+    std::cout << "Called!" << std::endl;
+}
 
 void idle(void)
 {
@@ -132,6 +140,7 @@ int main(int argc, char** argv)
         glutInitWindowSize(bmp.cols / 2, bmp.rows / 2);
         glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
 
+
         glutCreateWindow("DTCWT");
 
         glutDisplayFunc(render);
@@ -139,6 +148,23 @@ int main(int argc, char** argv)
 
 
         glewInit();
+
+        // Create the texture
+        glGenTextures(1, &texture);
+
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        float img[100][100] = {0.5};
+        for (int x = 0; x < 100; ++x)
+            for (int y = 0; y < 100; ++y)
+                img[y][x] = static_cast<float>(x) / 100.0f;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 100, 100, 0,
+                     GL_LUMINANCE, GL_FLOAT, img);
 
 
 
