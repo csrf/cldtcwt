@@ -7,16 +7,16 @@
 #include <stdexcept>
 
 static const std::string acquireLockFn =
-    "void acquireLock(__global int* lock)"
+    "void acquireLock(__global volatile int* lock)"
     "{"
         // Wait until the lock was free before a swap
-        "while (atomic_xchg(lock, 1) == 1)"
+        "while (atomic_cmpxchg(lock, 0, 1) == 1)"
             ";"
     "}\n";
 
 
 static const std::string releaseLockFn =
-    "void releaseLock(__global int* lock)"
+    "void releaseLock(__global volatile int* lock)"
     "{"
         // Unlock
         "atomic_xchg(lock, 0);"
@@ -40,7 +40,7 @@ FindMax::FindMax(cl::Context& context,
                              "global int2* maxCoords,"
                              "global int* numOutputs,"
                              "const int maxNumOutputs,"
-                             "global int* lock)\n"
+                             "volatile global int* lock)\n"
         "{"
             "sampler_t inputSampler ="
                 "CLK_NORMALIZED_COORDS_FALSE"
@@ -96,8 +96,8 @@ FindMax::FindMax(cl::Context& context,
                 "acquireLock(lock);"
 
                 // Write it out (if there's enough space)
-                "if (*numOutputs < maxNumOutputs)"
-                    "maxCoords[(*numOutputs)++] = (int2) (gx, gy);"
+                //"if (*numOutputs < maxNumOutputs)"
+                //    "maxCoords[(*numOutputs)++] = (int2) (gx, gy);"
 
                 "releaseLock(lock);"
             "}"

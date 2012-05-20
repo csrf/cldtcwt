@@ -42,7 +42,65 @@ int main()
         
         FindMax findMax(context, devices);
 
-  
+        const int width = 40, height = 40;
+        // Set up data for the input image
+        float data[height][width];
+        for (int x = 0; x < width; ++x)
+            for (int y = 0; y < height; ++y)
+                data[y][x] = 0.0f;
+        //data[10][5] = 1.0f;
+        data[15][15] = 1.0f;
+        data[13][15] = 1.0f;
+
+        cl::Image2D inImage = {
+            context, 
+            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+            cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+            width, height, 0,
+            data
+        };
+
+        int zero = 0;
+
+        cl::Buffer outputs = {
+            context,
+            0,              // Flags
+            10 * 2 * sizeof(int) // Size to allocate
+        };
+
+        cl::Buffer numOutputs = {
+            context,
+            CL_MEM_COPY_HOST_PTR,              // Flags
+            sizeof(int), // Size to allocate
+            &zero
+        };
+
+        cl::Buffer lock = {
+            context,
+            CL_MEM_COPY_HOST_PTR,              // Flags
+            sizeof(int), // Size to allocate
+            &zero 
+        };
+
+
+        findMax(commandQueue, inImage, outputs, numOutputs, lock);
+        commandQueue.finish();
+
+        int numOutputsVal;
+        commandQueue.enqueueReadBuffer(numOutputs, true, 0, sizeof(int),
+                                       &numOutputsVal);
+
+        std::cout << numOutputsVal << " outputs" << std::endl;
+        
+        if (numOutputsVal > 0) {
+            std::vector<int> results(numOutputsVal * 2);
+            commandQueue.enqueueReadBuffer(outputs, true, 0, 
+                                           numOutputsVal * 2 * sizeof(int),
+                                           &results[0]);
+
+            for (auto v: results)
+                std::cout << v << std::endl;
+        }
 
     }
     catch (cl::Error err) {
