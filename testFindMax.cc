@@ -50,7 +50,10 @@ int main()
                 data[y][x] = 0.0f;
         //data[10][5] = 1.0f;
         data[15][15] = 1.0f;
+        data[18][12] = 1.0f;
         data[13][15] = 1.0f;
+
+        data[24][30] = 1.0f;
 
         cl::Image2D inImage = {
             context, 
@@ -91,6 +94,8 @@ int main()
                                        &numOutputsVal);
 
         std::cout << numOutputsVal << " outputs" << std::endl;
+
+        numOutputsVal = (numOutputsVal > 10) ? 10 : numOutputsVal;
         
         if (numOutputsVal > 0) {
             std::vector<int> results(numOutputsVal * 2);

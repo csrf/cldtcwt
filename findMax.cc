@@ -92,14 +92,13 @@ FindMax::FindMax(cl::Context& context,
             "surroundMax = max(surroundMax, inputLocal[ly+1][lx+2]);"
             "surroundMax = max(surroundMax, inputLocal[ly+2][lx+2]);"
 
-            "if (inputLocal[lx+1][ly+1] > surroundMax) {"
-                "acquireLock(lock);"
+            "if (inputLocal[ly+1][lx+1] > surroundMax) {"
+                "int ourOutputPos = atomic_inc(numOutputs);"
 
                 // Write it out (if there's enough space)
-                //"if (*numOutputs < maxNumOutputs)"
-                //    "maxCoords[(*numOutputs)++] = (int2) (gx, gy);"
+                "if (ourOutputPos < maxNumOutputs)"
+                    "maxCoords[ourOutputPos] = (int2) (gx, gy);"
 
-                "releaseLock(lock);"
             "}"
         "}";
 
