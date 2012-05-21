@@ -50,7 +50,8 @@ int main()
                 data[y][x] = 0.0f;
         //data[10][5] = 1.0f;
         data[15][15] = 1.0f;
-        data[18][12] = 1.0f;
+        data[16][15] = 0.5f;
+        data[18][12] = 0.05f;
         data[13][15] = 1.0f;
 
         data[24][30] = 1.0f;
@@ -68,7 +69,7 @@ int main()
         cl::Buffer outputs = {
             context,
             0,              // Flags
-            10 * 2 * sizeof(int) // Size to allocate
+            10 * 2 * sizeof(float) // Size to allocate
         };
 
         cl::Buffer numOutputs = {
@@ -86,7 +87,7 @@ int main()
         };
 
 
-        findMax(commandQueue, inImage, outputs, numOutputs, lock);
+        findMax(commandQueue, inImage, 0.1f, outputs, numOutputs, lock);
         commandQueue.finish();
 
         int numOutputsVal;
@@ -98,9 +99,9 @@ int main()
         numOutputsVal = (numOutputsVal > 10) ? 10 : numOutputsVal;
         
         if (numOutputsVal > 0) {
-            std::vector<int> results(numOutputsVal * 2);
+            std::vector<float> results(numOutputsVal * 2);
             commandQueue.enqueueReadBuffer(outputs, true, 0, 
-                                           numOutputsVal * 2 * sizeof(int),
+                                           numOutputsVal * 2 * sizeof(float),
                                            &results[0]);
 
             for (auto v: results)

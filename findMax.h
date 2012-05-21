@@ -21,6 +21,7 @@ public:
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
            const cl::Image2D& input,
+           float threshold,
            cl::Buffer& output,
            cl::Buffer& numOutputs,
            cl::Buffer& lock,

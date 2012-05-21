@@ -37,7 +37,8 @@ FindMax::FindMax(cl::Context& context,
 
     kernelInput
     << "__kernel void findMax(read_only image2d_t input,"
-                             "global int2* maxCoords,"
+                             "const float threshold,"
+                             "global float2* maxCoords,"
                              "global int* numOutputs,"
                              "const int maxNumOutputs,"
                              "volatile global int* lock)\n"
@@ -82,8 +83,10 @@ FindMax::FindMax(cl::Context& context,
              "|| gy >= get_image_height(input))"
                 "return;"
 
-            // Consider each of the surrounds
-            "float surroundMax =            inputLocal[ly  ][lx  ];"
+            // Consider each of the surrounds; must be at least threshold,
+            // anyway
+            "float surroundMax = threshold;"
+            "surroundMax = max(surroundMax, inputLocal[ly  ][lx  ]);"
             "surroundMax = max(surroundMax, inputLocal[ly+1][lx  ]);"
             "surroundMax = max(surroundMax, inputLocal[ly+2][lx  ]);"
             "surroundMax = max(surroundMax, inputLocal[ly  ][lx+1]);"
@@ -94,10 +97,25 @@ FindMax::FindMax(cl::Context& context,
 
             "if (inputLocal[ly+1][lx+1] > surroundMax) {"
                 "int ourOutputPos = atomic_inc(numOutputs);"
+                
+                // Now refine the position.  Not so refined as original
+                // version: we ignore the cross term between x and y (since
+                // they would involve pseudo-inverses)
+                "float ratioX = "
+                       "(inputLocal[ly+1][lx+2] - inputLocal[ly+1][lx+1])"
+                     "/ (inputLocal[ly+1][lx  ] - inputLocal[ly+1][lx+1]);"
+
+                "float xOut = 0.5f * (1-ratioX) / (1+ratioX) + (float) gx;"
+
+                "float ratioY = "
+                       "(inputLocal[ly+2][lx+1] - inputLocal[ly+1][lx+1])"
+                     "/ (inputLocal[ly  ][lx+1] - inputLocal[ly+1][lx+1]);"
+
+                "float yOut = 0.5f * (1-ratioY) / (1+ratioY) + (float) gy;"
 
                 // Write it out (if there's enough space)
                 "if (ourOutputPos < maxNumOutputs)"
-                    "maxCoords[ourOutputPos] = (int2) (gx, gy);"
+                    "maxCoords[ourOutputPos] = (float2) (xOut, yOut);"
 
             "}"
         "}";
@@ -131,6 +149,7 @@ static int roundWGs(int l, int lWG)
 void FindMax::operator() 
       (cl::CommandQueue& commandQueue,
        const cl::Image2D& input,
+       float threshold,
        cl::Buffer& output,
        cl::Buffer& numOutputs,
        cl::Buffer& lock,
@@ -152,10 +171,11 @@ void FindMax::operator()
 
     // Set all the arguments
     kernel_.setArg(0, input);
-    kernel_.setArg(1, output);
-    kernel_.setArg(2, numOutputs);
-    kernel_.setArg(3, int(output.getInfo<CL_MEM_SIZE>() / (2 * sizeof(int))));
-    kernel_.setArg(4, lock);
+    kernel_.setArg(1, (threshold));
+    kernel_.setArg(2, output);
+    kernel_.setArg(3, numOutputs);
+    kernel_.setArg(4, int(output.getInfo<CL_MEM_SIZE>() / (2 * sizeof(int))));
+    kernel_.setArg(5, lock);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
