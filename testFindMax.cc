@@ -54,7 +54,7 @@ int main()
         data[18][12] = 0.05f;
         data[13][15] = 1.0f;
 
-        data[24][30] = 1.0f;
+        data[24][30] = 0.5f;
 
         cl::Image2D inImage = {
             context, 
@@ -86,8 +86,19 @@ int main()
             &zero 
         };
 
+        float zerof = 0.5f;
 
-        findMax(commandQueue, inImage, 0.1f, outputs, numOutputs, lock);
+        cl::Image2D zeroImg = {
+            context, 
+            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+            cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+            1, 1, 0,
+            &zerof
+        };
+
+
+        findMax(commandQueue, inImage, zeroImg, zeroImg, 
+                0.1f, outputs, numOutputs, lock);
         commandQueue.finish();
 
         int numOutputsVal;
