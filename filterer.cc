@@ -531,4 +531,38 @@ void QuadToComplex::operator() (cl::CommandQueue& commandQueue,
 
 
 
+Rescale::Rescale(cl::Context& context,
+                 const std::vector<cl::Device>& devices)
+    : context_(context)
+{
+    const std::string sourceCode = 
+    "__kernel void rescale(__read_only image2d_t input,"
+                          "__write_only image2d_t output,"
+                          "const float scaleFactor)"
+    "{"
+    "}";
+
+    // Bundle the code up
+    cl::Program::Sources source;
+    source.push_back(std::make_pair(sourceCode.c_str(), sourceCode.length()));
+
+    // Compile it...
+    cl::Program program(context, source);
+
+    try {
+        program.build(devices);
+    } catch(cl::Error err) {
+	    std::cerr 
+		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
+		    << std::endl;
+	    throw;
+    } 
+        
+    // ...and extract the useful part, viz the kernel
+    kernel_ = cl::Kernel(program, "rescale");
+}
+
+
+
+
 

@@ -94,6 +94,34 @@ private:
 };
 
 
+class Rescale {
+    // Class that takes an image, and interpolates it up or down to a new
+    // scale.  The scaling is centred around the centre point of the
+    // image
+    
+public:
+
+    Rescale(cl::Context& context, const std::vector<cl::Device>& devices);
+
+    void operator() (cl::CommandQueue& commandQueue,
+                     const cl::Image2D& input,
+                     cl::Image2D& output,
+                     float scalingFactor,
+                     const std::vector<cl::Event>& waitEvents
+                         = std::vector<cl::Event>(),
+                     cl::Event* doneEvent = nullptr);
+
+
+private:
+
+    cl::Context context_;
+    cl::Kernel kernel_;
+
+};
+
+
+
+
 void cornernessMap(cl::Context& context,
                    cl::CommandQueue& commandQueue,
                    cl::Kernel& cornernessMapKernel,
