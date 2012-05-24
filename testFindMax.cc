@@ -12,7 +12,6 @@
 
 #include <stdexcept>
 
-#include <cv.h>
 #include <highgui.h>
 
 

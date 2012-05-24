@@ -18,7 +18,6 @@
 
 #include <stdexcept>
 
-#include <cv.h>
 #include <highgui.h>
 
 #include <GL/glxew.h>
