@@ -57,11 +57,15 @@ int main()
 
         cl::Image2D inImage = {
             context, 
-            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+            CL_MEM_READ_WRITE,
             cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
-            width, height, 0,
-            data
+            width, height, 0
         };
+
+
+        writeImage2D(commandQueue, inImage, &data[0][0]);
+        commandQueue.finish();
+                                       
 
         int zero = 0;
 
