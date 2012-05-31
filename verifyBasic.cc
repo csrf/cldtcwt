@@ -125,12 +125,12 @@ int main()
 
         //-----------------------------------------------------------------
         // Starting test code
-  
-        // Read in image
-        cv::Mat bmp = cv::imread("test.bmp", 0);
-        cl::Image2D inImage = createImage2D(context, bmp);
 
-        std::cout << bmp.rows << " " << bmp.cols << std::endl;
+        cv::Mat input = cv::Mat::zeros(32, 32, cv::DataType<float>::type);
+        input.at<float>(15,12) = 1.0f;
+  
+        cl::Image2D inImage = createImage2D(context, input);
+
         std::cout << "Creating Dtcwt" << std::endl;
 
         Filters level1, level2;
@@ -138,23 +138,15 @@ int main()
 
         Dtcwt dtcwt(context, devices, level1, level2);
 
-        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
-                                           numLevels, startLevel);
+        DtcwtTemps env = dtcwt.createContext(input.cols, input.rows,
+                                             numLevels, startLevel);
 
         DtcwtOutput sbOutputs = {env};
-
-        EnergyMap energyMap(context, devices);
-
-        cl::Image2D emOut = createImage2D(context, bmp.cols / 2,
-                                                   bmp.rows / 2);
 
         std::cout << "Running DTCWT" << std::endl;
 
         
         dtcwt(commandQueue, inImage, env, sbOutputs);
-
-        energyMap(commandQueue, sbOutputs.subbands[0], emOut);
-
         commandQueue.finish();
 
         std::cout << "Saving image" << std::endl;
@@ -165,8 +157,6 @@ int main()
         saveComplexImage("sb3.dat", commandQueue, sbOutputs.subbands[0].sb[3]);
         saveComplexImage("sb4.dat", commandQueue, sbOutputs.subbands[0].sb[4]);
         saveComplexImage("sb5.dat", commandQueue, sbOutputs.subbands[0].sb[5]);
-
-        saveRealImage("em.dat", commandQueue, emOut);
 
     }
     catch (cl::Error err) {
