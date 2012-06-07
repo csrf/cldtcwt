@@ -151,12 +151,13 @@ int main()
 
         std::cout << "Saving image" << std::endl;
 
-        saveComplexImage("sb0.dat", commandQueue, sbOutputs.subbands[0].sb[0]);
-        saveComplexImage("sb1.dat", commandQueue, sbOutputs.subbands[0].sb[1]);
-        saveComplexImage("sb2.dat", commandQueue, sbOutputs.subbands[0].sb[2]);
-        saveComplexImage("sb3.dat", commandQueue, sbOutputs.subbands[0].sb[3]);
-        saveComplexImage("sb4.dat", commandQueue, sbOutputs.subbands[0].sb[4]);
-        saveComplexImage("sb5.dat", commandQueue, sbOutputs.subbands[0].sb[5]);
+        saveRealImage("lolo.dat", commandQueue, env.levelTemps[1].lolo);
+        saveComplexImage("sb0.dat", commandQueue, sbOutputs.subbands[1].sb[0]);
+        saveComplexImage("sb1.dat", commandQueue, sbOutputs.subbands[1].sb[1]);
+        saveComplexImage("sb2.dat", commandQueue, sbOutputs.subbands[1].sb[2]);
+        saveComplexImage("sb3.dat", commandQueue, sbOutputs.subbands[1].sb[3]);
+        saveComplexImage("sb4.dat", commandQueue, sbOutputs.subbands[1].sb[4]);
+        saveComplexImage("sb5.dat", commandQueue, sbOutputs.subbands[1].sb[5]);
 
     }
     catch (cl::Error err) {
