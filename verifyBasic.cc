@@ -211,9 +211,11 @@ int main()
         //-----------------------------------------------------------------
         // Starting test code
 
-        cv::Mat input = cv::Mat::zeros(128, 128, cv::DataType<float>::type);
-        input.at<float>(63,63) = 1.0f;
+        // This is the input we really want to put into a decimating layer
+        cv::Mat input = cv::Mat::zeros(64, 64, cv::DataType<float>::type);
+        input.at<float>(30,30) = 1.0f;
   
+        //cl::Image2D baseInImage = createImage2D(context, baseInput);
         cl::Image2D inImage = createImage2D(context, input);
 
         std::cout << "Creating Dtcwt" << std::endl;
@@ -223,7 +225,7 @@ int main()
 
         Dtcwt dtcwt(context, devices, level1, level2);
 
-        DtcwtTemps env = dtcwt.createContext(input.cols, input.rows,
+        DtcwtTemps env = dtcwt.createContext(64, 64,
                                              numLevels, startLevel);
 
         DtcwtOutput sbOutputs = {env};
@@ -231,17 +233,18 @@ int main()
         std::cout << "Running DTCWT" << std::endl;
 
         
-        dtcwt(commandQueue, inImage, env, sbOutputs);
+        dtcwt.decimateFilter(commandQueue, inImage, {}, 
+                             env.levelTemps[1], &sbOutputs.subbands[1]);
         commandQueue.finish();
 
         std::cout << "Saving image" << std::endl;
 
-        saveRealImage("lolo.dat", commandQueue, env.levelTemps[0].lolo);
         saveRealImage("lolo2.dat", commandQueue, env.levelTemps[1].lolo);
         saveRealImage("lox.dat", commandQueue, env.levelTemps[1].lox);
         saveRealImage("lohi.dat", commandQueue, env.levelTemps[1].lohi);
         saveRealImage("hilo.dat", commandQueue, env.levelTemps[1].hilo);
         saveRealImage("xbp.dat", commandQueue, env.levelTemps[1].xbp);
+        saveRealImage("bpbp.dat", commandQueue, env.levelTemps[1].bpbp);
         saveComplexImage("sb0.dat", commandQueue, sbOutputs.subbands[1].sb[0]);
         saveComplexImage("sb1.dat", commandQueue, sbOutputs.subbands[1].sb[1]);
         saveComplexImage("sb2.dat", commandQueue, sbOutputs.subbands[1].sb[2]);

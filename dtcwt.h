@@ -65,7 +65,8 @@ private:
     cl::Context context_;
 
     QuadToComplex quadToComplex;
-
+// Debug:
+public:
     void filter(cl::CommandQueue& commandQueue,
                 cl::Image2D& xx, const std::vector<cl::Event>& xxEvents,
                 LevelTemps& levelTemps, LevelOutput* subbands);
@@ -114,7 +115,6 @@ private:
 
 };
 
-
-
-
 #endif
+
+

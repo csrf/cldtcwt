@@ -221,6 +221,7 @@ DecimateFilter::DecimateFilter(cl::Context& context,
         (dimension_ == y)? 4 * (wgSizeY_ - 1) + 2 * filterLength
                          : wgSizeY_;
 
+
     kernelInput
     << "__kernel void decimateFilter(__read_only image2d_t input,"
                                     "__write_only image2d_t output,"
