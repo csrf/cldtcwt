@@ -76,7 +76,7 @@ int main()
         // Starting test code
   
         cv::Mat input = cv::Mat::zeros(32, 4, cv::DataType<float>::type);
-        input.at<float>(15,3) = 1.0f;
+        input.at<float>(16,3) = 1.0f;
         cl::Image2D inImage = createImage2D(context, input);
 
         Filter h = { 
@@ -94,13 +94,13 @@ int main()
 
         DecimateFilter hd = { 
             context, devices, 
-            createBuffer(context, commandQueue, {0.5, 1.0, 1.0, 0.5}),
-            DecimateFilter::x 
+            createBuffer(context, commandQueue, {0.5, 0.0, 1.0, 0.5}),
+            DecimateFilter::y 
         };
 
         cl::Image2D outImageD
-            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>() / 2,
-                                     inImage.getImageInfo<CL_IMAGE_HEIGHT>());
+            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>(),
+                                     inImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2);
 
         hd(commandQueue, inImage, outImageD);
 

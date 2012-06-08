@@ -9,13 +9,14 @@
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
 cl::Sampler createSampler(cl::Context& context)
 {
-    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
+    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_MIRRORED_REPEAT,
                        CL_FILTER_NEAREST);
 }
 
 
 
-static const std::string reflectRepeat = "CLK_ADDRESS_MIRRORED_REPEAT";
+static const std::string reflectRepeat = "CLK_ADDRESS_CLAMP";
+//MIRRORED_REPEAT";
 //"CLK_ADDRESS_CLAMP";
 
 
