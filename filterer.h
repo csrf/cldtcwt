@@ -47,7 +47,12 @@ public:
     DecimateFilter(cl::Context& context,
                    const std::vector<cl::Device>& devices,
                    cl::Buffer coefficients,
-                   Direction d);
+                   Direction d,
+                   bool swapTrees = false);
+    // If swapTrees is enabled, when outputing the two trees being rpoduced
+    // are swapped over.  Had not read about this before, but coldfilt does
+    // it (strangely not mentioning it, so far as I could see, in its
+    // description).
 
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,

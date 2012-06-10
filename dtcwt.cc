@@ -52,10 +52,11 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
       hbpy { context, devices, level1.hbp, Filter::y },
       g0x { context, devices, leveln.h0, DecimateFilter::x },
       g0y { context, devices, leveln.h0, DecimateFilter::y },
-      g1x { context, devices, leveln.h1, DecimateFilter::x },
-      g1y { context, devices, leveln.h1, DecimateFilter::y },
-      gbpx { context, devices, leveln.hbp, DecimateFilter::x },
-      gbpy { context, devices, leveln.hbp, DecimateFilter::y },
+      g1x { context, devices, leveln.h1, DecimateFilter::x, true },
+                        // True because we want to swap the trees over
+      g1y { context, devices, leveln.h1, DecimateFilter::y, true },
+      gbpx { context, devices, leveln.hbp, DecimateFilter::x, true },
+      gbpy { context, devices, leveln.hbp, DecimateFilter::y, true },
       context_ { context }
 
 {

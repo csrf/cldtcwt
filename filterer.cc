@@ -200,7 +200,7 @@ void Filter::operator()
 DecimateFilter::DecimateFilter(cl::Context& context,
                const std::vector<cl::Device>& devices,
                cl::Buffer coefficients,
-               Direction dimension)
+               Direction dimension, bool swapTrees)
    : context_(context), coefficients_(coefficients), dimension_(dimension),
      wgSizeX_(16), wgSizeY_(16)
 {
@@ -276,12 +276,19 @@ DecimateFilter::DecimateFilter(cl::Context& context,
                               "* inputLocal[2*(2*ly + i)][lx];"
                      "out2 += filter[i]"
                               "* inputLocal[2*(2*ly + i) + 1][lx];"
-                 "}"
+                 "}";
 
                 // Write the result
+        if (!swapTrees)
+            kernelInput << 
                 "write_imagef(output, (int2) (gx, 2*gy), out1);"
-                "write_imagef(output, (int2) (gx, 2*gy+1), out2);"
+                "write_imagef(output, (int2) (gx, 2*gy+1), out2);";
+        else
+            kernelInput << 
+                "write_imagef(output, (int2) (gx, 2*gy+1), out1);"
+                "write_imagef(output, (int2) (gx, 2*gy), out2);";
 
+        kernelInput << 
             "}"
         "}";
 
@@ -318,12 +325,20 @@ DecimateFilter::DecimateFilter(cl::Context& context,
                               "* inputLocal[ly][2*(2*lx + i)];"
                      "out2 += filter[i]"
                               "* inputLocal[ly][2*(2*lx + i) + 1];"
-                 "}"
+                 "}";
 
                 // Write the result
+        if (!swapTrees)
+            kernelInput << 
                 "write_imagef(output, (int2) (2*gx, gy), out1);"
-                "write_imagef(output, (int2) (2*gx+1, gy), out2);"
+                "write_imagef(output, (int2) (2*gx+1, gy), out2);";
+        else
+            kernelInput << 
+                "write_imagef(output, (int2) (2*gx+1, gy), out1);"
+                "write_imagef(output, (int2) (2*gx, gy), out2);";
 
+
+        kernelInput << 
             "}"
         "}";
     }
