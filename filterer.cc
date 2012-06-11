@@ -485,9 +485,9 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
 
                 // Combine into complex pairs
                 "write_imagef(out1, (int2) (x, y),"
-                             "factor * (float4) (ul - lr, ur + ll, 0, 0));"
+                             "factor * (float4) (ul - lr, ur + ll, 0.0, 1.0));"
                 "write_imagef(out2, (int2) (x, y),"
-                             "factor * (float4) (ul + lr, ur - ll, 0, 0));"
+                             "factor * (float4) (ul + lr, ur - ll, 0.0, 1.0));"
 
             "}"
 
