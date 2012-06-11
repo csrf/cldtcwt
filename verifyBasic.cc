@@ -204,19 +204,15 @@ int main()
         cl::Context context;
         cl::CommandQueue commandQueue; 
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
-
-        const int numLevels = 6;
+const int numLevels = 6;
         const int startLevel = 0;
-
 
         //-----------------------------------------------------------------
         // Starting test code
 
-        // This is the input we really want to put into a decimating layer
-        cv::Mat input = cv::Mat::zeros(64, 64, cv::DataType<float>::type);
-        input.at<float>(30,30) = 1.0f;
+        cv::Mat input = cv::Mat::zeros(128, 128, cv::DataType<float>::type);
+        input.at<float>(63,63) = 1.0f;
   
-        //cl::Image2D baseInImage = createImage2D(context, baseInput);
         cl::Image2D inImage = createImage2D(context, input);
 
         std::cout << "Creating Dtcwt" << std::endl;
@@ -226,7 +222,7 @@ int main()
 
         Dtcwt dtcwt(context, devices, level1, level2);
 
-        DtcwtTemps env = dtcwt.createContext(64, 64,
+        DtcwtTemps env = dtcwt.createContext(input.cols, input.rows,
                                              numLevels, startLevel);
 
         DtcwtOutput sbOutputs = {env};
@@ -234,8 +230,7 @@ int main()
         std::cout << "Running DTCWT" << std::endl;
 
         
-        dtcwt.decimateFilter(commandQueue, inImage, {}, 
-                             env.levelTemps[1], &sbOutputs.subbands[1]);
+        dtcwt(commandQueue, inImage, env, sbOutputs);
         commandQueue.finish();
 
         std::cout << "Saving image" << std::endl;
