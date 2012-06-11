@@ -182,9 +182,10 @@ void saveComplexImage(std::string filename,
     // Produce the output in a file readable by MATLAB dlmread
     for (size_t y = 0; y < height; ++y) {
         for (size_t x = 0; x < width; ++x) {
-            out << output[y][x][0]
-                << (output[y][x] >= 0? "+" : "")
-                << output[y][x][1] << "j"
+            out << output[y][x][0];
+            if (output[y][x][1] >= 0)
+                out << "+";
+            out << output[y][x][1] << "j"
                 << ((x+1) < width? "," : "");
         }
 
