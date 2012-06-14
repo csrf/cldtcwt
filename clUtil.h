@@ -9,12 +9,15 @@
 
 #include <vector>
 
+#include <highgui.h>
 
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
                         const std::vector<float>& data);
 
 cl::Image2D createImage2D(cl::Context&, int width, int height);
+
+cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
 
 void writeImage2D(cl::CommandQueue& commandQueue,
                   cl::Image2D& image, float* memory);

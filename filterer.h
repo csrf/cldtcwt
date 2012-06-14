@@ -34,6 +34,14 @@ private:
 
     const int wgSizeX_;
     const int wgSizeY_;
+
+
+public:
+    // Default constructor does nothing
+    Filter() : wgSizeX_(16), wgSizeY_(16), dimension_(x)
+    {}
+
+
 };
 
 
@@ -53,6 +61,10 @@ public:
     // are swapped over.  Had not read about this before, but coldfilt does
     // it (strangely not mentioning it, so far as I could see, in its
     // description).
+
+    // Default constructor does nothing
+    DecimateFilter() : wgSizeX_(16), wgSizeY_(16), dimension_(x)
+    {}
 
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,

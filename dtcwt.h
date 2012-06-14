@@ -60,11 +60,16 @@ struct DtcwtOutput {
 class Dtcwt {
 private:
 
-    Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
-    DecimateFilter g0x, g0y, g1x, g1y, gbpx, gbpy;
     cl::Context context_;
 
+    Filters level1_, leveln_;
+
+    Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
+    DecimateFilter g0x, g0y, g1x, g1y, gbpx, gbpy;
+
+
     QuadToComplex quadToComplex;
+
 // Debug:
 public:
     void filter(cl::CommandQueue& commandQueue,
@@ -78,7 +83,7 @@ public:
 public:
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
-          Filters level1, Filters leveln);
+          cl::CommandQueue commandQueue);
 
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image2D& image, 

@@ -22,27 +22,6 @@ std::tuple<cl::Platform, std::vector<cl::Device>,
            cl::Context, cl::CommandQueue> 
     initOpenCL();
 
-cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
-
-
-void displayComplexImage(cl::CommandQueue& cq, cl::Image2D& image)
-{
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width][2];
-    readImage2D(cq, &output[0][0][0], image);
-
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x)
-            std::cout << output[y][x][0] 
-                      << "+i*" << output[y][x][1]<< "\t";
-
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-}
-
 
 void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image)
 {
@@ -143,32 +122,6 @@ initOpenCL()
 
     return std::make_tuple(platforms[0], devices, context, commandQueue);
 }
-
-
-cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat)
-{
-    if (mat.type() == CV_32F) {
-        // If in the right format already, just create the image and point
-        // it to the data
-        return cl::Image2D(context, 
-                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                           cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
-                           mat.cols, mat.rows, 0,
-                           mat.ptr());
-    } else {
-        // We need to get it into the right format first.  Convert then
-        // send
-        cv::Mat floatedMat;
-        mat.convertTo(floatedMat, CV_32F);
-
-        return cl::Image2D(context, 
-                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                           cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
-                           floatedMat.cols, floatedMat.rows, 0,
-                           floatedMat.ptr());
-    }
-}
-
 
 
 
