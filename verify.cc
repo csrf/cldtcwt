@@ -23,56 +23,6 @@ std::tuple<cl::Platform, std::vector<cl::Device>,
     initOpenCL();
 
 
-void saveRealImage(std::string filename,
-                   cl::CommandQueue& cq, cl::Image2D& image)
-{
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width];
-    readImage2D(cq, &output[0][0], image);
-
-    // Open the file for output
-    std::ofstream out(filename, std::ios_base::trunc | std::ios_base::out);
-
-    // Produce the output in a file readable by MATLAB dlmread
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x) {
-            out << output[y][x] << ((x+1) < width? "," : "");
-        }
-
-        if ((y+1) < height)
-            out << "\n";
-    }
-}
-
-
-
-void saveComplexImage(std::string filename,
-                      cl::CommandQueue& cq, cl::Image2D& image)
-{
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width][2];
-    readImage2D(cq, &output[0][0][0], image);
-
-    // Open the file for output
-    std::ofstream out(filename, std::ios_base::trunc | std::ios_base::out);
-
-    // Produce the output in a file readable by MATLAB dlmread
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x) {
-            out << output[y][x][0]
-                << (output[y][x] >= 0? "+" : "")
-                << output[y][x][1] << "j"
-                << ((x+1) < width? "," : "");
-        }
-
-        if ((y+1) < height)
-            out << "\n";
-    }
-}
-
-
 int main()
 {
     try {

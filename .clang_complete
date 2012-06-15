@@ -1,0 +1,4 @@
+-std=c++11
+-I/usr/include/opencv
+-I/usr/include/GL   
+-I/usr/local/cuda/include

@@ -25,5 +25,12 @@ void writeImage2D(cl::CommandQueue& commandQueue,
 void readImage2D(cl::CommandQueue& commandQueue,
                  float* outMemory, cl::Image2D& image);
 
+void saveRealImage(std::string filename,
+                   cl::CommandQueue& cq, cl::Image2D& image);
+
+void saveComplexImage(std::string filename,
+                      cl::CommandQueue& cq, cl::Image2D& image);
+
+void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image);
 
 #endif

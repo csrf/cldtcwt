@@ -24,43 +24,6 @@ std::tuple<cl::Platform, std::vector<cl::Device>,
 
 
 
-void displayComplexImage(cl::CommandQueue& cq, cl::Image2D& image)
-{
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width][2];
-    readImage2D(cq, &output[0][0][0], image);
-
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x)
-            std::cout << output[y][x][0] 
-                      << "+i*" << output[y][x][1]<< "\t";
-
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-}
-
-
-void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image)
-{
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width];
-    readImage2D(cq, &output[0][0], image);
-
-    for (size_t y = 0; y < height; ++y) {
-        for (size_t x = 0; x < width; ++x)
-            std::cout << output[y][x] << "\t"; 
-
-        std::cout << std::endl;
-    }
-
-    std::cout << std::endl;
-}
-
-
 int main()
 {
     try {
