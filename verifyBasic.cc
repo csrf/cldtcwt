@@ -19,11 +19,6 @@
 #include <sstream>
 
 
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-    initOpenCL();
-
-
 int main(int argc, char** argv)
 {
     // Make sure we were given the image name to process
@@ -36,11 +31,10 @@ int main(int argc, char** argv)
 
     try {
 
-        cl::Platform platform;
-        std::vector<cl::Device> devices;
-        cl::Context context;
-        cl::CommandQueue commandQueue; 
-        std::tie(platform, devices, context, commandQueue) = initOpenCL();
+        CLContext context;
+
+        // Ready the command queue on the first device to hand
+        cl::CommandQueue cq(context.context, context.devices[0]);
 
         // This should make sure all code gets exercised, including the
         // lolo decimated
@@ -49,10 +43,10 @@ int main(int argc, char** argv)
 
         // Read the image in
         cv::Mat bmp = cv::imread(filename, 0) / 255.0f;
-        cl::Image2D inImage = createImage2D(context, bmp);
+        cl::Image2D inImage = createImage2D(context.context, bmp);
 
         // Create the DTCWT itself
-        Dtcwt dtcwt(context, devices, commandQueue);
+        Dtcwt dtcwt(context.context, context.devices, cq);
 
         // Create the intermediate storage for the DTCWT
         DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
@@ -62,8 +56,8 @@ int main(int argc, char** argv)
         DtcwtOutput sbOutputs = {env};
 
         // Perform DTCWT
-        dtcwt(commandQueue, inImage, env, sbOutputs);
-        commandQueue.finish();
+        dtcwt(cq, inImage, env, sbOutputs);
+        cq.finish();
 
         // Produce the outputs
         for (int l = 0; l < numLevels; ++l) {
@@ -75,12 +69,12 @@ int main(int argc, char** argv)
                 ss << filename << "." << l << "." << sb;
 
                 saveComplexImage(ss.str(), 
-                                 commandQueue, 
+                                 cq, 
                                  sbOutputs.subbands[l].sb[sb]);
             }
         }
 
-        saveRealImage("in.dat", commandQueue, inImage);
+        saveRealImage("in.dat", cq, inImage);
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
@@ -88,32 +82,6 @@ int main(int argc, char** argv)
     }
                      
     return 0;
-}
-
-
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-initOpenCL()
-{
-    // Get platform, devices, command queue
-
-    // Retrive platform information
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-
-    if (platforms.size() == 0)
-        throw std::runtime_error("No platforms!");
-
-    std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
-
-    // Create a context to work in 
-    cl::Context context(devices);
-
-    // Ready the command queue on the first device to hand
-    cl::CommandQueue commandQueue(context, devices[0]);
-
-    return std::make_tuple(platforms[0], devices, context, commandQueue);
 }
 
 

@@ -29,16 +29,15 @@ int main()
 {
     try {
 
-        cl::Platform platform;
-        std::vector<cl::Device> devices;
-        cl::Context context;
-        cl::CommandQueue commandQueue; 
-        std::tie(platform, devices, context, commandQueue) = initOpenCL();
+        CLContext context;
+
+        // Ready the command queue on the first device to hand
+        cl::CommandQueue cq(context.context, context.devices[0]);
 
         //-----------------------------------------------------------------
         // Starting test code
         
-        FindMax findMax(context, devices);
+        FindMax findMax(context.context, context.devices);
 
         const int width = 40, height = 40;
         // Set up data for the input image
@@ -55,34 +54,34 @@ int main()
         data[24][30] = 0.5f;
 
         cl::Image2D inImage = {
-            context, 
+            context.context, 
             CL_MEM_READ_WRITE,
             cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
             width, height, 0
         };
 
 
-        writeImage2D(commandQueue, inImage, &data[0][0]);
-        commandQueue.finish();
+        writeImage2D(cq, inImage, &data[0][0]);
+        cq.finish();
                                        
 
         int zero = 0;
 
         cl::Buffer outputs = {
-            context,
+            context.context,
             0,              // Flags
             10 * 2 * sizeof(float) // Size to allocate
         };
 
         cl::Buffer numOutputs = {
-            context,
+            context.context,
             CL_MEM_COPY_HOST_PTR,              // Flags
             sizeof(int), // Size to allocate
             &zero
         };
 
         cl::Buffer lock = {
-            context,
+            context.context,
             CL_MEM_COPY_HOST_PTR,              // Flags
             sizeof(int), // Size to allocate
             &zero 
@@ -91,7 +90,7 @@ int main()
         float zerof = 0.5f;
 
         cl::Image2D zeroImg = {
-            context, 
+            context.context, 
             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
             cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
             1, 1, 0,
@@ -99,12 +98,12 @@ int main()
         };
 
 
-        findMax(commandQueue, inImage, zeroImg, zeroImg, 
+        findMax(cq, inImage, zeroImg, zeroImg, 
                 0.1f, outputs, numOutputs, lock);
-        commandQueue.finish();
+        cq.finish();
 
         int numOutputsVal;
-        commandQueue.enqueueReadBuffer(numOutputs, true, 0, sizeof(int),
+        cq.enqueueReadBuffer(numOutputs, true, 0, sizeof(int),
                                        &numOutputsVal);
 
         std::cout << numOutputsVal << " outputs" << std::endl;
@@ -113,7 +112,7 @@ int main()
         
         if (numOutputsVal > 0) {
             std::vector<float> results(numOutputsVal * 2);
-            commandQueue.enqueueReadBuffer(outputs, true, 0, 
+            cq.enqueueReadBuffer(outputs, true, 0, 
                                            numOutputsVal * 2 * sizeof(float),
                                            &results[0]);
 
@@ -128,32 +127,6 @@ int main()
     }
                      
     return 0;
-}
-
-
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-initOpenCL()
-{
-    // Get platform, devices, command queue
-
-    // Retrive platform information
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-
-    if (platforms.size() == 0)
-        throw std::runtime_error("No platforms!");
-
-    std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
-
-    // Create a context to work in 
-    cl::Context context(devices);
-
-    // Ready the command queue on the first device to hand
-    cl::CommandQueue commandQueue(context, devices[0]);
-
-    return std::make_tuple(platforms[0], devices, context, commandQueue);
 }
 
 

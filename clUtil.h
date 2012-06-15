@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <highgui.h>
+#include <stdexcept>
 
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
@@ -32,5 +33,36 @@ void saveComplexImage(std::string filename,
                       cl::CommandQueue& cq, cl::Image2D& image);
 
 void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image);
+
+
+class CLContext {
+public:
+
+    CLContext()
+    {
+        // Get platform, devices, then create a context
+
+        // Retrive platform information
+        std::vector<cl::Platform> platforms;
+        cl::Platform::get(&platforms);
+
+        if (platforms.size() == 0)
+            throw std::runtime_error("No platforms!");
+
+        // Use the first platform
+        platform = platforms[0];
+
+        platform.getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
+
+        // Create a context to work in 
+        context = cl::Context(devices);
+    }
+
+    cl::Platform platform;
+    std::vector<cl::Device> devices;
+    cl::Context context;
+
+};
+
 
 #endif

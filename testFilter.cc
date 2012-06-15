@@ -18,58 +18,54 @@
 #include <highgui.h>
 
 
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-    initOpenCL();
-
-
 
 int main()
 {
     try {
 
-        cl::Platform platform;
-        std::vector<cl::Device> devices;
-        cl::Context context;
-        cl::CommandQueue commandQueue; 
-        std::tie(platform, devices, context, commandQueue) = initOpenCL();
+        CLContext context;
+
+        // Ready the command queue on the first device to hand
+        cl::CommandQueue cq(context.context, context.devices[0]);
 
         //-----------------------------------------------------------------
         // Starting test code
   
         cv::Mat input = cv::Mat::zeros(32, 4, cv::DataType<float>::type);
         input.at<float>(16,3) = 1.0f;
-        cl::Image2D inImage = createImage2D(context, input);
+        cl::Image2D inImage = createImage2D(context.context, input);
 
         Filter h = { 
-            context, devices, 
-            createBuffer(context, commandQueue, {0.5, 1, 0.5}),
+            context.context, context.devices, 
+            createBuffer(context.context, cq, {0.5, 1, 0.5}),
             Filter::y 
         };
 
         cl::Image2D outImage
-            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>(),
+            = createImage2D(context.context, 
+                                     inImage.getImageInfo<CL_IMAGE_WIDTH>(),
                                      inImage.getImageInfo<CL_IMAGE_HEIGHT>());
 
-        h(commandQueue, inImage, outImage);
+        h(cq, inImage, outImage);
 
 
         DecimateFilter hd = { 
-            context, devices, 
-            createBuffer(context, commandQueue, {0.5, 0.0, 1.0, 0.5}),
+            context.context, context.devices, 
+            createBuffer(context.context, cq, {0.5, 0.0, 1.0, 0.5}),
             DecimateFilter::y 
         };
 
         cl::Image2D outImageD
-            = createImage2D(context, inImage.getImageInfo<CL_IMAGE_WIDTH>(),
-                                     inImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2);
+            = createImage2D(context.context, 
+                            inImage.getImageInfo<CL_IMAGE_WIDTH>(),
+                            inImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2);
 
-        hd(commandQueue, inImage, outImageD);
+        hd(cq, inImage, outImageD);
 
-        commandQueue.finish();
+        cq.finish();
 
-        displayRealImage(commandQueue, outImage);
-        displayRealImage(commandQueue, outImageD);
+        displayRealImage(cq, outImage);
+        displayRealImage(cq, outImageD);
 
     }
     catch (cl::Error err) {
@@ -78,32 +74,6 @@ int main()
     }
                      
     return 0;
-}
-
-
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-initOpenCL()
-{
-    // Get platform, devices, command queue
-
-    // Retrive platform information
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-
-    if (platforms.size() == 0)
-        throw std::runtime_error("No platforms!");
-
-    std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
-
-    // Create a context to work in 
-    cl::Context context(devices);
-
-    // Ready the command queue on the first device to hand
-    cl::CommandQueue commandQueue(context, devices[0]);
-
-    return std::make_tuple(platforms[0], devices, context, commandQueue);
 }
 
 
