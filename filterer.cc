@@ -15,7 +15,7 @@ cl::Sampler createSampler(cl::Context& context)
 
 
 
-static const std::string reflectRepeat = "CLK_ADDRESS_CLAMP";
+static const std::string reflectRepeat = "CLK_ADDRESS_NONE";
 //MIRRORED_REPEAT";
 //"CLK_ADDRESS_CLAMP";
 
@@ -78,10 +78,22 @@ Filter::Filter(cl::Context& context,
                  "++n) {"
 
                  // Make sure still in range, then read
-                 "if ((ly+n*" << wgSizeY_ << ") < " << inputLocalSizeY << ")"
+                 "if ((ly+n*" << wgSizeY_ << ") < " << inputLocalSizeY << ") {"
+                    "int readY = startY+ly+n*" << wgSizeY_ << ";"
+                    "int height = get_image_height(input);"
+
+                    // Deal with extension correctly
+                    "readY = (readY < 0) ? (-readY - 1): readY;"
+                    "readY = (readY >= height)?"
+                            "height - (readY - height) - 1: readY;"
+                                
                     "inputLocal[ly + n * " << wgSizeY_ << "][lx]"
                         "= read_imagef(input, inputSampler,"
-                          "(int2) (gx, startY+ly+n*" << wgSizeY_ << ")).x;"
+                          "(float2) (gx, readY)).x;"
+                          // If the position is less than 0, we need to add
+                          // an offset of one so that the reflected
+                          // position is correct
+                  "}"
 
             "}"
 
@@ -105,11 +117,19 @@ Filter::Filter(cl::Context& context,
                  "(n * " << wgSizeX_ << ") < " << inputLocalSizeX << ";"
                  "++n) {"
 
+                "int readX = startX+lx+n*" << wgSizeX_ << ";"
+                "int width = get_image_width(input);"
+
+                // Deal with extension correctly
+                "readX = (readX < 0) ? (-readX - 1): readX;"
+                "readX = (readX >= width)?"
+                        "width - (readX - width) - 1: readX;"
+ 
                  // Make sure still in range, then read
                  "if ((lx+n*" << wgSizeX_ << ") < " << inputLocalSizeX << ")"
                     "inputLocal[ly][lx + n * " << wgSizeX_ << "]"
                         "= read_imagef(input, inputSampler,"
-                          "(int2) (startX+lx+n*" << wgSizeX_ << ", gy)).x;"
+                          "(int2) (readX, gy)).x;"
 
             "}"
 
@@ -256,10 +276,21 @@ DecimateFilter::DecimateFilter(cl::Context& context,
             "for (int n = 0;"
                  "(n * " << wgSizeY_ << ") < " << inputLocalSizeY << ";"
                  "++n) {"
-                 "if ((ly + n * " << wgSizeY_ << ") < " << inputLocalSizeY << ")"
+                 "if ((ly + n * " << wgSizeY_ << ") < " << inputLocalSizeY << "){"
+                     "int readY = startY+ly+n*" << wgSizeY_ << ";"
+                     "int height = get_image_height(input);"
+
+                     // Deal with extension correctly
+                     "readY = (readY < 0) ? (-readY - 1): readY;"
+                     "readY = (readY >= height)?"
+                              "height - (readY - height) - 1: readY;"
+             
+
                     "inputLocal[ly + n * " << wgSizeY_ << "][lx]"
                         "= read_imagef(input, inputSampler,"
-                          "(int2) (gx, startY + ly + n * " << wgSizeY_ << ")).x;"
+                          "(int2) (gx, readY)).x;"
+
+                "}"
             "}"               
 
             "barrier(CLK_LOCAL_MEM_FENCE);"
@@ -305,10 +336,19 @@ DecimateFilter::DecimateFilter(cl::Context& context,
             "for (int n = 0;"
                  "(n * " << wgSizeX_ << ") < " << inputLocalSizeX << ";"
                  "++n) {"
-                 "if ((lx + n * " << wgSizeX_ << ") < " << inputLocalSizeX << ")"
+                 "if ((lx + n * " << wgSizeX_ << ") < " << inputLocalSizeX << ") {"
+                    "int readX = startX+lx+n*" << wgSizeX_ << ";"
+                    "int width = get_image_width(input);"
+
+                    // Deal with extension correctly
+                    "readX = (readX < 0) ? (-readX - 1): readX;"
+                    "readX = (readX >= width)?"
+                            "width - (readX - width) - 1: readX;"
+ 
                     "inputLocal[ly][lx + n * " << wgSizeX_ << "]"
                         "= read_imagef(input, inputSampler,"
-                          "(int2) (startX + lx + n * " << wgSizeX_ << ", gy)).x;"
+                          "(int2) (readX, gy)).x;"
+                "}"
             "}"               
 
             "barrier(CLK_LOCAL_MEM_FENCE);"

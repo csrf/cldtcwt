@@ -4,7 +4,7 @@ octave --eval "
 
 % Produce a bitmap with the desired pattern
 
-X = zeros(128); X(65, 38) = 1;
+X = zeros(128); X(128, 128) = 1;
 
 
 imwrite(X, 'test.bmp');

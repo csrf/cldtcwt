@@ -75,6 +75,7 @@ int main(int argc, char** argv)
         }
 
         saveRealImage("in.dat", cq, inImage);
+        saveRealImage("lo.dat", cq, env.levelTemps[0].lo);
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
