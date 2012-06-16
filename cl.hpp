@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wcomment"
 /*******************************************************************************
  * Copyright (c) 2008-2010 The Khronos Group Inc.
  *
@@ -4009,3 +4011,4 @@ Event KernelFunctor::operator()(
 } // namespace cl
 
 #endif // CL_HPP_
+#pragma clang diagnostic pop
