@@ -20,8 +20,17 @@ struct Filters {
 
 // Temporary images needed only when the level produces an output 
 struct LevelTemps {
-    cl::Image2D xlo, lolo, lox, lohi, hilo, xbp, bpbp;
-    cl::Event xloDone, loloDone, loxDone, lohiDone, hiloDone, xbpDone, bpbpDone;
+
+    // Columns filtered
+    cl::Image2D lo, bp, hi;
+
+    // Columns & rows filtered
+    cl::Image2D lolo, lohi, hilo, bpbp;
+
+    // Done events for each of these
+    cl::Event loDone, bpDone, hiDone,
+              loloDone, lohiDone, hiloDone, bpbpDone;
+
 };
 
 

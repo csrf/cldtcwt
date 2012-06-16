@@ -108,21 +108,22 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
         c.levelTemps.push_back(LevelTemps());
 
         // Temps that will be needed whether there's an output or not
-        c.levelTemps.back().xlo
+        c.levelTemps.back().lo
             = createImage2D(context_, width, newHeight);
         c.levelTemps.back().lolo
             = createImage2D(context_, newWidth, newHeight);
 
         // Temps only needed when producing subband outputs
         if  (l >= startLevel) {
-            c.levelTemps.back().lox
-                = createImage2D(context_, newWidth, height);
+            c.levelTemps.back().hi
+                = createImage2D(context_, width, newHeight);
+            c.levelTemps.back().bp
+                = createImage2D(context_, width, newHeight);
+
             c.levelTemps.back().lohi
                 = createImage2D(context_, newWidth, newHeight);
             c.levelTemps.back().hilo
                 = createImage2D(context_, newWidth, newHeight);
-            c.levelTemps.back().xbp
-                = createImage2D(context_, width, newHeight);
             c.levelTemps.back().bpbp
                 = createImage2D(context_, newWidth, newHeight);
         }
@@ -176,32 +177,31 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
                    LevelTemps& levelTemps, LevelOutput* subbands)
 {
     // Apply the non-decimating, special low pass filters that must be needed
-    h0y(commandQueue, xx, levelTemps.xlo, 
-        xxEvents, &levelTemps.xloDone);
+    h0y(commandQueue, xx, levelTemps.lo, 
+        xxEvents, &levelTemps.loDone);
 
-    h0x(commandQueue, levelTemps.xlo, levelTemps.lolo,
-        {levelTemps.xloDone}, &levelTemps.loloDone);
+    h0x(commandQueue, levelTemps.lo, levelTemps.lolo,
+        {levelTemps.loDone}, &levelTemps.loloDone);
 
     // If we've been given subbands to output to, we need to do more work:
     if (subbands) {
 
-        // Low pass one way then high pass the other...
-        h0x(commandQueue, xx, levelTemps.lox,
-            xxEvents, &levelTemps.loxDone); 
-                                            
-        h1y(commandQueue, levelTemps.lox, levelTemps.lohi,
-            {levelTemps.loxDone}, &levelTemps.lohiDone);
+        // Produce both the other vertically-filtered versions
+        h1y(commandQueue, xx, levelTemps.hi,
+            xxEvents, &levelTemps.hiDone);
 
-        // High pass the image that had been low-passed the other way...
-        h1x(commandQueue, levelTemps.xlo, levelTemps.hilo,
-            {levelTemps.xloDone}, &levelTemps.hiloDone);
+        hbpy(commandQueue, xx, levelTemps.bp,
+            xxEvents, &levelTemps.bpDone);
 
-        // Band pass both ways...
-        hbpy(commandQueue, xx, levelTemps.xbp,
-             xxEvents, &levelTemps.xbpDone);
+        // High pass the images that had been low-passed the other way
+        h0x(commandQueue, levelTemps.hi, levelTemps.lohi,
+            {levelTemps.hiDone}, &levelTemps.lohiDone);
 
-        hbpx(commandQueue, levelTemps.xbp, levelTemps.bpbp,
-             {levelTemps.xbpDone}, &levelTemps.bpbpDone);
+        h1x(commandQueue, levelTemps.lo, levelTemps.hilo,
+            {levelTemps.loDone}, &levelTemps.hiloDone);
+
+        hbpx(commandQueue, levelTemps.bp, levelTemps.bpbp,
+            {levelTemps.bpDone}, &levelTemps.bpbpDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
@@ -229,32 +229,32 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            LevelTemps& levelTemps, LevelOutput* subbands)
 {
     // Apply the non-decimating, special low pass filters that must be needed
-    g0y(commandQueue, xx, levelTemps.xlo, 
-        xxEvents, &levelTemps.xloDone);
+    g0y(commandQueue, xx, levelTemps.lo, 
+        xxEvents, &levelTemps.loDone);
 
-    g0x(commandQueue, levelTemps.xlo, levelTemps.lolo,
-        {levelTemps.xloDone}, &levelTemps.loloDone);
+    g0x(commandQueue, levelTemps.lo, levelTemps.lolo,
+        {levelTemps.loDone}, &levelTemps.loloDone);
+
 
     // If we've been given subbands to output to, we need to do more work:
     if (subbands) {
 
-        // Low pass one way then high pass the other...
-        g0x(commandQueue, xx, levelTemps.lox,
-            xxEvents, &levelTemps.loxDone); 
-                                            
-        g1y(commandQueue, levelTemps.lox, levelTemps.lohi,
-            {levelTemps.loxDone}, &levelTemps.lohiDone);
+        // Produce both the other vertically-filtered versions
+        g1y(commandQueue, xx, levelTemps.hi,
+            xxEvents, &levelTemps.hiDone);
 
-        // High pass the image that had been low-passed the other way...
-        g1x(commandQueue, levelTemps.xlo, levelTemps.hilo,
-            {levelTemps.xloDone}, &levelTemps.hiloDone);
+        gbpy(commandQueue, xx, levelTemps.bp,
+            xxEvents, &levelTemps.bpDone);
 
-        // Band pass both ways...
-        gbpy(commandQueue, xx, levelTemps.xbp,
-             xxEvents, &levelTemps.xbpDone);
+        // High pass the images that had been low-passed the other way
+        g0x(commandQueue, levelTemps.hi, levelTemps.lohi,
+            {levelTemps.hiDone}, &levelTemps.lohiDone);
 
-        gbpx(commandQueue, levelTemps.xbp, levelTemps.bpbp,
-             {levelTemps.xbpDone}, &levelTemps.bpbpDone);
+        g1x(commandQueue, levelTemps.lo, levelTemps.hilo,
+            {levelTemps.loDone}, &levelTemps.hiloDone);
+
+        gbpx(commandQueue, levelTemps.bp, levelTemps.bpbp,
+            {levelTemps.bpDone}, &levelTemps.bpbpDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
