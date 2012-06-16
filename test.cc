@@ -11,7 +11,7 @@
 #include "dtcwt.h"
 #include <iomanip>
 
-#include <ctime>
+#include <sys/timeb.h>
 
 #include <stdexcept>
 
@@ -57,18 +57,23 @@ int main()
 
 
 
-        time_t start, end;
+        timeb start, end;
         const int numFrames = 1000;
-        time(&start);
+        ftime(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(cq, inImage, env, out);
                 cq.finish();
             }
-        time(&end);
-        std::cout << (numFrames / difftime(end, start))
+        ftime(&end);
+
+        // Work out what the difference between these is
+        double t = end.time - start.time 
+                 + 0.001 * (end.millitm - start.millitm);
+
+        std::cout << (numFrames / t)
 		  << " fps" << std::endl;
         std::cout << numFrames << " frames in " 
-                  << difftime(end, start) << "s" << std::endl;
+                  << t << "s" << std::endl;
 
     }
     catch (cl::Error err) {
