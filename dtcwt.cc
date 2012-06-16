@@ -440,7 +440,7 @@ Filters createLevel1Filters(cl::Context& context,
     } );
     
     level1.hbp = createBuffer(context, commandQueue, { 
-          -3.68250025673202e-05,
+          -3.68250025673202e-04,
           -6.22253585579744e-04,
           -7.81782479825950e-05,
            4.18582084706810e-03,
