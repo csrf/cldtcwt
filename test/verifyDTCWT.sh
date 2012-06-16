@@ -4,7 +4,7 @@ octave --eval "
 
 % Produce a bitmap with the desired pattern
 
-X = zeros(128); X(31, 31) = 1;
+X = zeros(128); X(65, 38) = 1;
 
 
 imwrite(X, 'test.bmp');
@@ -16,7 +16,6 @@ system('./verifyBasic test.bmp');
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
 
-idx = [3 5 1 6 2 4];
 for l = 1:3
     for sb = 1:6
 
@@ -24,12 +23,12 @@ for l = 1:3
         vbY = dlmread(sprintf('test.bmp.%d.%d', l-1, sb-1), ',');
 
         % Compare to reference implementation
-        difference = abs(Yh{l}(:,:,idx(sb)) - vbY);
+        difference = abs(Yh{l}(:,:,sb) - vbY);
 
         disp(sprintf('%d %d %f', l, sb, max(difference(:))));
 
         % Check it's all close enough to right
-        if any(difference(:) > 1e-3)
+        if any(difference(:) > 1e-4)
             disp('DTCWT failed to meet tolerances!!!');
 
             % Flag an error
