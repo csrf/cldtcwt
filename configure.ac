@@ -4,7 +4,7 @@ AC_INIT([test], [1.0], [timothy.gale@cantab.net])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.9 foreign])
+AM_INIT_AUTOMAKE([1.9 foreign subdir-objects])
 
 AC_PROG_CXX
 

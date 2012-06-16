@@ -2,14 +2,14 @@ ACLOCAL_AMFLAGS=-I m4
 
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x
 
-TESTS=verifyDTCWT.sh
+TESTS=test/verifyDTCWT.sh
 TEST_EXTENSIONS=.sh
 
-bin_PROGRAMS=test testFilter verify testOutput testFindMax testRescale \
+bin_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
 			 verifyBasic
 
-test_SOURCES=test.cc filterer.cc clUtil.cc dtcwt.cc
-test_LDADD=@CL_LIBS@ @opencv_LIBS@
+testDTCWT_SOURCES=test.cc filterer.cc clUtil.cc dtcwt.cc
+testDTCWT_LDADD=@CL_LIBS@ @opencv_LIBS@
 
 testFindMax_SOURCES=testFindMax.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc
 testFindMax_LDADD=@CL_LIBS@ @opencv_LIBS@
@@ -26,5 +26,6 @@ testRescale_LDADD=@CL_LIBS@ @opencv_LIBS@
 verify_SOURCES=verify.cc filterer.cc clUtil.cc dtcwt.cc
 verify_LDADD=@CL_LIBS@ @opencv_LIBS@
 
-verifyBasic_SOURCES=verifyBasic.cc filterer.cc clUtil.cc dtcwt.cc
+verifyBasic_SOURCES=test/verifyBasic.cc filterer.cc clUtil.cc dtcwt.cc
 verifyBasic_LDADD=@CL_LIBS@ @opencv_LIBS@
+
