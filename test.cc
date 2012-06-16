@@ -37,7 +37,7 @@ int main()
         // Starting test code
   
         // Read in image
-        cv::Mat bmp = cv::imread("test.bmp", 0);
+        cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
         cl::Image2D inImage = createImage2D(context.context, bmp);
 
         std::cout << bmp.rows << " " << bmp.cols << std::endl;
