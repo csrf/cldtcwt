@@ -26,6 +26,8 @@ for l = 1:3
         % Compare to reference implementation
         difference = abs(Yh{l}(:,:,idx(sb)) - vbY);
 
+        disp(sprintf('%d %d %f', l, sb, max(difference(:))));
+
         % Check it's all close enough to right
         if any(difference(:) > 1e-3)
             disp('DTCWT failed to meet tolerances!!!');
