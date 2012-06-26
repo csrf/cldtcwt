@@ -134,7 +134,6 @@ private:
     Dtcwt dtcwt;
     DtcwtOutput out;
     DtcwtTemps env;
-    GLuint texture;
     sf::Window app;
 
     cl::Platform platform;
@@ -145,7 +144,8 @@ private:
     cl::Image2D inImage;
 
     // For interop OpenGL/OpenCL
-    cl::Image2DGL dispImage;
+    GLuint texture[6];
+    cl::Image2DGL dispImage[6];
 
     Abs abs;
 
@@ -159,68 +159,66 @@ public:
 
 
 Main::Main()
- : app(sf::VideoMode(800, 600, 32), "SFML OpenGL")
+ : app(sf::VideoMode(2*180, 3*144, 32), "SFML OpenGL")
 {
     try {
 
 
         // Read in image
-        cv::Mat bmp = cv::imread("test.bmp", 0);
-
-        // Create the texture
-        glGenTextures(1, &texture);
-
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        float img[100][100] = {0.5};
-        for (int x = 0; x < 100; ++x)
-            for (int y = 0; y < 100; ++y)
-                img[y][x] = static_cast<float>(x) / 100.0f;
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 100, 100, 0,
-                     GL_LUMINANCE, GL_FLOAT, img);
+        cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
 
         app.SetActive();
-
-
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
-        abs = Abs(context, devices);
-
-        dispImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
-                                  GL_TEXTURE_2D, 0,
-                                  texture);
+        inImage = createImage2D(context, bmp);
 
 
         const int numLevels = 6;
         const int startLevel = 1;
 
-
-        //-----------------------------------------------------------------
-        // Starting test code
-  
-        cl::Image2D inImage = createImage2D(context, bmp);
-
-        std::cout << bmp.rows << " " << bmp.cols << std::endl;
-        std::cout << "Creating Dtcwt" << std::endl;
-
-
+        // Create the DTCWT, temporaries and outputs
         dtcwt = Dtcwt(context, devices, commandQueue);
-
-        std::cout << "Creating the DTCWT environment..." << std::endl;
-
         env = dtcwt.createContext(bmp.cols, bmp.rows,
                                   numLevels, startLevel);
-
-        std::cout << "Creating the subband output images..." << std::endl;
         out = DtcwtOutput(env);
 
-        dtcwt(commandQueue, inImage, env, out);
+        // Create the abs kernel
+        abs = Abs(context, devices);
 
+        const int width
+            = out.subbands[0].sb[0].getImageInfo<CL_IMAGE_WIDTH>();
+        const int height
+            = out.subbands[0].sb[0].getImageInfo<CL_IMAGE_HEIGHT>();
+
+        std::cout << width << std::endl;
+        std::cout << height << std::endl;
+
+        // Create the textures
+        glGenTextures(6, texture);
+
+        for (int n = 0; n < 6; ++n) {
+
+            glBindTexture(GL_TEXTURE_2D, texture[n]);
+
+            // Set up the texture display properties
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            // Put it to the right size, filling with zeros
+            std::vector<float> zeros(bmp.rows * bmp.cols, 0.0f);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+                         width, height, 0,
+                         GL_LUMINANCE, GL_FLOAT, &zeros[0]);
+
+            // Create the associated OpenCL image
+            dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+                                         GL_TEXTURE_2D, 0,
+                                         texture[n]);
+
+        }
 
     }
     catch (cl::Error err) {
@@ -254,11 +252,15 @@ bool Main::update(void)
     // Synchronise OpenGL
     glFinish();
 
+    dtcwt(commandQueue, inImage, env, out);
+
     // Synchronise OpenCL
-    std::vector<cl::Memory> mems = {dispImage};
+    std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
     commandQueue.enqueueAcquireGLObjects(&mems);
 
-    abs(commandQueue, out.subbands[0].sb[0], dispImage);
+    for (int n = 0; n < 6; ++n)
+        abs(commandQueue, out.subbands[0].sb[n], dispImage[n],
+                          out.subbands[0].done);
 
     commandQueue.enqueueReleaseGLObjects(&mems);
 
@@ -266,15 +268,29 @@ bool Main::update(void)
 
     glColor3f(1.0, 1.0, 1.0);
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glBegin(GL_QUADS);
 
+    for (int n = 0; n < 3; ++n) {
+        for (int m = 0; m < 2; ++m) {
 
-    glTexCoord2f(1.0f, 1.0f); glVertex2f( 1, 1);
-    glTexCoord2f(0.0f, 1.0f); glVertex2f(-1, 1);
-    glTexCoord2f(0.0f, 0.0f); glVertex2f(-1,-1);
-    glTexCoord2f(1.0f, 0.0f); glVertex2f( 1,-1);
-    glEnd();
+            glBindTexture(GL_TEXTURE_2D, texture[n+3*m]);
+            glBegin(GL_QUADS);
+
+            glTexCoord2f(1.0f, 1.0f); 
+            glVertex2f( 0 + m, 1 - n * 2.f / 3.f);
+
+            glTexCoord2f(0.0f, 1.0f); 
+            glVertex2f(-1 + m, 1 - n * 2.f / 3.f);
+
+            glTexCoord2f(0.0f, 0.0f); 
+            glVertex2f(-1 + m, 1.f / 3.f - n * 2.f / 3.f);
+
+            glTexCoord2f(1.0f, 0.0f); 
+            glVertex2f( 0 + m, 1.f / 3.f - n * 2.f / 3.f);
+
+            glEnd();
+
+        }
+    }
 
     app.Display();
 
