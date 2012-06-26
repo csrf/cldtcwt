@@ -1,0 +1,9 @@
+*.swp
+m4/*
+octave-core
+*/octave-core
+autom4te.cache
+aclocal.m4
+Makefile.in
+config
+configure
