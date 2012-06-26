@@ -58,6 +58,8 @@ struct LevelOutput {
 
 struct DtcwtOutput {
 
+    DtcwtOutput(const DtcwtOutput&) = default;
+    DtcwtOutput() = default;
     DtcwtOutput(const DtcwtTemps& env);
 
     std::vector<LevelOutput> subbands;
@@ -90,6 +92,9 @@ public:
                         const std::vector<cl::Event>& xxEvents,
                         LevelTemps& levelTemps, LevelOutput* subbands);
 public:
+
+    Dtcwt() = default;
+    Dtcwt(const Dtcwt&) = default;
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
           cl::CommandQueue commandQueue);

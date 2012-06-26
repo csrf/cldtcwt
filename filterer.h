@@ -30,16 +30,18 @@ private:
     cl::Context context_;
     cl::Kernel kernel_;
     cl::Buffer coefficients_;
-    const Direction dimension_;
+    Direction dimension_;
 
-    const int wgSizeX_;
-    const int wgSizeY_;
+    int wgSizeX_;
+    int wgSizeY_;
 
 
 public:
     // Default constructor does nothing
     Filter() : wgSizeX_(16), wgSizeY_(16), dimension_(x)
     {}
+
+    Filter(const Filter&) = default;
 
 
 };
@@ -66,6 +68,8 @@ public:
     DecimateFilter() : wgSizeX_(16), wgSizeY_(16), dimension_(x)
     {}
 
+    DecimateFilter(const DecimateFilter&) = default; 
+
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
            const cl::Image2D& input,
@@ -78,10 +82,10 @@ private:
     cl::Context context_;
     cl::Kernel kernel_;
     cl::Buffer coefficients_;
-    const Direction dimension_;
+    Direction dimension_;
 
-    const int wgSizeX_;
-    const int wgSizeY_;
+    int wgSizeX_;
+    int wgSizeY_;
 };
 
 
@@ -95,6 +99,8 @@ public:
 
     QuadToComplex(cl::Context& context,
               const std::vector<cl::Device>& devices);
+
+    QuadToComplex() = default;
 
     void
     operator() (cl::CommandQueue& commandQueue,
