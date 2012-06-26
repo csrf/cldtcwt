@@ -2,6 +2,14 @@
 #include <iostream>
 #include <fstream>
 
+
+int roundWGs(int l, int lWG)
+{
+    return lWG * (l / lWG + ((l % lWG) ? 1 : 0)); 
+}
+
+
+
 cl::Buffer createBuffer(cl::Context& context,
                         cl::CommandQueue& commandQueue, 
                         const std::vector<float>& data)

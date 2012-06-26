@@ -174,10 +174,7 @@ Filter::Filter(cl::Context& context,
     kernel_.setArg(2, coefficients_);
 }
 
-static int roundWGs(int l, int lWG)
-{
-    return lWG * (l / lWG + ((l % lWG) ? 1 : 0)); 
-}
+
 
 void Filter::operator() 
       (cl::CommandQueue& commandQueue,

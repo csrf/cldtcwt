@@ -363,10 +363,6 @@ EnergyMap::EnergyMap(cl::Context& context,
 }
 
 
-static int roundWGs(int l, int lWG)
-{
-    return lWG * (l / lWG + ((l % lWG) ? 1 : 0)); 
-}
 
 
 void EnergyMap::operator() (cl::CommandQueue& commandQueue,

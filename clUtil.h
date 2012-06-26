@@ -12,6 +12,7 @@
 #include <highgui.h>
 #include <stdexcept>
 
+int roundWGs(int l, int lWG);
 
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
                         const std::vector<float>& data);
