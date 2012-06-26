@@ -19,6 +19,7 @@
 #include <stdexcept>
 
 #include <highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <CL/cl_gl.h>
 
@@ -29,6 +30,19 @@
 std::tuple<cl::Platform, std::vector<cl::Device>, 
            cl::Context, cl::CommandQueue> 
     initOpenCL();
+
+cv::Mat convertVideoImgToFloat(cv::Mat videoImg)
+{
+    // Convert to floating point
+    cv::Mat tmp;
+    videoImg.convertTo(tmp, CV_32F);
+
+    // Now go to greyscale
+    cv::Mat out;
+    cv::cvtColor(tmp, out, CV_RGB2GRAY);
+
+    return out;
+}
 
 
 class Abs {
@@ -149,6 +163,8 @@ private:
 
     Abs abs;
 
+    cv::VideoCapture video;
+
 public:
 
     Main();
@@ -159,18 +175,15 @@ public:
 
 
 Main::Main()
- : app(sf::VideoMode(2*180, 3*144, 32), "SFML OpenGL")
+ : app(sf::VideoMode(2*160*2, 3*120*2, 32), "SFML OpenGL"),
+   video(0)
 {
     try {
-
-
-        // Read in image
-        cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
 
         app.SetActive();
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
-        inImage = createImage2D(context, bmp);
+        inImage = createImage2D(context, 640, 480);
 
 
         const int numLevels = 6;
@@ -178,7 +191,7 @@ Main::Main()
 
         // Create the DTCWT, temporaries and outputs
         dtcwt = Dtcwt(context, devices, commandQueue);
-        env = dtcwt.createContext(bmp.cols, bmp.rows,
+        env = dtcwt.createContext(640, 480,
                                   numLevels, startLevel);
         out = DtcwtOutput(env);
 
@@ -202,13 +215,13 @@ Main::Main()
 
             // Set up the texture display properties
             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
             // Put it to the right size, filling with zeros
-            std::vector<float> zeros(bmp.rows * bmp.cols, 0.0f);
+            std::vector<float> zeros(width * height, 0.0f);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
                          width, height, 0,
                          GL_LUMINANCE, GL_FLOAT, &zeros[0]);
@@ -251,6 +264,16 @@ bool Main::update(void)
 
     // Synchronise OpenGL
     glFinish();
+
+    // Get the image from the camera
+
+    cv::Mat picture;
+    video >> picture;
+
+    cv::Mat in = convertVideoImgToFloat(picture);
+    std::cout << in.rows <<  " " << in.cols << std::endl;
+
+    writeImage2D(commandQueue, inImage, reinterpret_cast<float*>(in.data));
 
     dtcwt(commandQueue, inImage, env, out);
 
