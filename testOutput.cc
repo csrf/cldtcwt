@@ -298,16 +298,16 @@ bool Main::update(void)
             glBindTexture(GL_TEXTURE_2D, texture[n+3*m]);
             glBegin(GL_QUADS);
 
-            glTexCoord2f(1.0f, 1.0f); 
+            glTexCoord2f(1.0f, 0.0f); 
             glVertex2f( 0 + m, 1 - n * 2.f / 3.f);
 
-            glTexCoord2f(0.0f, 1.0f); 
+            glTexCoord2f(0.0f, 0.0f); 
             glVertex2f(-1 + m, 1 - n * 2.f / 3.f);
 
-            glTexCoord2f(0.0f, 0.0f); 
+            glTexCoord2f(0.0f, 1.0f); 
             glVertex2f(-1 + m, 1.f / 3.f - n * 2.f / 3.f);
 
-            glTexCoord2f(1.0f, 0.0f); 
+            glTexCoord2f(1.0f, 1.0f); 
             glVertex2f( 0 + m, 1.f / 3.f - n * 2.f / 3.f);
 
             glEnd();
