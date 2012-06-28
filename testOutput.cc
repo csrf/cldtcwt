@@ -85,7 +85,7 @@ Abs::Abs(cl::Context& context, const std::vector<cl::Device>& devices)
             if (x < get_image_width(output)
                 && y < get_image_height(output)) {
 
-                float2 valIn = read_imagef(input, s, (int2)(x, y)).xy;
+                float2 valIn = read_imagef(input, s, (int2)(x, y)).xy / 20.0f;
                 write_imagef(output, (int2)(x, y), fast_length(valIn));
             }
 
