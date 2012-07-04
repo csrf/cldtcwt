@@ -89,8 +89,8 @@ Abs::Abs(cl::Context& context, const std::vector<cl::Device>& devices)
             if (x < get_image_width(output)
                 && y < get_image_height(output)) {
 
-                float2 valIn = read_imagef(input, s, (int2)(x, y)).xy / 20.0f;
-                write_imagef(output, (int2)(x, y), fast_length(valIn));
+                float2 valIn = read_imagef(input, s, (int2)(x, y)).xy;
+                write_imagef(output, (int2)(x, y), 5.f * fast_length(valIn));
             }
 
         }
@@ -198,7 +198,8 @@ private:
     cl::Image2DGL inImage;
 
     // For interop OpenGL/OpenCL
-    GLuint texture[7];
+    GLuint texture[6];
+    GLuint textureInImage;
     cl::Image2DGL dispImage[6];
 
 	VBOBuffers buffers;
@@ -223,7 +224,8 @@ public:
 void Main::createTextures(int width, int height)
 {
     // Create the textures
-    glGenTextures(7, texture);
+    glGenTextures(6, texture);
+    glGenTextures(1, &textureInImage);
     
 	// Subband outputs
     for (int n = 0; n < 6; ++n) {
@@ -251,7 +253,7 @@ void Main::createTextures(int width, int height)
     }
 
 	// Image input
-	glBindTexture(GL_TEXTURE_2D, texture[6]);
+	glBindTexture(GL_TEXTURE_2D, textureInImage);
     
     // Set up the texture display properties
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -269,7 +271,7 @@ void Main::createTextures(int width, int height)
     // Create the associated OpenCL image
     inImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
     							 GL_TEXTURE_2D, 0,
-    							 texture[6]);
+    							 textureInImage);
 
 }
 
@@ -373,8 +375,7 @@ bool Main::update(void)
 
     app.SetActive();
 
-    // Synchronise OpenGL
-    glFinish();
+
 
     // Get the image from the camera
 
@@ -384,13 +385,26 @@ bool Main::update(void)
     cv::Mat in = convertVideoImgToFloat(picture);
     std::cout << in.rows <<  " " << in.cols << std::endl;
 
+    in /= 256.f;
+    // Copy matrix contents to the inImage/textureInImage with OpenGL (since
+    // OpenCL seems to have issues doing enqueueWriteImage to a shared
+    // texture)
+    glBindTexture(GL_TEXTURE_2D, textureInImage);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, in.cols, in.rows,
+                    GL_LUMINANCE, GL_FLOAT, in.data); 
+                    
+
+    // Synchronise OpenGL
+    glFinish();
+
     // Synchronise OpenCL
     std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
-	mems.push_back(inImage);
+    std::vector<cl::Memory> memsInput(&inImage, &inImage + 1);
 
     commandQueue.enqueueAcquireGLObjects(&mems);
-
-    writeImage2D(commandQueue, inImage, reinterpret_cast<float*>(in.data));
+    commandQueue.enqueueAcquireGLObjects(&memsInput);
+    commandQueue.finish();
+    //writeImage2DGL(commandQueue, inImage, reinterpret_cast<float*>(in.data));
 
     dtcwt(commandQueue, inImage, env, out);
 
@@ -400,6 +414,7 @@ bool Main::update(void)
                           out.subbands[0].done);
 
     commandQueue.enqueueReleaseGLObjects(&mems);
+    commandQueue.enqueueReleaseGLObjects(&memsInput);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -433,6 +448,21 @@ bool Main::update(void)
 
         }
     }
+
+			// Select the texture
+            glBindTexture(GL_TEXTURE_2D, textureInImage);
+
+			// Select texture positioning
+			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+			glTexCoordPointer(2, GL_FLOAT, 0, 0);
+
+			// Select vertex positioning
+			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+			glVertexPointer(2, GL_FLOAT, 0, 0);
+
+			// Draw it
+			glDrawArrays(GL_QUADS, 0, 4);
+
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
