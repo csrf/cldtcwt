@@ -1,4 +1,5 @@
 
+#define GL_GLEXT_PROTOTYPES
 
 #include <iostream>
 #include <fstream>
@@ -23,7 +24,10 @@
 
 #include <CL/cl_gl.h>
 
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <GL/glx.h>
+#include <GL/glext.h>
 
 #include "cl.hpp"
 
@@ -142,6 +146,42 @@ void Abs::operator() (cl::CommandQueue& cq, const cl::Image2D& input,
 
 
 
+class VBOBuffers {
+public:
+	
+    VBOBuffers(const VBOBuffers&) = default;
+	VBOBuffers(int num = 0);
+	~VBOBuffers();
+
+	GLuint getBuffer(int n);
+
+private:
+
+	std::vector<GLuint> buffers_;
+
+};
+
+
+
+VBOBuffers::VBOBuffers(int num)
+ : buffers_(num)
+{
+	glGenBuffers(num, &buffers_[0]);
+}
+
+
+GLuint VBOBuffers::getBuffer(int n)
+{
+	return buffers_[n];
+}
+
+
+VBOBuffers::~VBOBuffers()
+{
+	glDeleteBuffers(buffers_.size(), &buffers_[0]);
+}
+
+
 
 class Main {
 private:
@@ -160,6 +200,9 @@ private:
     // For interop OpenGL/OpenCL
     GLuint texture[6];
     cl::Image2DGL dispImage[6];
+
+	VBOBuffers buffers;
+	VBOBuffers imageDisplayVertexBuffers;
 
     Abs abs;
 
@@ -233,6 +276,42 @@ Main::Main()
 
         }
 
+
+		buffers = VBOBuffers(2);
+
+
+		float pcoords[3*2] = {0.f, 0.5f, 0.5f, 0.5f, -1.0f, 0.0f};
+		glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(0));
+		glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), pcoords, GL_STATIC_DRAW);
+
+		float colours[4*3] = {1.f, 1.f, 1.f, 1.f,
+						      1.f, 1.f, 1.f, 1.f,
+							  1.f, 1.f, 1.f, 1.f};
+		glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(1));
+		glBufferData(GL_ARRAY_BUFFER, 12*sizeof(float), colours, GL_STATIC_DRAW);
+
+		// The buffers setting coords for displaying the images: first, the texture
+		// coordinates, then the vertex coordinates
+		imageDisplayVertexBuffers = VBOBuffers(2);
+
+		// Texture coordinates
+	    std::vector<float> texCoords = {1.f, 0.f, 
+									    0.f, 0.f,
+										0.f, 1.f,
+										1.f, 1.f};
+		glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+		glBufferData(GL_ARRAY_BUFFER, texCoords.size()*sizeof(float), &texCoords[0], 
+				     GL_STATIC_DRAW);
+	
+
+		// Coordinates of the vertices
+		std::vector<float> coords = {1.f, 2.f / 3.f, 
+								     0.f, 2.f / 3.f,
+									 0.f, 0.f,
+									 1.f, 0.f};
+		glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+		glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
+				     GL_STATIC_DRAW);
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
@@ -240,6 +319,10 @@ Main::Main()
     }
  
 }
+
+
+
+
 
 
 
@@ -288,32 +371,69 @@ bool Main::update(void)
     commandQueue.enqueueReleaseGLObjects(&mems);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
     glColor3f(1.0, 1.0, 1.0);
     glEnable(GL_TEXTURE_2D);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     for (int n = 0; n < 3; ++n) {
         for (int m = 0; m < 2; ++m) {
 
+		    glPushMatrix();
+		    glTranslatef(-1.f + m, 1.f/3.f - n * 2.f / 3.f, 0.f);
+
+			// Select the texture
             glBindTexture(GL_TEXTURE_2D, texture[n+3*m]);
-            glBegin(GL_QUADS);
 
-            glTexCoord2f(1.0f, 0.0f); 
-            glVertex2f( 0 + m, 1 - n * 2.f / 3.f);
+			// Select texture positioning
+			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+			glTexCoordPointer(2, GL_FLOAT, 0, 0);
 
-            glTexCoord2f(0.0f, 0.0f); 
-            glVertex2f(-1 + m, 1 - n * 2.f / 3.f);
+			// Select vertex positioning
+			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+			glVertexPointer(2, GL_FLOAT, 0, 0);
 
-            glTexCoord2f(0.0f, 1.0f); 
-            glVertex2f(-1 + m, 1.f / 3.f - n * 2.f / 3.f);
+			// Draw it
+			glDrawArrays(GL_QUADS, 0, 4);
 
-            glTexCoord2f(1.0f, 1.0f); 
-            glVertex2f( 0 + m, 1.f / 3.f - n * 2.f / 3.f);
-
-            glEnd();
+			glPopMatrix();
 
         }
     }
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_TEXTURE_2D);
+
+		
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	glColor4f(1.0, 0.0, 0.0, 1.0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_POINT_SMOOTH);
+	glPointSize(2.f);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(0));
+	glVertexPointer(2, GL_FLOAT, 0, 0);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glPushMatrix();
+	glDrawArrays(GL_POINTS, 0, 3);
+	glPopMatrix();
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     app.Display();
 
