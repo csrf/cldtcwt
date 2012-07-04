@@ -195,10 +195,10 @@ private:
     cl::Context context;
     cl::CommandQueue commandQueue; 
 
-    cl::Image2D inImage;
+    cl::Image2DGL inImage;
 
     // For interop OpenGL/OpenCL
-    GLuint texture[6];
+    GLuint texture[7];
     cl::Image2DGL dispImage[6];
 
 	VBOBuffers buffers;
@@ -223,8 +223,9 @@ public:
 void Main::createTextures(int width, int height)
 {
     // Create the textures
-    glGenTextures(6, texture);
+    glGenTextures(7, texture);
     
+	// Subband outputs
     for (int n = 0; n < 6; ++n) {
     
     	glBindTexture(GL_TEXTURE_2D, texture[n]);
@@ -249,6 +250,26 @@ void Main::createTextures(int width, int height)
     
     }
 
+	// Image input
+	glBindTexture(GL_TEXTURE_2D, texture[6]);
+    
+    // Set up the texture display properties
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    // Put it to the right size, filling with zeros
+    std::vector<float> zeros(width * height, 0.0f);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+    			 width, height, 0,
+    			 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
+    
+    // Create the associated OpenCL image
+    inImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    							 GL_TEXTURE_2D, 0,
+    							 texture[6]);
 
 }
 
@@ -303,8 +324,6 @@ Main::Main()
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
 		const int width = 640, height = 480;
-        inImage = createImage2D(context, width, height);
-
 
         const int numLevels = 6;
         const int startLevel = 1;
@@ -365,13 +384,16 @@ bool Main::update(void)
     cv::Mat in = convertVideoImgToFloat(picture);
     std::cout << in.rows <<  " " << in.cols << std::endl;
 
+    // Synchronise OpenCL
+    std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
+	mems.push_back(inImage);
+
+    commandQueue.enqueueAcquireGLObjects(&mems);
+
     writeImage2D(commandQueue, inImage, reinterpret_cast<float*>(in.data));
 
     dtcwt(commandQueue, inImage, env, out);
 
-    // Synchronise OpenCL
-    std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
-    commandQueue.enqueueAcquireGLObjects(&mems);
 
     for (int n = 0; n < 6; ++n)
         abs(commandQueue, out.subbands[0].sb[n], dispImage[n],
