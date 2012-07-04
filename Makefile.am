@@ -8,7 +8,7 @@ TEST_EXTENSIONS=.sh
 bin_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
 			 verifyBasic
 
-testDTCWT_SOURCES=test.cc filterer.cc clUtil.cc dtcwt.cc
+testDTCWT_SOURCES=test.cc filterer.cc clUtil.cc dtcwt.cc extractDescriptors.cc
 testDTCWT_LDADD=@CL_LIBS@ @opencv_LIBS@
 
 testFindMax_SOURCES=testFindMax.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc
