@@ -208,6 +208,9 @@ private:
 
     cv::VideoCapture video;
 
+	void createTextures(int width, int height);
+	void createBuffers();
+
 public:
 
     Main();
@@ -216,6 +219,79 @@ public:
 
 };
 
+
+void Main::createTextures(int width, int height)
+{
+    // Create the textures
+    glGenTextures(6, texture);
+    
+    for (int n = 0; n < 6; ++n) {
+    
+    	glBindTexture(GL_TEXTURE_2D, texture[n]);
+    
+    	// Set up the texture display properties
+    	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    	// Put it to the right size, filling with zeros
+    	std::vector<float> zeros(width * height, 0.0f);
+    	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+    				 width / 4, height / 4, 0,
+    				 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
+    
+    	// Create the associated OpenCL image
+    	dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    								 GL_TEXTURE_2D, 0,
+    								 texture[n]);
+    
+    }
+
+
+}
+
+
+void Main::createBuffers()
+{
+	buffers = VBOBuffers(2);
+
+
+	float pcoords[3*2] = {0.f, 0.5f, 0.5f, 0.5f, -1.0f, 0.0f};
+	glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(0));
+	glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), pcoords, GL_STATIC_DRAW);
+
+	float colours[4*3] = {1.f, 1.f, 1.f, 1.f,
+					      1.f, 1.f, 1.f, 1.f,
+						  1.f, 1.f, 1.f, 1.f};
+	glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(1));
+	glBufferData(GL_ARRAY_BUFFER, 12*sizeof(float), colours, GL_STATIC_DRAW);
+
+	// The buffers setting coords for displaying the images: first, the texture
+	// coordinates, then the vertex coordinates
+	imageDisplayVertexBuffers = VBOBuffers(2);
+
+	// Texture coordinates
+	std::vector<float> texCoords = {1.f, 0.f, 
+								    0.f, 0.f,
+									0.f, 1.f,
+									1.f, 1.f};
+	glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+	glBufferData(GL_ARRAY_BUFFER, texCoords.size()*sizeof(float), &texCoords[0], 
+			     GL_STATIC_DRAW);
+	
+
+	// Coordinates of the vertices
+	std::vector<float> coords = {1.f, 2.f / 3.f, 
+							     0.f, 2.f / 3.f,
+								 0.f, 0.f,
+								 1.f, 0.f};
+	glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
+			     GL_STATIC_DRAW);
+
+}
 
 Main::Main()
  : app(sf::VideoMode(2*160*2, 3*120*2, 32), "SFML OpenGL"),
@@ -226,7 +302,8 @@ Main::Main()
         app.SetActive();
         std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
-        inImage = createImage2D(context, 640, 480);
+		const int width = 640, height = 480;
+        inImage = createImage2D(context, width, height);
 
 
         const int numLevels = 6;
@@ -234,84 +311,16 @@ Main::Main()
 
         // Create the DTCWT, temporaries and outputs
         dtcwt = Dtcwt(context, devices, commandQueue);
-        env = dtcwt.createContext(640, 480,
+        env = dtcwt.createContext(width, height,
                                   numLevels, startLevel);
         out = DtcwtOutput(env);
 
         // Create the abs kernel
         abs = Abs(context, devices);
 
-        const int width
-            = out.subbands[0].sb[0].getImageInfo<CL_IMAGE_WIDTH>();
-        const int height
-            = out.subbands[0].sb[0].getImageInfo<CL_IMAGE_HEIGHT>();
+		createTextures(width, height);
+		createBuffers();
 
-        std::cout << width << std::endl;
-        std::cout << height << std::endl;
-
-        // Create the textures
-        glGenTextures(6, texture);
-
-        for (int n = 0; n < 6; ++n) {
-
-            glBindTexture(GL_TEXTURE_2D, texture[n]);
-
-            // Set up the texture display properties
-            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-            // Put it to the right size, filling with zeros
-            std::vector<float> zeros(width * height, 0.0f);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
-                         width, height, 0,
-                         GL_LUMINANCE, GL_FLOAT, &zeros[0]);
-
-            // Create the associated OpenCL image
-            dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
-                                         GL_TEXTURE_2D, 0,
-                                         texture[n]);
-
-        }
-
-
-		buffers = VBOBuffers(2);
-
-
-		float pcoords[3*2] = {0.f, 0.5f, 0.5f, 0.5f, -1.0f, 0.0f};
-		glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(0));
-		glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float), pcoords, GL_STATIC_DRAW);
-
-		float colours[4*3] = {1.f, 1.f, 1.f, 1.f,
-						      1.f, 1.f, 1.f, 1.f,
-							  1.f, 1.f, 1.f, 1.f};
-		glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(1));
-		glBufferData(GL_ARRAY_BUFFER, 12*sizeof(float), colours, GL_STATIC_DRAW);
-
-		// The buffers setting coords for displaying the images: first, the texture
-		// coordinates, then the vertex coordinates
-		imageDisplayVertexBuffers = VBOBuffers(2);
-
-		// Texture coordinates
-	    std::vector<float> texCoords = {1.f, 0.f, 
-									    0.f, 0.f,
-										0.f, 1.f,
-										1.f, 1.f};
-		glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
-		glBufferData(GL_ARRAY_BUFFER, texCoords.size()*sizeof(float), &texCoords[0], 
-				     GL_STATIC_DRAW);
-	
-
-		// Coordinates of the vertices
-		std::vector<float> coords = {1.f, 2.f / 3.f, 
-								     0.f, 2.f / 3.f,
-									 0.f, 0.f,
-									 1.f, 0.f};
-		glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
-		glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
-				     GL_STATIC_DRAW);
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
