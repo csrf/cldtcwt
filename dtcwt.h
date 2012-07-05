@@ -119,6 +119,9 @@ class EnergyMap {
 
 public:
 
+    EnergyMap() = default;
+    EnergyMap(const EnergyMap&) = default;
+
     EnergyMap(cl::Context& context,
               const std::vector<cl::Device>& devices);
 

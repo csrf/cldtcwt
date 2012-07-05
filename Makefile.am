@@ -14,7 +14,7 @@ testDTCWT_LDADD=@CL_LIBS@ @opencv_LIBS@
 testFindMax_SOURCES=testFindMax.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc
 testFindMax_LDADD=@CL_LIBS@ @opencv_LIBS@
 
-testOutput_SOURCES=testOutput.cc filterer.cc clUtil.cc dtcwt.cc
+testOutput_SOURCES=testOutput.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc
 testOutput_LDADD=@CL_LIBS@ @opencv_LIBS@ -lsfml-window -lsfml-system
 
 testFilter_SOURCES=testFilter.cc filterer.cc clUtil.cc dtcwt.cc

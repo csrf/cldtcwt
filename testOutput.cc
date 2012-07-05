@@ -28,12 +28,17 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
+#include "findMax.h"
 
 #include "cl.hpp"
 
 std::tuple<cl::Platform, std::vector<cl::Device>, 
            cl::Context, cl::CommandQueue> 
     initOpenCL();
+
+
+
+
 
 cv::Mat convertVideoImgToFloat(cv::Mat videoImg)
 {
@@ -195,6 +200,7 @@ private:
     cl::Context context;
     cl::CommandQueue commandQueue; 
 
+    cl::Image2D zeroImage;
     cl::Image2DGL inImage;
 
     // For interop OpenGL/OpenCL
@@ -204,8 +210,17 @@ private:
 
 	VBOBuffers buffers;
 	VBOBuffers imageDisplayVertexBuffers;
+    VBOBuffers keypointLocationBuffers;
+
+    cl::BufferGL keypointLocs;
+
+    cl::Buffer numKps;
 
     Abs abs;
+    EnergyMap energyMap;
+    FindMax findMax;
+
+    std::vector<cl::Image2D> energyMaps;
 
     cv::VideoCapture video;
 
@@ -314,6 +329,17 @@ void Main::createBuffers()
 	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
 			     GL_STATIC_DRAW);
 
+    const int maxNumKeypoints = 100;
+
+    // For the keypoint location extraction
+    std::vector<float> kps(maxNumKeypoints * 2);
+    keypointLocationBuffers = VBOBuffers(energyMaps.size());
+	glBindBuffer(GL_ARRAY_BUFFER, keypointLocationBuffers.getBuffer(0));
+	glBufferData(GL_ARRAY_BUFFER, kps.size()*sizeof(float), &kps[0], 
+			     GL_STATIC_DRAW);
+
+    keypointLocs = cl::BufferGL(context, CL_MEM_READ_WRITE,
+                                keypointLocationBuffers.getBuffer(0));
 }
 
 Main::Main()
@@ -336,8 +362,31 @@ Main::Main()
                                   numLevels, startLevel);
         out = DtcwtOutput(env);
 
-        // Create the abs kernel
+        // Create energy maps for each output level (other than the last,
+        // which is only there for coarse detections)
+        for (int l = 0; l < (out.subbands.size() - 1); ++l) {
+            energyMaps.push_back(
+                createImage2D(context, 
+                    out.subbands[l].sb[0].getImageInfo<CL_IMAGE_WIDTH>(),
+                    out.subbands[l].sb[0].getImageInfo<CL_IMAGE_HEIGHT>())
+            );
+        }
+
+        // Zero image for use off the ends of maximum finding
+        float zerof = 0;
+        zeroImage = {
+            context, 
+            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+            cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+            1, 1, 0,
+            &zerof
+        };
+
+        // Create the kernels
         abs = Abs(context, devices);
+        energyMap = EnergyMap(context, devices);
+        findMax = FindMax(context, devices);
+
 
 		createTextures(width, height);
 		createBuffers();
@@ -406,6 +455,14 @@ bool Main::update(void)
     commandQueue.finish();
 
     dtcwt(commandQueue, inImage, env, out);
+
+    // Calculate energy maps
+    for (int l = 0; l < energyMaps.size(); ++l)
+        energyMap(commandQueue, out.subbands[l], energyMaps[l]);
+
+    // Look for peaks in them
+    for (int l = 0; l < energyMaps.size(); ++l)
+        ;
 
 
     for (int n = 0; n < 6; ++n)
