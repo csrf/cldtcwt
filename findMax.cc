@@ -5,35 +5,13 @@
 #include <iostream>
 
 #include <stdexcept>
-
-static const std::string acquireLockFn =
-    "void acquireLock(__global volatile int* lock)"
-    "{"
-        // Wait until the lock was free before a swap
-        "while (atomic_cmpxchg(lock, 0, 1) == 1)"
-            ";"
-    "}\n";
-
-
-static const std::string releaseLockFn =
-    "void releaseLock(__global volatile int* lock)"
-    "{"
-        // Unlock
-        "atomic_xchg(lock, 0);"
-    "}\n";
-
-
 FindMax::FindMax(cl::Context& context,
                const std::vector<cl::Device>& devices)
-   : context_(context), 
-     wgSizeX_(16), wgSizeY_(16)
+   : context_(context)
 {
     // The OpenCL kernel:
     std::ostringstream kernelInput;
 
-    // We'll need to use locking functions
-    kernelInput << acquireLockFn
-                << releaseLockFn;
 
     kernelInput
     << "__kernel void findMax(read_only image2d_t input,"
@@ -42,8 +20,7 @@ FindMax::FindMax(cl::Context& context,
                              "const float threshold,"
                              "global float2* maxCoords,"
                              "global int* numOutputs,"
-                             "const int maxNumOutputs,"
-                             "volatile global int* lock)\n"
+                             "const int maxNumOutputs)"
         "{"
             "sampler_t isNorm ="
                 "CLK_NORMALIZED_COORDS_FALSE"
@@ -189,7 +166,6 @@ void FindMax::operator()
        float threshold,
        cl::Buffer& output,
        cl::Buffer& numOutputs,
-       cl::Buffer& lock,
        const std::vector<cl::Event>& waitEvents,
        cl::Event* doneEvent)
 {
@@ -214,7 +190,6 @@ void FindMax::operator()
     kernel_.setArg(4, output);
     kernel_.setArg(5, numOutputs);
     kernel_.setArg(6, int(output.getInfo<CL_MEM_SIZE>() / (2 * sizeof(int))));
-    kernel_.setArg(7, lock);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,

@@ -99,7 +99,7 @@ int main()
 
 
         findMax(cq, inImage, zeroImg, zeroImg, 
-                0.1f, outputs, numOutputs, lock);
+                0.1f, outputs, numOutputs);
         cq.finish();
 
         int numOutputsVal;

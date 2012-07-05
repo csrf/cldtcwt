@@ -9,12 +9,13 @@
 
 
 
-
 class FindMax {
 // Class that finds the local maxima above a threshold in an image
 
 public:
 
+    FindMax() = default;
+    FindMax(const FindMax&) = default;
     FindMax(cl::Context& context,
            const std::vector<cl::Device>& devices);
 
@@ -26,7 +27,6 @@ public:
            float threshold,
            cl::Buffer& output,
            cl::Buffer& numOutputs,
-           cl::Buffer& lock,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);
 
@@ -34,8 +34,8 @@ private:
     cl::Context context_;
     cl::Kernel kernel_;
 
-    const int wgSizeX_;
-    const int wgSizeY_;
+    static const int wgSizeX_ = 16;
+    static const int wgSizeY_ = 16;
 };
 
 
