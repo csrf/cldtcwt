@@ -498,8 +498,9 @@ bool Main::update(void)
 		    glPushMatrix();
 		    glTranslatef(m / 2.f, 1.f/3.f - n * 2.f / 3.f, 0.f);
 
+            int sbIdx = (m == 0) ? n : (5 - n);
 			// Select the texture
-            glBindTexture(GL_TEXTURE_2D, texture[n+3*m]);
+            glBindTexture(GL_TEXTURE_2D, texture[sbIdx]);
 
 			// Select texture positioning
 			glBindBuffer(GL_ARRAY_BUFFER,
@@ -556,7 +557,7 @@ bool Main::update(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_POINT_SMOOTH);
-	glPointSize(2.f);
+	glPointSize(7.f);
 
 	glBindBuffer(GL_ARRAY_BUFFER, keypointLocationBuffers.getBuffer(0));
 	glVertexPointer(2, GL_FLOAT, 0, 0);
