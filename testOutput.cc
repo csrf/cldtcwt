@@ -329,7 +329,7 @@ void Main::createBuffers()
 	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
 			     GL_STATIC_DRAW);
 
-    const int maxNumKeypoints = 100;
+    const int maxNumKeypoints = 1000;
 
     // For the keypoint location extraction
     std::vector<float> kps(maxNumKeypoints * 2);
@@ -539,7 +539,6 @@ bool Main::update(void)
     // Draw it
     glDrawArrays(GL_QUADS, 0, 4);
 
-    glPopMatrix();
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -559,13 +558,15 @@ bool Main::update(void)
 	glEnable(GL_POINT_SMOOTH);
 	glPointSize(2.f);
 
-	glBindBuffer(GL_ARRAY_BUFFER, buffers.getBuffer(0));
+	glBindBuffer(GL_ARRAY_BUFFER, keypointLocationBuffers.getBuffer(0));
 	glVertexPointer(2, GL_FLOAT, 0, 0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glPushMatrix();
-	glDrawArrays(GL_POINTS, 0, 3);
+    glTranslatef(0.f, 2.f/3.f, 0.f);
+    glScalef(1.f / 160.f * 0.5f, -1.f / 120.f * 2.f / 3.f, 1.f);
+   
+	glDrawArrays(GL_POINTS, 0, numOutputsVal);
 	glPopMatrix();
 
 	glDisableClientState(GL_VERTEX_ARRAY);
