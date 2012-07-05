@@ -306,10 +306,10 @@ void Main::createBuffers()
 	
 
 	// Coordinates of the vertices
-	std::vector<float> coords = {1.f, 2.f / 3.f, 
-							     0.f, 2.f / 3.f,
-								 0.f, 0.f,
-								 1.f, 0.f};
+	std::vector<float> coords = {0.5f, 2.f / 3.f, 
+							     0.0f, 2.f / 3.f,
+								 0.0f, 0.f,
+								 0.5f, 0.f};
 	glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
 	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), &coords[0], 
 			     GL_STATIC_DRAW);
@@ -317,7 +317,7 @@ void Main::createBuffers()
 }
 
 Main::Main()
- : app(sf::VideoMode(2*160*2, 3*120*2, 32), "SFML OpenGL"),
+ : app(sf::VideoMode(640*2, 3*120*2, 32), "SFML OpenGL"),
    video(0)
 {
     try {
@@ -404,7 +404,6 @@ bool Main::update(void)
     commandQueue.enqueueAcquireGLObjects(&mems);
     commandQueue.enqueueAcquireGLObjects(&memsInput);
     commandQueue.finish();
-    //writeImage2DGL(commandQueue, inImage, reinterpret_cast<float*>(in.data));
 
     dtcwt(commandQueue, inImage, env, out);
 
@@ -428,17 +427,19 @@ bool Main::update(void)
         for (int m = 0; m < 2; ++m) {
 
 		    glPushMatrix();
-		    glTranslatef(-1.f + m, 1.f/3.f - n * 2.f / 3.f, 0.f);
+		    glTranslatef(m / 2.f, 1.f/3.f - n * 2.f / 3.f, 0.f);
 
 			// Select the texture
             glBindTexture(GL_TEXTURE_2D, texture[n+3*m]);
 
 			// Select texture positioning
-			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+			glBindBuffer(GL_ARRAY_BUFFER,
+                         imageDisplayVertexBuffers.getBuffer(0));
 			glTexCoordPointer(2, GL_FLOAT, 0, 0);
 
 			// Select vertex positioning
-			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+			glBindBuffer(GL_ARRAY_BUFFER, 
+                         imageDisplayVertexBuffers.getBuffer(1));
 			glVertexPointer(2, GL_FLOAT, 0, 0);
 
 			// Draw it
@@ -449,20 +450,27 @@ bool Main::update(void)
         }
     }
 
-			// Select the texture
-            glBindTexture(GL_TEXTURE_2D, textureInImage);
+    // Display the original image
 
-			// Select texture positioning
-			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
-			glTexCoordPointer(2, GL_FLOAT, 0, 0);
+    glPushMatrix();
 
-			// Select vertex positioning
-			glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
-			glVertexPointer(2, GL_FLOAT, 0, 0);
+    glTranslatef(-1.f, -1.f/3.f, 0.f);
+    glScalef(2.f, 2.f, 1.f);
+    // Select the texture
+    glBindTexture(GL_TEXTURE_2D, textureInImage);
 
-			// Draw it
-			glDrawArrays(GL_QUADS, 0, 4);
+    // Select texture positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+    glTexCoordPointer(2, GL_FLOAT, 0, 0);
 
+    // Select vertex positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+    glVertexPointer(2, GL_FLOAT, 0, 0);
+
+    // Draw it
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    glPopMatrix();
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
