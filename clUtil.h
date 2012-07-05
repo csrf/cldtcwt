@@ -17,6 +17,15 @@ int roundWGs(int l, int lWG);
 cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
                         const std::vector<float>& data);
 
+template <typename T>
+void writeBuffer(cl::CommandQueue& cq, const cl::Buffer& buffer,
+                 const std::vector<T>& vals)
+{
+    cq.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(T) * vals.size(),
+                          &vals[0]);
+}
+
+
 cl::Image2D createImage2D(cl::Context&, int width, int height);
 
 cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);

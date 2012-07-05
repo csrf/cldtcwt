@@ -387,6 +387,8 @@ Main::Main()
         energyMap = EnergyMap(context, devices);
         findMax = FindMax(context, devices);
 
+        std::vector<float> zeroV = {0.f};
+        numKps = createBuffer(context, commandQueue, zeroV);
 
 		createTextures(width, height);
 		createBuffers();
@@ -448,6 +450,7 @@ bool Main::update(void)
 
     // Synchronise OpenCL
     std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
+    mems.push_back(keypointLocs);
     std::vector<cl::Memory> memsInput(&inImage, &inImage + 1);
 
     commandQueue.enqueueAcquireGLObjects(&mems);
@@ -464,6 +467,15 @@ bool Main::update(void)
     for (int l = 0; l < energyMaps.size(); ++l)
         ;
 
+    writeBuffer(commandQueue, numKps, std::vector<int> {0});
+    findMax(commandQueue, energyMaps[0], zeroImage, energyMaps[1], 0.1f,
+            keypointLocs, numKps);
+
+    int numOutputsVal;
+    commandQueue.enqueueReadBuffer(numKps, CL_TRUE, 0, sizeof(int),
+                                   &numOutputsVal);
+
+    std::cout << numOutputsVal << std::endl;
 
     for (int n = 0; n < 6; ++n)
         abs(commandQueue, out.subbands[0].sb[n], dispImage[n],

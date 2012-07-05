@@ -40,6 +40,7 @@ cl::Image2D createImage2D(cl::Context& context,
 }
 
 
+
 void writeImage2D(cl::CommandQueue& commandQueue,
                   cl::Image2D& image, float* memory)
 {
