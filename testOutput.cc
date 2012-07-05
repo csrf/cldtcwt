@@ -451,11 +451,9 @@ bool Main::update(void)
     // Synchronise OpenCL
     std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
     mems.push_back(keypointLocs);
-    std::vector<cl::Memory> memsInput(&inImage, &inImage + 1);
+    mems.push_back(inImage);
 
     commandQueue.enqueueAcquireGLObjects(&mems);
-    commandQueue.enqueueAcquireGLObjects(&memsInput);
-    commandQueue.finish();
 
     dtcwt(commandQueue, inImage, env, out);
 
@@ -482,7 +480,6 @@ bool Main::update(void)
                           out.subbands[0].done);
 
     commandQueue.enqueueReleaseGLObjects(&mems);
-    commandQueue.enqueueReleaseGLObjects(&memsInput);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
