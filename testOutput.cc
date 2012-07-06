@@ -100,10 +100,7 @@ VBOBuffers::~VBOBuffers()
 
 
 
-
-
-
-class Main {
+class CLCalcs {
 private:
 
     cl::Platform platform;
@@ -130,6 +127,128 @@ private:
     cl::Buffer numKps;
     cl::BufferGL keypointLocs;
 
+public:
+
+    CLCalcs(const CLCalcs&) = default;
+    CLCalcs() = default;
+    CLCalcs(int width, int height,
+            GLuint textureInImage, GLuint texture[6],
+            GLuint keypointLocationBuffer);
+
+
+    int update();
+};
+
+
+
+
+
+CLCalcs::CLCalcs(int width, int height,
+                 GLuint textureInImage, GLuint texture[6],
+                 GLuint keypointLocationBuffer)
+{
+    std::tie(platform, devices, context, commandQueue) = initOpenCL();
+
+    const int numLevels = 6;
+    const int startLevel = 1;
+
+    // Create the DTCWT, temporaries and outputs
+    dtcwt = Dtcwt(context, devices, commandQueue);
+    env = dtcwt.createContext(width, height,
+                              numLevels, startLevel);
+    out = DtcwtOutput(env);
+
+    // Create energy maps for each output level (other than the last,
+    // which is only there for coarse detections)
+    for (int l = 0; l < (out.subbands.size() - 1); ++l) {
+        energyMaps.push_back(
+            createImage2D(context, 
+                out.subbands[l].sb[0].getImageInfo<CL_IMAGE_WIDTH>(),
+                out.subbands[l].sb[0].getImageInfo<CL_IMAGE_HEIGHT>())
+        );
+    }
+
+    // Zero image for use off the ends of maximum finding
+    float zerof = 0;
+    zeroImage = {
+        context, 
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
+        1, 1, 0,
+        &zerof
+    };
+
+    // Create the kernels
+    abs = Abs(context, devices);
+    energyMap = EnergyMap(context, devices);
+    findMax = FindMax(context, devices);
+
+    std::vector<float> zeroV = {0.f};
+    numKps = createBuffer(context, commandQueue, zeroV);
+ 
+    // Create the associated OpenCL image
+    inImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    					    GL_TEXTURE_2D, 0,
+    					    textureInImage);
+
+    for (int n = 0; n < 6; ++n) {
+
+    	// Create the associated OpenCL image
+    	dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    								 GL_TEXTURE_2D, 0,
+    								 texture[n]);
+
+    }
+ 
+    keypointLocs = cl::BufferGL(context, CL_MEM_READ_WRITE,
+                                keypointLocationBuffer);
+}
+
+
+
+int CLCalcs::update()
+{
+    // Synchronise OpenCL
+    std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
+    mems.push_back(keypointLocs);
+    mems.push_back(inImage);
+
+    commandQueue.enqueueAcquireGLObjects(&mems);
+
+    dtcwt(commandQueue, inImage, env, out);
+
+    // Calculate energy maps
+    for (int l = 0; l < energyMaps.size(); ++l)
+        energyMap(commandQueue, out.subbands[l], energyMaps[l]);
+
+    // Look for peaks in them
+    for (int l = 0; l < energyMaps.size(); ++l)
+        ;
+
+    writeBuffer(commandQueue, numKps, std::vector<int> {0});
+    findMax(commandQueue, energyMaps[0], zeroImage, energyMaps[1], 0.1f,
+            keypointLocs, numKps);
+
+    int numOutputsVal;
+    commandQueue.enqueueReadBuffer(numKps, CL_TRUE, 0, sizeof(int),
+                                   &numOutputsVal);
+
+    std::cout << numOutputsVal << std::endl;
+
+    for (int n = 0; n < 6; ++n)
+        abs(commandQueue, out.subbands[0].sb[n], dispImage[n],
+                          out.subbands[0].done);
+
+    commandQueue.enqueueReleaseGLObjects(&mems);
+    commandQueue.finish();
+
+    return numOutputsVal;
+}
+
+
+
+class Main {
+private:
 
     sf::Window app;
 
@@ -143,8 +262,10 @@ private:
 	VBOBuffers imageDisplayVertexBuffers;
     VBOBuffers keypointLocationBuffers;
 
+    CLCalcs clCalcs;
+
 	void createTextures(int width, int height);
-	void createBuffers();
+	void createBuffers(int numKeypointLocationBuffers);
 
 public:
 
@@ -179,11 +300,7 @@ void Main::createTextures(int width, int height)
     				 width / 4, height / 4, 0,
     				 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
     
-    	// Create the associated OpenCL image
-    	dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
-    								 GL_TEXTURE_2D, 0,
-    								 texture[n]);
-    
+   
     }
 
 	// Image input
@@ -201,16 +318,10 @@ void Main::createTextures(int width, int height)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
     			 width, height, 0,
     			 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
-    
-    // Create the associated OpenCL image
-    inImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
-    							 GL_TEXTURE_2D, 0,
-    							 textureInImage);
-
 }
 
 
-void Main::createBuffers()
+void Main::createBuffers(int numKeypointLocationBuffers)
 {
 	buffers = VBOBuffers(2);
 
@@ -252,13 +363,11 @@ void Main::createBuffers()
 
     // For the keypoint location extraction
     std::vector<float> kps(maxNumKeypoints * 2);
-    keypointLocationBuffers = VBOBuffers(energyMaps.size());
+    keypointLocationBuffers = VBOBuffers(numKeypointLocationBuffers);
 	glBindBuffer(GL_ARRAY_BUFFER, keypointLocationBuffers.getBuffer(0));
 	glBufferData(GL_ARRAY_BUFFER, kps.size()*sizeof(float), &kps[0], 
 			     GL_STATIC_DRAW);
 
-    keypointLocs = cl::BufferGL(context, CL_MEM_READ_WRITE,
-                                keypointLocationBuffers.getBuffer(0));
 }
 
 Main::Main()
@@ -268,49 +377,15 @@ Main::Main()
     try {
 
         app.SetActive();
-        std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
 		const int width = 640, height = 480;
 
-        const int numLevels = 6;
-        const int startLevel = 1;
-
-        // Create the DTCWT, temporaries and outputs
-        dtcwt = Dtcwt(context, devices, commandQueue);
-        env = dtcwt.createContext(width, height,
-                                  numLevels, startLevel);
-        out = DtcwtOutput(env);
-
-        // Create energy maps for each output level (other than the last,
-        // which is only there for coarse detections)
-        for (int l = 0; l < (out.subbands.size() - 1); ++l) {
-            energyMaps.push_back(
-                createImage2D(context, 
-                    out.subbands[l].sb[0].getImageInfo<CL_IMAGE_WIDTH>(),
-                    out.subbands[l].sb[0].getImageInfo<CL_IMAGE_HEIGHT>())
-            );
-        }
-
-        // Zero image for use off the ends of maximum finding
-        float zerof = 0;
-        zeroImage = {
-            context, 
-            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-            cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
-            1, 1, 0,
-            &zerof
-        };
-
-        // Create the kernels
-        abs = Abs(context, devices);
-        energyMap = EnergyMap(context, devices);
-        findMax = FindMax(context, devices);
-
-        std::vector<float> zeroV = {0.f};
-        numKps = createBuffer(context, commandQueue, zeroV);
-
 		createTextures(width, height);
-		createBuffers();
+		createBuffers(1);
+
+        clCalcs = CLCalcs(width, height,
+                          textureInImage, texture,
+                          keypointLocationBuffers.getBuffer(0));
 
     }
     catch (cl::Error err) {
@@ -355,7 +430,7 @@ bool Main::update(void)
     cv::Mat in = convertVideoImgToFloat(picture);
     std::cout << in.rows <<  " " << in.cols << std::endl;
 
-    in /= 512.f;
+    in /= 256.f;
     // Copy matrix contents to the inImage/textureInImage with OpenGL (since
     // OpenCL seems to have issues doing enqueueWriteImage to a shared
     // texture)
@@ -367,38 +442,7 @@ bool Main::update(void)
     // Synchronise OpenGL
     glFinish();
 
-    // Synchronise OpenCL
-    std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
-    mems.push_back(keypointLocs);
-    mems.push_back(inImage);
-
-    commandQueue.enqueueAcquireGLObjects(&mems);
-
-    dtcwt(commandQueue, inImage, env, out);
-
-    // Calculate energy maps
-    for (int l = 0; l < energyMaps.size(); ++l)
-        energyMap(commandQueue, out.subbands[l], energyMaps[l]);
-
-    // Look for peaks in them
-    for (int l = 0; l < energyMaps.size(); ++l)
-        ;
-
-    writeBuffer(commandQueue, numKps, std::vector<int> {0});
-    findMax(commandQueue, energyMaps[0], zeroImage, energyMaps[1], 0.1f,
-            keypointLocs, numKps);
-
-    int numOutputsVal;
-    commandQueue.enqueueReadBuffer(numKps, CL_TRUE, 0, sizeof(int),
-                                   &numOutputsVal);
-
-    std::cout << numOutputsVal << std::endl;
-
-    for (int n = 0; n < 6; ++n)
-        abs(commandQueue, out.subbands[0].sb[n], dispImage[n],
-                          out.subbands[0].done);
-
-    commandQueue.enqueueReleaseGLObjects(&mems);
+    int numKeypoints = clCalcs.update();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -483,7 +527,7 @@ bool Main::update(void)
     glTranslatef(0.f, 2.f/3.f, 0.f);
     glScalef(1.f / 160.f * 0.5f, -1.f / 120.f * 2.f / 3.f, 1.f);
    
-	glDrawArrays(GL_POINTS, 0, numOutputsVal);
+	glDrawArrays(GL_POINTS, 0, numKeypoints);
 	glPopMatrix();
 
 	glDisableClientState(GL_VERTEX_ARRAY);
