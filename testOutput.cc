@@ -97,41 +97,51 @@ VBOBuffers::~VBOBuffers()
 
 
 
+
+
+
+
+
+
 class Main {
 private:
-    Dtcwt dtcwt;
-    DtcwtOutput out;
-    DtcwtTemps env;
-    sf::Window app;
 
     cl::Platform platform;
     std::vector<cl::Device> devices;
     cl::Context context;
     cl::CommandQueue commandQueue; 
 
-    cl::Image2D zeroImage;
-    cl::Image2DGL inImage;
-
-    // For interop OpenGL/OpenCL
-    GLuint texture[6];
-    GLuint textureInImage;
-    cl::Image2DGL dispImage[6];
-
-	VBOBuffers buffers;
-	VBOBuffers imageDisplayVertexBuffers;
-    VBOBuffers keypointLocationBuffers;
-
-    cl::BufferGL keypointLocs;
-
-    cl::Buffer numKps;
-
+    Dtcwt dtcwt;
     Abs abs;
     EnergyMap energyMap;
     FindMax findMax;
 
+    cl::Image2D zeroImage;
+
+    cl::Image2DGL inImage;
+
+    DtcwtTemps env;
+    DtcwtOutput out;
+
+    cl::Image2DGL dispImage[6];
+
     std::vector<cl::Image2D> energyMaps;
 
+    cl::Buffer numKps;
+    cl::BufferGL keypointLocs;
+
+
+    sf::Window app;
+
     cv::VideoCapture video;
+
+    // For interop OpenGL/OpenCL
+    GLuint textureInImage;
+    GLuint texture[6];
+
+	VBOBuffers buffers;
+	VBOBuffers imageDisplayVertexBuffers;
+    VBOBuffers keypointLocationBuffers;
 
 	void createTextures(int width, int height);
 	void createBuffers();
