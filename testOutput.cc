@@ -11,6 +11,7 @@
 #define __CL_ENABLE_EXCEPTIONS
 
 #include "filterer.h"
+#include "abs.h"
 #include "clUtil.h"
 #include "dtcwt.h"
 #include <iomanip>
@@ -54,98 +55,6 @@ cv::Mat convertVideoImgToFloat(cv::Mat videoImg)
 }
 
 
-class Abs {
-    // Kernel that takes a two-component (i.e. complex) image, and puts out a
-    // single-component (magnitude) image
-
-public:
-
-    Abs() = default;
-    Abs(const Abs&) = default;
-    Abs(cl::Context& context, const std::vector<cl::Device>& devices);
-
-    void operator() (cl::CommandQueue& cq, const cl::Image2D& input,
-                                           const cl::Image2D& output,
-                     const std::vector<cl::Event>& waitEvents
-                        = std::vector<cl::Event>(),
-                     cl::Event* doneEvent = nullptr);
-
-private:
-
-    cl::Context context_;
-    cl::Kernel kernel_;
-
-};
-
-
-#define STRING(t) #t
-
-Abs::Abs(cl::Context& context, const std::vector<cl::Device>& devices)
-{
-    std::string src = STRING(
-        __kernel void absKernel(__read_only image2d_t input,
-                          __write_only image2d_t output)
-        {
-            sampler_t s = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST;
-
-            int x = get_global_id(0);
-            int y = get_global_id(1);
-
-            if (x < get_image_width(output)
-                && y < get_image_height(output)) {
-
-                float2 valIn = read_imagef(input, s, (int2)(x, y)).xy;
-                write_imagef(output, (int2)(x, y), 5.f * fast_length(valIn));
-            }
-
-        }
-    );
-
-    // Bundle the code up
-    cl::Program::Sources source;
-    source.push_back(std::make_pair(src.c_str(), src.length()));
-
-    // Compile it...
-    cl::Program program(context, source);
-    try {
-        program.build(devices);
-    } catch(cl::Error err) {
-	    std::cerr 
-		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
-		    << std::endl;
-	    throw;
-    } 
-        
-    // ...and extract the useful part, viz the kernel
-    kernel_ = cl::Kernel(program, "absKernel");
-}
-
-
-
-void Abs::operator() (cl::CommandQueue& cq, const cl::Image2D& input,
-                                       const cl::Image2D& output,
-                 const std::vector<cl::Event>& waitEvents,
-                 cl::Event* doneEvent)
-{
-    const int wgSize = 16;
-
-    cl::NDRange workgroupSize = {wgSize, wgSize};
-
-    cl::NDRange globalSize = {
-        roundWGs(output.getImageInfo<CL_IMAGE_WIDTH>(), wgSize), 
-        roundWGs(output.getImageInfo<CL_IMAGE_HEIGHT>(), wgSize)
-    }; 
-
-
-    // Set all the arguments
-    kernel_.setArg(0, input);
-    kernel_.setArg(1, output);
-
-    // Execute
-    cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
-                            globalSize, workgroupSize,
-                            &waitEvents, doneEvent);
-}
 
 
 
@@ -436,7 +345,7 @@ bool Main::update(void)
     cv::Mat in = convertVideoImgToFloat(picture);
     std::cout << in.rows <<  " " << in.cols << std::endl;
 
-    in /= 256.f;
+    in /= 512.f;
     // Copy matrix contents to the inImage/textureInImage with OpenGL (since
     // OpenCL seems to have issues doing enqueueWriteImage to a shared
     // texture)
