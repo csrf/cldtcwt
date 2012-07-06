@@ -487,14 +487,6 @@ bool Main::update(void)
     // Select the texture
     glBindTexture(GL_TEXTURE_2D, textureInImage);
 
-    // Select texture positioning
-    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
-    glTexCoordPointer(2, GL_FLOAT, 0, 0);
-
-    // Select vertex positioning
-    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
-    glVertexPointer(2, GL_FLOAT, 0, 0);
-
     // Draw it
     glDrawArrays(GL_QUADS, 0, 4);
 
@@ -505,12 +497,11 @@ bool Main::update(void)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 
-		
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 
+    // Draw the keypoints
+
+	// Draw with red, 7-pixel large dots
 	glColor4f(1.0, 0.0, 0.0, 1.0);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -522,16 +513,16 @@ bool Main::update(void)
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
+    // Got to the right place to overlay the display
     glTranslatef(0.f, 2.f/3.f, 0.f);
     glScalef(1.f / 160.f * 0.5f, -1.f / 120.f * 2.f / 3.f, 1.f);
    
 	glDrawArrays(GL_POINTS, 0, numKeypoints);
 	glPopMatrix();
 
+    // Thoroughly disable the array buffer
 	glDisableClientState(GL_VERTEX_ARRAY);
-
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     app.Display();
 
