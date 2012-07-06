@@ -452,6 +452,14 @@ bool Main::update(void)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
+	// Select texture positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
+    glTexCoordPointer(2, GL_FLOAT, 0, 0);
+
+    // Select vertex positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
+    glVertexPointer(2, GL_FLOAT, 0, 0);
+
     for (int n = 0; n < 3; ++n) {
         for (int m = 0; m < 2; ++m) {
 
@@ -462,17 +470,7 @@ bool Main::update(void)
 			// Select the texture
             glBindTexture(GL_TEXTURE_2D, texture[sbIdx]);
 
-			// Select texture positioning
-			glBindBuffer(GL_ARRAY_BUFFER,
-                         imageDisplayVertexBuffers.getBuffer(0));
-			glTexCoordPointer(2, GL_FLOAT, 0, 0);
-
-			// Select vertex positioning
-			glBindBuffer(GL_ARRAY_BUFFER, 
-                         imageDisplayVertexBuffers.getBuffer(1));
-			glVertexPointer(2, GL_FLOAT, 0, 0);
-
-			// Draw it
+					// Draw it
 			glDrawArrays(GL_QUADS, 0, 4);
 
 			glPopMatrix();
