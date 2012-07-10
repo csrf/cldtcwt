@@ -26,6 +26,19 @@ void writeBuffer(cl::CommandQueue& cq, const cl::Buffer& buffer,
 }
 
 
+template <typename T>
+std::vector<T> readBuffer(cl::CommandQueue& cq, const cl::Buffer& buffer)
+{
+    const size_t size = buffer.getInfo<CL_MEM_SIZE>();
+    std::vector<T> vals(size / sizeof(T));
+
+    cq.enqueueReadBuffer(buffer, CL_TRUE, 0, size, &vals[0]);
+
+    return vals;
+}
+
+
+
 cl::Image2D createImage2D(cl::Context&, int width, int height);
 
 cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
@@ -35,6 +48,7 @@ void writeImage2D(cl::CommandQueue& commandQueue,
 
 void readImage2D(cl::CommandQueue& commandQueue,
                  float* outMemory, cl::Image2D& image);
+
 
 void saveRealImage(std::string filename,
                    cl::CommandQueue& cq, cl::Image2D& image);
