@@ -8,6 +8,7 @@
 #include <vector>
 
 
+#include "dtcwt.h"
 
 
 
@@ -20,14 +21,29 @@ public:
     DescriptorExtracter(const DescriptorExtracter&) = default;
 
     DescriptorExtracter(cl::Context& context,
-                        const std::vector<cl::Device>& devices);
+                        const std::vector<cl::Device>& devices,
+                        cl::CommandQueue& cq,
+                        const std::vector<float[2]>& samplingPattern,
+                        float scaleFactor,
+                        int outputStride, int outputOffset,
+                        int diameter);
 
+    void
+    operator() (cl::CommandQueue& cq,
+                const LevelOutput& subbands,
+                const cl::Buffer& locations,
+                int numLocations,
+                cl::Buffer& output,
+                cl::Event* doneEvent = nullptr);
 
 
 private:
 
     cl::Context context_;
     cl::Kernel kernel_;
+
+    cl::Buffer samplingPattern_;
+    int diameter_;
 
 };
 

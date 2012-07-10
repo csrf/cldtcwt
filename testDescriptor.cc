@@ -38,7 +38,10 @@ int main(int argc, char** argv)
         Dtcwt dtcwt(context.context, context.devices, cq);
 
         // Ready the keypoint extractor
-        DescriptorExtracter(context.context, context.devices);
+        DescriptorExtracter(context.context, context.devices, cq,
+                            {{0,0}}, 1.f,
+                            1, 0,
+                            0);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0);

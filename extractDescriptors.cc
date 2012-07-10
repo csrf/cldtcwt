@@ -5,6 +5,7 @@
 
 #include "extractDescriptors.h"
 #include <iostream>
+#include <string>
 
 
 
@@ -69,10 +70,10 @@ static std::string kernelSrc =
 "    return centre + posRelToImgCentre;\n"
 "}\n"
 "\n"
-"#define DIAMETER 2\n"
 "\n"
 "\n"
 "__kernel void extractDescriptor(__read_only __global float2* pos,\n"
+"                                int numPos,\n"
 "                                __read_only __global float2* sampleLocs,\n"
 "                                const int numSampleLocs,\n"
 "                                int stride, int offset,\n"
@@ -230,21 +231,34 @@ static std::string kernelSrc =
 "\n"
 "    }\n"
 "}\n"
-"\n"
-"#undef DIAMETER";
+"\n";
 
 
 
 
 
 DescriptorExtracter::DescriptorExtracter(cl::Context& context,
-               const std::vector<cl::Device>& devices)
- : context_(context)
+                const std::vector<cl::Device>& devices,
+                cl::CommandQueue& cq,
+                const std::vector<float[2]>& samplingPattern,
+                float scaleFactor,
+                int outputStride, int outputOffset,
+                int diameter)
+ : context_(context), diameter_(diameter)
 {
-    
+    // Define the diameter (total width/height of sampling pattern)
+    // to begin with
+    std::ostringstream kernelInput;
+
+    kernelInput << "#define DIAMETER " << diameter << "\n"
+                << kernelSrc;
+
+    const std::string sourceCode = kernelInput.str();
+
     // Bundle the code up
     cl::Program::Sources source;
-    source.push_back(std::make_pair(kernelSrc.c_str(), kernelSrc.length()));
+    source.push_back(std::make_pair(sourceCode.c_str(), 
+                                    sourceCode.length()));
 
     // Compile it...
     cl::Program program(context, source);
@@ -256,9 +270,64 @@ DescriptorExtracter::DescriptorExtracter(cl::Context& context,
 		    << std::endl;
 	    throw;
     } 
-        
+
+    // Upload the sampling pattern
+    const size_t samplingPatternSize 
+        = samplingPattern.size() * 2 * sizeof(float);
+
+    samplingPattern_ = cl::Buffer(context_, CL_MEM_READ_ONLY, 
+                                  samplingPatternSize);
+
+    cq.enqueueWriteBuffer(samplingPattern_, CL_TRUE, 
+                          0, samplingPatternSize,
+                          &samplingPattern[0][0]);
+
     // ...and extract the useful part, viz the kernel
     kernel_ = cl::Kernel(program, "extractDescriptor");
 
+    // Set arguments we already know
+    kernel_.setArg(2, samplingPattern_);
+    kernel_.setArg(3, int(samplingPattern.size()));
+    kernel_.setArg(4, int(outputStride));
+    kernel_.setArg(5, int(outputOffset));
+    kernel_.setArg(6, float(scaleFactor));
 }
+
+
+
+void DescriptorExtracter::operator() 
+               (cl::CommandQueue& cq,
+                const LevelOutput& subbands,
+                const cl::Buffer& locations,
+                int numLocations,
+                cl::Buffer& output,
+                cl::Event* doneEvent)
+{
+    // Set subband arguments
+    kernel_.setArg(8, subbands.sb[0]);
+    kernel_.setArg(9, subbands.sb[1]);
+    kernel_.setArg(10, subbands.sb[2]);
+    kernel_.setArg(11, subbands.sb[3]);
+    kernel_.setArg(12, subbands.sb[4]);
+    kernel_.setArg(13, subbands.sb[5]);
+
+    // Set descriptor location arguments (which are scaled by scaleFactor,
+    // set on creation), and are relative to the centre of the subband
+    // images
+    kernel_.setArg(0, locations);
+    kernel_.setArg(1, int(numLocations));
+
+    // Set output argument
+    kernel_.setArg(7, output);
+
+    // Enqueue the kernel
+    cl::NDRange workgroupSize = {1, diameter_+4, diameter_+4};
+    cl::NDRange globalSize = {numLocations, diameter_+4, diameter_+4};
+
+    cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
+                            globalSize, workgroupSize,
+                            &subbands.done, doneEvent);    
+}
+
+
 
