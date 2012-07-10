@@ -16,8 +16,13 @@ class DescriptorExtracter {
 
 public:
 
+    DescriptorExtracter() = default;
+    DescriptorExtracter(const DescriptorExtracter&) = default;
+
     DescriptorExtracter(cl::Context& context,
                         const std::vector<cl::Device>& devices);
+
+
 
 private:
 
