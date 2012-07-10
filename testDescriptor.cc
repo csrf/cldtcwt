@@ -38,10 +38,11 @@ int main(int argc, char** argv)
         Dtcwt dtcwt(context.context, context.devices, cq);
 
         // Ready the keypoint extractor
-        DescriptorExtracter(context.context, context.devices, cq,
-                            {{0,0}}, 1.f,
-                            1, 0,
-                            0);
+        DescriptorExtracter
+            descriptorExtracter(context.context, context.devices, cq,
+                                {{0,0}}, 1.f,
+                                1, 0,
+                                0);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0);
@@ -52,11 +53,28 @@ int main(int argc, char** argv)
                                            numLevels, startLevel);
         DtcwtOutput out(env);
 
+        // Create locations to sample at
+        cl::Buffer kplocs = createBuffer(context.context, cq, 
+                                         {-0.5f, -0.5f});
+
+        cl::Buffer output = createBuffer(context.context, cq, 
+                                         {0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
+                                          0.f, 0.f, 0.f, 0.f, 0.f, 0.f});
+
         // Perform the transform
         dtcwt(cq, inImage, env, out);
 
         // Extract descriptors
+        descriptorExtracter(cq, out.subbands[0], kplocs, 1,
+                            output);
+        
+        // Read them out
+        std::vector<float> descriptor = readBuffer<float>(cq, output);
 
+        // Display
+        for (float val: descriptor) {
+            std::cout << val << std::endl;
+        }
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"
