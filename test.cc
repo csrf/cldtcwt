@@ -28,7 +28,6 @@ int main()
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        DescriptorExtracter(context.context, context.devices);
 
         const int numLevels = 6;
         const int startLevel = 1;
