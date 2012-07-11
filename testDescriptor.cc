@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {-0.5f, -0.5f});
+                                         {15.f, 14.5f});
 
         cl::Buffer output = createBuffer(context.context, cq, 
                                          {0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
@@ -64,6 +64,7 @@ int main(int argc, char** argv)
         // Perform the transform
         dtcwt(cq, inImage, env, out);
 
+        saveComplexImage("testout.1.0", cq, out.subbands[0].sb[0]);
         // Extract descriptors
         descriptorExtracter(cq, out.subbands[0], kplocs, 1,
                             output);
