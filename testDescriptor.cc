@@ -45,7 +45,7 @@ int main(int argc, char** argv)
                                 0);
 
         // Read in image
-        cv::Mat bmp = cv::imread(argv[1], 0);
+        cv::Mat bmp = cv::imread(argv[1], 0) / 255.0f;
         cl::Image2D inImage = createImage2D(context.context, bmp);
 
         // Create temporaries and outputs for the DTCWT
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {15.f, 14.5f});
+                                         {15.5f, 14.5f});
 
         cl::Buffer output = createBuffer(context.context, cq, 
                                          {0.f, 0.f, 0.f, 0.f, 0.f, 0.f,
