@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=-I m4
 
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x
 
-TESTS=test/verifyDTCWT.sh
+TESTS=test/verifyDTCWT.sh test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
 
 bin_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
