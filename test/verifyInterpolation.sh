@@ -16,7 +16,7 @@ system('./testDescriptor test.bmp');
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
 
-locs = [32 31];
+locs = [31 31.5];
 
 % Correct the phases and perform band-pass interpolation
 Yh = correctPhase(Yh);
@@ -25,17 +25,26 @@ r5 = sqrt(5);
 w = [-3 -1; -r5 -r5; -1 -3; 1 -3; r5 -r5; 3 -1]*pi/2.15; 
 % Nominally pi/2, but reduced a bit due to asymmetry of subband freq responses.
 
-out = zeros(6,1);
+% Generate reference outputs
+ref = zeros(6,1);
 for n = 1:6
-    out(n) = cpxinterp2b(Yh{2}(:,:,n), locs, w(n,:));
+    ref(n) = cpxinterp2b(Yh{2}(:,:,n), locs, w(n,:));
 end
 
-out
+out = dlmread('interpolations.dat', ',');
 
-% Read the data
-%vbY = dlmread(sprintf('test.bmp.%d.%d', l-1, sb-1), ',');
+if any((out - ref) > 1e-3)
+    disp('Interpolations did not give the same results as Octave!')
+    disp('Should have been:')
+    ref
+    disp('Was:')
+    out
+    quit(-1)
+else
+    display('Interpolation worked!')
+end
 
-display('DTCWT worked!')
+
 quit(0)
 "
 
