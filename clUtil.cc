@@ -168,6 +168,26 @@ void saveComplexImage(std::string filename,
 }
 
 
+void saveComplexBuffer(std::string filename,
+                      cl::CommandQueue& cq, cl::Buffer& buffer)
+{
+    std::vector<float> output = readBuffer<float>(cq, buffer);
+
+    // Open the file for output
+    std::ofstream out(filename, std::ios_base::trunc | std::ios_base::out);
+
+    // Produce the output in a file readable bn MATLAB dlmread
+    for (size_t n = 0; n < output.size(); n += 2) {
+        out << output[n];
+        if (output[n+1] >= 0)
+            out << "+";
+        out << output[n+1] << "j";
+
+        if ((n+2) < output.size())
+            out << "\n";
+    }
+}
+
 void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image)
 {
     const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),

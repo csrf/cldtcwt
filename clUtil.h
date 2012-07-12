@@ -56,6 +56,9 @@ void saveRealImage(std::string filename,
 void saveComplexImage(std::string filename,
                       cl::CommandQueue& cq, cl::Image2D& image);
 
+void saveComplexBuffer(std::string filename,
+                       cl::CommandQueue& cq, cl::Buffer& buffer);
+
 void displayRealImage(cl::CommandQueue& cq, cl::Image2D& image);
 
 
