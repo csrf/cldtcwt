@@ -42,7 +42,7 @@ int main(int argc, char** argv)
             descriptorExtracter(context.context, context.devices, cq,
                                 {{0,0}}, 1.f,
                                 1, 0,
-                                0);
+                                2);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0) / 255.0f;
@@ -55,16 +55,17 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {15.f, 14.5f});
+                                         {15.5f, 14.5f,
+                                          15.5f, 15.5f});
 
         cl::Buffer output = createBuffer(context.context, cq, 
-                                         std::vector<float>(12));
+                                         std::vector<float>(2*12));
 
         // Perform the transform
         dtcwt(cq, inImage, env, out);
 
         // Extract descriptors
-        descriptorExtracter(cq, out.subbands[0], kplocs, 1,
+        descriptorExtracter(cq, out.subbands[0], kplocs, 2,
                             output);
         
         // Read them out

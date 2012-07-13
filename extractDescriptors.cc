@@ -220,7 +220,7 @@ static std::string kernelSrc =
 "\n"
 "\n"
 "            // Save to matrix\n"
-"            output[n + 6*samplerIdx*numSampleLocs + idx * stride + offset]\n"
+"            output[n + samplerIdx * 6 + idx * stride * 6 + offset * 6]\n"
 "                = result;\n"
 "\n"
 "        }\n"
