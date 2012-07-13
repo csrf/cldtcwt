@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         // Ready the keypoint extractor
         DescriptorExtracter
             descriptorExtracter(context.context, context.devices, cq,
-                                {{0,0}}, 1.f,
+                                {{0,0}}, 0.5f,
                                 1, 0,
                                 2);
 
@@ -55,8 +55,8 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {15.5f, 14.5f,
-                                          15.5f, 15.5f});
+                                         {2*15.5f, 2*14.5f,
+                                          2*15.5f, 2*15.5f});
 
         cl::Buffer output = createBuffer(context.context, cq, 
                                          std::vector<float>(2*12));
