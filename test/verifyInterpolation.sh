@@ -41,7 +41,7 @@ if any((out - ref(:)) > 1e-3)
     ref
     disp('Was:')
     out
-    quit(-1)
+    quit(1)
 else
     display('Interpolation worked!')
 end
