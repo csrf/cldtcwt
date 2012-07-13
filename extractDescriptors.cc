@@ -5,7 +5,9 @@
 
 #include "extractDescriptors.h"
 #include <iostream>
+#include <iterator>
 #include <string>
+#include <algorithm>
 
 
 
@@ -300,6 +302,7 @@ void DescriptorExtracter::operator()
                 const cl::Buffer& locations,
                 int numLocations,
                 cl::Buffer& output,
+                std::vector<cl::Event> waitEvents,
                 cl::Event* doneEvent)
 {
     // Set subband arguments
@@ -318,6 +321,10 @@ void DescriptorExtracter::operator()
 
     // Set output argument
     kernel_.setArg(7, output);
+
+    // Wait for the subbands to be done too
+    std::copy(subbands.done.begin(), subbands.done.end(),
+              std::back_inserter(waitEvents));
 
     // Enqueue the kernel
     cl::NDRange workgroupSize = {1, diameter_+4, diameter_+4};

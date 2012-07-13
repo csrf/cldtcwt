@@ -34,6 +34,7 @@ public:
                 const cl::Buffer& locations,
                 int numLocations,
                 cl::Buffer& output,
+                std::vector<cl::Event> waitEvents = std::vector<cl::Event>(),
                 cl::Event* doneEvent = nullptr);
 
 
