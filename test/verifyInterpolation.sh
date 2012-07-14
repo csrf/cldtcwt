@@ -16,9 +16,12 @@ system('./testDescriptor test.bmp');
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
 
-pattern = [0 0; 1 0];
+% Design the pattern
+z = exp(i * (0:11)' / 12 * 2 * pi);
+pattern = [0 0; real(z) imag(z)];
 
-locs = bsxfun(@plus, [31 32], pattern);
+
+locs = bsxfun(@plus, [31 30.5], pattern)
 
 % Correct the phases and perform band-pass interpolation
 Yh = correctPhase(Yh);
@@ -30,17 +33,20 @@ w = [-3 -1; -r5 -r5; -1 -3; 1 -3; r5 -r5; 3 -1]*pi/2.15;
 % Generate reference outputs
 ref = zeros(6,size(pattern,1));
 for n = 1:6
-    ref(n,:) = transpose(cpxinterp2b(Yh{2}(:,:,n), locs, w(n,:)));
+    for m = 1:size(pattern,1);
+        ref(n,m) = transpose(cpxinterp2b(Yh{2}(:,:,n), locs(m,:), w(n,:)));
+    end
 end
 
 out = dlmread('interpolations.dat', ',');
 
-if any((out - ref(:)) > 1e-3)
-    disp('Interpolations did not give the same results as Octave!')
     disp('Should have been:')
     ref
     disp('Was:')
-    out
+    reshape(out, 6, numel(out) / 6)
+
+if any(abs(out - ref(:)) > 1e-5)
+    disp('Interpolations did not give the same results as Octave!')
     quit(1)
 else
     display('Interpolation worked!')

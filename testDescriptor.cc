@@ -13,6 +13,7 @@
 
 #include <sys/timeb.h>
 
+#include <cmath>
 #include <stdexcept>
 
 #include <highgui.h>
@@ -37,11 +38,24 @@ int main(int argc, char** argv)
         cl::CommandQueue cq(context.context, context.devices[0]);
         Dtcwt dtcwt(context.context, context.devices, cq);
 
+        const float pi = 4 * atan(1);
+
+        // Pattern of locations to sample at
+        // Set up the centre
+        std::vector<Coord> pattern = {{0 ,0}};
+
+        // Set up the circle
+        for (int n = 0; n < 12; ++n) {
+            pattern.push_back({float(sin(float(n) / 12.f * 2.f * pi)),
+                               float(cos(float(n) / 12.f * 2.f * pi))});
+        }
+
+
         // Ready the keypoint extractor
         DescriptorExtracter
             descriptorExtracter(context.context, context.devices, cq,
-                                {{0,0}}, 0.5f,
-                                1, 0,
+                                pattern, 1.f,
+                                13, 0,
                                 2);
 
         // Read in image
@@ -55,11 +69,10 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {2*15.5f, 2*14.5f,
-                                          2*15.5f, 2*15.5f});
+                                         {14.f, 14.5f});
 
         cl::Buffer output = createBuffer(context.context, cq, 
-                                         std::vector<float>(2*12));
+                                 std::vector<float>(pattern.size() * 12));
 
         // Perform the transform
         dtcwt(cq, inImage, env, out);

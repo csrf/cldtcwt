@@ -241,7 +241,7 @@ static std::string kernelSrc =
 DescriptorExtracter::DescriptorExtracter(cl::Context& context,
                 const std::vector<cl::Device>& devices,
                 cl::CommandQueue& cq,
-                const std::vector<float[2]>& samplingPattern,
+                const std::vector<Coord>& samplingPattern,
                 float scaleFactor,
                 int outputStride, int outputOffset,
                 int diameter)
@@ -281,7 +281,7 @@ DescriptorExtracter::DescriptorExtracter(cl::Context& context,
 
     cq.enqueueWriteBuffer(samplingPattern_, CL_TRUE, 
                           0, samplingPatternSize,
-                          &samplingPattern[0][0]);
+                          &samplingPattern[0]);
 
     // ...and extract the useful part, viz the kernel
     kernel_ = cl::Kernel(program, "extractDescriptor");

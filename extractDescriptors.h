@@ -11,6 +11,9 @@
 #include "dtcwt.h"
 
 
+struct Coord {
+    float x, y;
+};
 
 class DescriptorExtracter {
 // Class that can extract a ring of keypoints from a particular level
@@ -23,7 +26,7 @@ public:
     DescriptorExtracter(cl::Context& context,
                         const std::vector<cl::Device>& devices,
                         cl::CommandQueue& cq,
-                        const std::vector<float[2]>& samplingPattern,
+                        const std::vector<Coord>& samplingPattern,
                         float scaleFactor,
                         int outputStride, int outputOffset,
                         int diameter);
