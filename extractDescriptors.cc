@@ -336,4 +336,51 @@ void Interpolator::operator()
 }
 
 
+// Keypoint extracter class
+
+DescriptorExtracter::DescriptorExtracter
+    (cl::Context& context, 
+     const std::vector<cl::Device>& devices,
+     cl::CommandQueue& cq)
+{
+    const float pi = 4 * atan(1);
+
+    // Pattern of locations to sample at
+    // Set up the centre
+    std::vector<Coord> finePattern= {{0, 0}};
+
+    // Set up the circle
+    for (int n = 0; n < 12; ++n) {
+        finePattern.push_back({float(sin(float(n) / 12.f * 2.f * pi)),
+                               float(cos(float(n) / 12.f * 2.f * pi))});
+    }
+
+    std::vector<Coord> coarsePattern = {{0, 0}};
+
+    // Set up the kernels
+    fineInterpolator_ = Interpolator(context, devices, cq,
+                                     finePattern, 1.0f, 14, 0, 2);
+    coarseInterpolator_ = Interpolator(context, devices, cq,
+                                     coarsePattern, 0.5f, 14, 13, 0);
+}
+
+
+void DescriptorExtracter:: operator() 
+               (cl::CommandQueue& cq,
+                const LevelOutput& fineSubbands,
+                const LevelOutput& coarseSubbands,
+                const cl::Buffer& locations,
+                int numLocations,
+                cl::Buffer& output,
+                std::vector<cl::Event> waitEvents,
+                cl::Event* doneEventFine, cl::Event* doneEventCoarse)
+{
+    // Call the fine and coarse levels
+    fineInterpolator_(cq, fineSubbands, locations, numLocations, output,
+                      waitEvents, doneEventFine);
+
+    coarseInterpolator_(cq, coarseSubbands, locations, numLocations, output,
+                      waitEvents, doneEventCoarse);
+}
+
 

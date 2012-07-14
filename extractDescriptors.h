@@ -52,6 +52,38 @@ private:
 };
 
 
+class DescriptorExtracter {
+// Extract descriptors from two consecutive levels, the lower one a ring
+// with a central point (unit radius) and the upper one a circle.  The
+// coordinates are for the finer scale and relative to its centre
+
+public:
+    DescriptorExtracter() = default;
+    DescriptorExtracter(const DescriptorExtracter&) = default;
+
+    DescriptorExtracter(cl::Context& context, 
+                        const std::vector<cl::Device>& devices,
+                        cl::CommandQueue& cq);
+
+    void
+    operator() (cl::CommandQueue& cq,
+                const LevelOutput& fineSubbands,
+                const LevelOutput& coarseSubbands,
+                const cl::Buffer& locations,
+                int numLocations,
+                cl::Buffer& output,
+                std::vector<cl::Event> waitEvents = std::vector<cl::Event>(),
+                cl::Event* doneEventFine = nullptr,
+                cl::Event* doneEventCoarse = nullptr);
+
+
+private:
+
+    // Different interpolators for the ring vs. the single point
+    Interpolator fineInterpolator_, coarseInterpolator_;
+
+};
+
 
 
 
