@@ -15,15 +15,15 @@ struct Coord {
     float x, y;
 };
 
-class DescriptorExtracter {
+class Interpolator {
 // Class that can extract a ring of keypoints from a particular level
 
 public:
 
-    DescriptorExtracter() = default;
-    DescriptorExtracter(const DescriptorExtracter&) = default;
+    Interpolator() = default;
+    Interpolator(const Interpolator&) = default;
 
-    DescriptorExtracter(cl::Context& context,
+    Interpolator(cl::Context& context,
                         const std::vector<cl::Device>& devices,
                         cl::CommandQueue& cq,
                         const std::vector<Coord>& samplingPattern,

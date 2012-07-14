@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
 
         // Ready the keypoint extractor
-        DescriptorExtracter
+        Interpolator
             descriptorExtracter(context.context, context.devices, cq,
                                 pattern, 1.f,
                                 13, 0,

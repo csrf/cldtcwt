@@ -238,7 +238,7 @@ static std::string kernelSrc =
 
 
 
-DescriptorExtracter::DescriptorExtracter(cl::Context& context,
+Interpolator::Interpolator(cl::Context& context,
                 const std::vector<cl::Device>& devices,
                 cl::CommandQueue& cq,
                 const std::vector<Coord>& samplingPattern,
@@ -296,7 +296,7 @@ DescriptorExtracter::DescriptorExtracter(cl::Context& context,
 
 
 
-void DescriptorExtracter::operator() 
+void Interpolator::operator() 
                (cl::CommandQueue& cq,
                 const LevelOutput& subbands,
                 const cl::Buffer& locations,
