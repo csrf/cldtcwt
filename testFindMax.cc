@@ -17,11 +17,6 @@
 
 #include "findMax.h"
 
-std::tuple<cl::Platform, std::vector<cl::Device>, 
-           cl::Context, cl::CommandQueue> 
-    initOpenCL();
-
-
 
 
 
