@@ -2,6 +2,17 @@ ACLOCAL_AMFLAGS=-I m4
 
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x
 
+# Rule to turn an OpenCL source file into a C string within a header file.
+# xxd uses its input's filename to name the string and its length, so we
+# need to move them to a name that depends only on the path output, not its
+# input.  Otherwise, builds in different relative locations would put the
+# source into different variable names, and everything would fall over.
+# The actual name will be 
+%.h: %.cl Makefile
+	cp $< $@_src
+	xxd -i $@_src $@
+	rm $@_src
+
 TESTS=test/verifyDTCWT.sh test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
 
