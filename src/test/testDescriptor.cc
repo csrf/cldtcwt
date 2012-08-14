@@ -4,11 +4,11 @@
 #include <tuple>
 
 #define __CL_ENABLE_EXCEPTIONS
-#include "cl.hpp"
+#include "CL/cl.hpp"
 
-#include "filterer.h"
-#include "clUtil.h"
-#include "dtcwt.h"
+#include "DTCWT/filterer.h"
+#include "util/clUtil.h"
+#include "DTCWT/dtcwt.h"
 #include <iomanip>
 
 #include <sys/timeb.h>
@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 #include <highgui.h>
-#include "extractDescriptors.h"
+#include "KeypointDescriptor/extractDescriptors.h"
 
 
 int main(int argc, char** argv)

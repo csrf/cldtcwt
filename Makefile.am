@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4
 
-AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x
+AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src
 
 # Rule to turn an OpenCL source file into a C string within a header file.
 # xxd uses its input's filename to name the string and its length, so we
@@ -13,35 +13,47 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x
 	xxd -i $@_src $@
 	rm $@_src
 
-TESTS=test/verifyDTCWT.sh test/verifyInterpolation.sh
+TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
 
-bin_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
+noinst_LTLIBRARIES = libdtcwt.la libclutil.la
+
+libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
+					  src/DTCWT/filterer.cc \
+					  src/KeypointDetector/findMax.cc \
+					  src/KeypointDescriptor/extractDescriptors.cc 
+libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
+
+libclutil_la_SOURCES = src/util/clUtil.cc
+libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
+
+
+noinst_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
 			 verifyBasic testDescriptor
 
-testDTCWT_SOURCES=test.cc filterer.cc clUtil.cc dtcwt.cc extractDescriptors.cc
-testDTCWT_LDADD=@CL_LIBS@ @opencv_LIBS@
+testDTCWT_SOURCES = src/test/test.cc 
+testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
 
-testDescriptor_SOURCES=testDescriptor.cc \
-					   filterer.cc clUtil.cc dtcwt.cc extractDescriptors.cc
-testDescriptor_LDADD=@CL_LIBS@ @opencv_LIBS@
+testDescriptor_SOURCES = src/test/testDescriptor.cc 
+testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
 
-testFindMax_SOURCES=testFindMax.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc
-testFindMax_LDADD=@CL_LIBS@ @opencv_LIBS@
+testFindMax_SOURCES = src/test/testFindMax.cc
+testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
 
-testOutput_SOURCES=testOutput.cc filterer.cc clUtil.cc dtcwt.cc findMax.cc \
-				   abs.cc
-testOutput_LDADD=@CL_LIBS@ @opencv_LIBS@ -lsfml-window -lsfml-system
+testOutput_SOURCES = src/test/testOutput.cc \
+					 src/MiscKernels/abs.cc
+testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
+				   @opencv_LIBS@
 
-testFilter_SOURCES=testFilter.cc filterer.cc clUtil.cc dtcwt.cc
-testFilter_LDADD=@CL_LIBS@ @opencv_LIBS@
+testFilter_SOURCES = src/test/testFilter.cc 
+testFilter_LDADD = libdtcwt.la @opencv_LIBS@
 
-testRescale_SOURCES=testRescale.cc filterer.cc clUtil.cc dtcwt.cc
-testRescale_LDADD=@CL_LIBS@ @opencv_LIBS@
+testRescale_SOURCES = src/test/testRescale.cc 
+testRescale_LDADD = libdtcwt.la @opencv_LIBS@
 
-verify_SOURCES=verify.cc filterer.cc clUtil.cc dtcwt.cc
-verify_LDADD=@CL_LIBS@ @opencv_LIBS@
+verify_SOURCES = src/test/verify.cc 
+verify_LDADD = libdtcwt.la @opencv_LIBS@
 
-verifyBasic_SOURCES=test/verifyBasic.cc filterer.cc clUtil.cc dtcwt.cc
-verifyBasic_LDADD=@CL_LIBS@ @opencv_LIBS@
+verifyBasic_SOURCES = src/test/verifyBasic.cc 
+verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 

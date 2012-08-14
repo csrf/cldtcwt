@@ -1,6 +1,6 @@
 #include "dtcwt.h"
 
-#include "clUtil.h"
+#include "util/clUtil.h"
 
 Filters createLevel1Filters(cl::Context& context, 
                             cl::CommandQueue& commandQueue);

@@ -10,10 +10,10 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#include "filterer.h"
-#include "abs.h"
-#include "clUtil.h"
-#include "dtcwt.h"
+#include "DTCWT/filterer.h"
+#include "MiscKernels/abs.h"
+#include "util/clUtil.h"
+#include "DTCWT/dtcwt.h"
 #include <iomanip>
 
 #include <ctime>
@@ -29,9 +29,9 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
-#include "findMax.h"
+#include "KeypointDetector/findMax.h"
 
-#include "cl.hpp"
+#include "CL/cl.hpp"
 
 std::tuple<cl::Platform, std::vector<cl::Device>, 
            cl::Context, cl::CommandQueue> 

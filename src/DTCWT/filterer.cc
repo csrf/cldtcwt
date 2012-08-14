@@ -1,5 +1,5 @@
 #include "filterer.h"
-#include "clUtil.h"
+#include "util/clUtil.h"
 #include <stdexcept>
 #include <iostream>
 #include <string>

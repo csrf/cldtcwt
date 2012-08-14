@@ -4,10 +4,10 @@
 #include <tuple>
 
 #define __CL_ENABLE_EXCEPTIONS
-#include "cl.hpp"
+#include "CL/cl.hpp"
 
-#include "filterer.h"
-#include "clUtil.h"
+#include "DTCWT/filterer.h"
+#include "util/clUtil.h"
 #include <iomanip>
 
 #include <stdexcept>
@@ -15,7 +15,7 @@
 #include <highgui.h>
 
 
-#include "findMax.h"
+#include "KeypointDetector/findMax.h"
 
 
 
