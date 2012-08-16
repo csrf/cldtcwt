@@ -9,7 +9,7 @@
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
 cl::Sampler createSampler(cl::Context& context)
 {
-    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_MIRRORED_REPEAT,
+    return cl::Sampler(context, CL_FALSE, CL_ADDRESS_CLAMP,
                        CL_FILTER_NEAREST);
 }
 
@@ -178,7 +178,7 @@ Filter::Filter(cl::Context& context,
 
 void Filter::operator() 
       (cl::CommandQueue& commandQueue,
-       const cl::Image2D& input,
+       cl::Image& input,
        cl::Image2D& output,
        const std::vector<cl::Event>& waitEvents,
        cl::Event* doneEvent)
@@ -197,8 +197,8 @@ void Filter::operator()
     }; 
 
     // Set all the arguments
-    kernel_.setArg(0, input);
-    kernel_.setArg(1, output);
+    kernel_.setArg(0, sizeof(input), &input);
+    kernel_.setArg(1, sizeof(output), &output);
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,

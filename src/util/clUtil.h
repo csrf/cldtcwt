@@ -79,7 +79,7 @@ public:
         // Use the first platform
         platform = platforms[0];
 
-        platform.getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
 
         // Create a context to work in 
         context = cl::Context(devices);

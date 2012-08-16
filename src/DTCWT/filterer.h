@@ -21,7 +21,7 @@ public:
 
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
-           const cl::Image2D& input,
+           cl::Image& input,
            cl::Image2D& output,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);

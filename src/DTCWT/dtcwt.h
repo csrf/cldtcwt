@@ -84,7 +84,7 @@ private:
 // Debug:
 public:
     void filter(cl::CommandQueue& commandQueue,
-                cl::Image2D& xx, const std::vector<cl::Event>& xxEvents,
+                cl::Image& xx, const std::vector<cl::Event>& xxEvents,
                 LevelTemps& levelTemps, LevelOutput* subbands);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
@@ -100,7 +100,7 @@ public:
           cl::CommandQueue commandQueue);
 
     void operator() (cl::CommandQueue& commandQueue,
-                     cl::Image2D& image, 
+                     cl::Image& image, 
                      DtcwtTemps& env,
                      DtcwtOutput& subbandOutputs);
 

@@ -26,7 +26,8 @@ int main()
         CLContext context;
 
         // Ready the command queue on the first device to hand
-        cl::CommandQueue cq(context.context, context.devices[0]);
+        cl::CommandQueue cq(context.context, context.devices[0],
+                            CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
 
 
         const int numLevels = 6;
@@ -58,7 +59,7 @@ int main()
 
 
         timeb start, end;
-        const int numFrames = 1000;
+        const int numFrames = 100;
         ftime(&start);
             for (int n = 0; n < numFrames; ++n) {
                 dtcwt(cq, inImage, env, out);

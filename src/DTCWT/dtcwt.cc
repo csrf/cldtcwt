@@ -138,7 +138,7 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
-                        cl::Image2D& image, 
+                        cl::Image& image, 
                         DtcwtTemps& env,
                         DtcwtOutput& subbandOutputs)
 {
@@ -172,7 +172,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 
 
 void Dtcwt::filter(cl::CommandQueue& commandQueue,
-                   cl::Image2D& xx, 
+                   cl::Image& xx, 
                    const std::vector<cl::Event>& xxEvents,
                    LevelTemps& levelTemps, LevelOutput* subbands)
 {

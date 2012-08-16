@@ -47,8 +47,8 @@ Abs::Abs(cl::Context& context, const std::vector<cl::Device>& devices)
 
 
 
-void Abs::operator() (cl::CommandQueue& cq, const cl::Image2D& input,
-                                       const cl::Image2D& output,
+void Abs::operator() (cl::CommandQueue& cq, cl::Image& input,
+                                       cl::Image& output,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -63,8 +63,8 @@ void Abs::operator() (cl::CommandQueue& cq, const cl::Image2D& input,
 
 
     // Set all the arguments
-    kernel_.setArg(0, input);
-    kernel_.setArg(1, output);
+    kernel_.setArg(0, sizeof(input), &input);
+    kernel_.setArg(1, sizeof(output), &output);
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,

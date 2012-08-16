@@ -115,12 +115,12 @@ private:
 
     cl::Image2D zeroImage;
 
-    cl::Image2DGL inImage;
+    cl::ImageGL inImage;
 
     DtcwtTemps env;
     DtcwtOutput out;
 
-    cl::Image2DGL dispImage[6];
+    cl::ImageGL dispImage[6];
 
     std::vector<cl::Image2D> energyMaps;
 
@@ -186,15 +186,18 @@ CLCalcs::CLCalcs(int width, int height,
     std::vector<float> zeroV = {0.f};
     numKps = createBuffer(context, commandQueue, zeroV);
  
+    std::cout << "in" << std::endl;
     // Create the associated OpenCL image
-    inImage = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    inImage = cl::ImageGL(context, CL_MEM_READ_WRITE,
     					    GL_TEXTURE_2D, 0,
     					    textureInImage);
 
+    std::cout << "in2" << std::endl;
     for (int n = 0; n < 6; ++n) {
+        std::cout << n << std::endl;
 
     	// Create the associated OpenCL image
-    	dispImage[n] = cl::Image2DGL(context, CL_MEM_READ_WRITE,
+    	dispImage[n] = cl::ImageGL(context, CL_MEM_READ_WRITE,
     								 GL_TEXTURE_2D, 0,
     								 texture[n]);
 
@@ -209,11 +212,17 @@ CLCalcs::CLCalcs(int width, int height,
 int CLCalcs::update()
 {
     // Synchronise OpenCL
+
     std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
-    mems.push_back(keypointLocs);
     mems.push_back(inImage);
 
     commandQueue.enqueueAcquireGLObjects(&mems);
+
+    std::vector<cl::Memory> m;
+    m.push_back(keypointLocs);
+    commandQueue.enqueueAcquireGLObjects(&m);
+
+    commandQueue.finish();
 
     dtcwt(commandQueue, inImage, env, out);
 
@@ -296,7 +305,7 @@ void Main::createTextures(int width, int height)
     
     	// Put it to the right size, filling with zeros
     	std::vector<float> zeros(width * height, 0.0f);
-    	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+    	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 
     				 width / 4, height / 4, 0,
     				 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
     
@@ -315,7 +324,7 @@ void Main::createTextures(int width, int height)
     
     // Put it to the right size, filling with zeros
     std::vector<float> zeros(width * height, 0.0f);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 
     			 width, height, 0,
     			 GL_LUMINANCE, GL_FLOAT, &zeros[0]);
 }
@@ -382,6 +391,7 @@ Main::Main()
 
 		createTextures(width, height);
 		createBuffers(1);
+
 
         clCalcs = CLCalcs(width, height,
                           textureInImage, texture,

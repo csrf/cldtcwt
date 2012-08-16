@@ -18,8 +18,8 @@ public:
     Abs(const Abs&) = default;
     Abs(cl::Context& context, const std::vector<cl::Device>& devices);
 
-    void operator() (cl::CommandQueue& cq, const cl::Image2D& input,
-                                           const cl::Image2D& output,
+    void operator() (cl::CommandQueue& cq, cl::Image& input,
+                                           cl::Image& output,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);
