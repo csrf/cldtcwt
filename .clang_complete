@@ -2,3 +2,4 @@
 -I/usr/include/opencv
 -I/usr/include/GL   
 -I/usr/local/cuda/include
+-Isrc/

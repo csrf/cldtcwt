@@ -61,8 +61,9 @@ int main()
         timeb start, end;
         const int numFrames = 100;
         ftime(&start);
-            for (int n = 0; n < numFrames; ++n) {
-                dtcwt(cq, inImage, env, out);
+            dtcwt(cq, inImage, env, out);
+            for (int n = 0; n < (numFrames-1); ++n) {
+                dtcwt(cq, inImage, env, out, out.subbands.back().done);
                 cq.finish();
             }
         ftime(&end);

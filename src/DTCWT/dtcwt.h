@@ -102,7 +102,9 @@ public:
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image& image, 
                      DtcwtTemps& env,
-                     DtcwtOutput& subbandOutputs);
+                     DtcwtOutput& subbandOutputs,
+                     const std::vector<cl::Event>& waitEvents
+                        = std::vector<cl::Event>());
 
     // Create the set of images etc needed to perform a DTCWT calculation
     DtcwtTemps createContext(size_t imageWidth, size_t imageHeight, 

@@ -140,13 +140,14 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                         cl::Image& image, 
                         DtcwtTemps& env,
-                        DtcwtOutput& subbandOutputs)
+                        DtcwtOutput& subbandOutputs,
+                        const std::vector<cl::Event>& waitEvents)
 {
     for (int l = 0; l < env.numLevels; ++l) {
 
         if (l == 0) {
 
-            filter(commandQueue, image, {},
+            filter(commandQueue, image, waitEvents,
                    env.levelTemps[l], 
                    (env.startLevel == 0) ? 
                        &subbandOutputs.subbands[0]
