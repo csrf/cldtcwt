@@ -97,7 +97,10 @@ public:
     Dtcwt(const Dtcwt&) = default;
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
-          cl::CommandQueue commandQueue);
+          cl::CommandQueue commandQueue, float scaleFactor = 1.f);
+    // Scale factor selects how much to multiply each level by,
+    // cumulatively.  0.5 is useful in quite a few cases, because otherwise
+    // the coarser scales have much greater magnitudes.
 
     void operator() (cl::CommandQueue& commandQueue,
                      cl::Image& image, 

@@ -1,11 +1,14 @@
 #include "dtcwt.h"
+#include <cmath>
 
 #include "util/clUtil.h"
 
 Filters createLevel1Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue);
+                            cl::CommandQueue& commandQueue,
+                            float scaleFactor = 1.f);
 Filters createLevel2Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue);
+                            cl::CommandQueue& commandQueue,
+                            float scaleFactor = 1.f);
 
 static size_t decimateDim(size_t inSize)
 {
@@ -47,10 +50,10 @@ DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 
 
 Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
-             cl::CommandQueue commandQueue) : 
+             cl::CommandQueue commandQueue, float scaleFactor) : 
     context_ { context },
-    level1_ (createLevel1Filters(context_, commandQueue)),
-    leveln_ (createLevel2Filters(context_, commandQueue)),
+    level1_ (createLevel1Filters(context_, commandQueue, scaleFactor)),
+    leveln_ (createLevel2Filters(context_, commandQueue, scaleFactor)),
     h0x { context, devices, level1_.h0, Filter::x },
     h0y { context, devices, level1_.h0, Filter::y },
     h1x { context, devices, level1_.h1, Filter::x },
@@ -395,11 +398,15 @@ void EnergyMap::operator() (cl::CommandQueue& commandQueue,
 
 
 Filters createLevel1Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue)
+                            cl::CommandQueue& commandQueue,
+                            float scaleFactor)
 {
+    // Scale factor is the scaling factor that should be applied between
+    // levels
+
     Filters level1;
 
-    level1.h0 = createBuffer(context, commandQueue, { 
+    std::vector<float> h0 = { 
           -0.001757812500000,
            0.000000000000000,
            0.022265625000000,
@@ -413,7 +420,14 @@ Filters createLevel1Filters(cl::Context& context,
            0.022265625000000,
            0.000000000000000,
           -0.001757812500000
-    });
+    };
+
+    // Scale so that when applied in both directions gives the correct
+    // overall scale factor
+    for (float& val: h0)
+        val *= sqrt(scaleFactor);
+
+    level1.h0 = createBuffer(context, commandQueue, h0);
 
     level1.h1 = createBuffer(context, commandQueue, { 
           -0.000070626395089,
@@ -466,11 +480,15 @@ Filters createLevel1Filters(cl::Context& context,
 
 
 Filters createLevel2Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue)
+                            cl::CommandQueue& commandQueue,
+                            float scaleFactor)
 {
+    // Scale factor is the scaling factor that should be applied between
+    // levels
+    
     Filters level2;
 
-    level2.h0 = createBuffer(context, commandQueue, {
+    std::vector<float> h0 = {
           -0.00455689562847549,
           -0.00543947593727412,
            0.01702522388155399,
@@ -485,7 +503,14 @@ Filters createLevel2Filters(cl::Context& context,
            0.03466034684485349,
           -0.00388321199915849,
            0.00325314276365318
-    } );
+    };
+
+    // Scale so that when applied in both directions gives the correct
+    // overall scale factor
+    for (float& val: h0)
+        val *= sqrt(scaleFactor);
+
+    level2.h0 = createBuffer(context, commandQueue, h0);
 
     level2.h1 = createBuffer(context, commandQueue, {
           -0.00325314276365318,
