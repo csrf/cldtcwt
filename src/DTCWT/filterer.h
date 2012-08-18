@@ -22,7 +22,7 @@ public:
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
            cl::Image& input,
-           cl::Image2D& output,
+           cl::Image& output,
            const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
            cl::Event* doneEvent = nullptr);
 
@@ -127,7 +127,7 @@ public:
     Rescale(cl::Context& context, const std::vector<cl::Device>& devices);
 
     void operator() (cl::CommandQueue& commandQueue,
-                     const cl::Image2D& input,
+                     cl::Image& input,
                      cl::Image2D& output,
                      float scalingFactor,
                      const std::vector<cl::Event>& waitEvents

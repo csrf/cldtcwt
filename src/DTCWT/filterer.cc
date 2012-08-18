@@ -179,7 +179,7 @@ Filter::Filter(cl::Context& context,
 void Filter::operator() 
       (cl::CommandQueue& commandQueue,
        cl::Image& input,
-       cl::Image2D& output,
+       cl::Image& output,
        const std::vector<cl::Event>& waitEvents,
        cl::Event* doneEvent)
 {
@@ -655,7 +655,7 @@ Rescale::Rescale(cl::Context& context,
 
 void Rescale::operator() 
       (cl::CommandQueue& commandQueue,
-       const cl::Image2D& input,
+       cl::Image& input,
        cl::Image2D& output,
        float scalingFactor,
        const std::vector<cl::Event>& waitEvents,
@@ -674,7 +674,7 @@ void Rescale::operator()
     }; 
 
     // Set all the arguments
-    kernel_.setArg(0, input);
+    kernel_.setArg(0, sizeof(input), &input);
     kernel_.setArg(1, output);
     kernel_.setArg(2, float(scalingFactor));
 

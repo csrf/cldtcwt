@@ -20,6 +20,7 @@ noinst_LTLIBRARIES = libdtcwt.la libclutil.la
 
 libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/DTCWT/filterer.cc \
+					  src/DTCWT/fourTree.cc \
 					  src/KeypointDetector/findMax.cc \
 					  src/KeypointDescriptor/extractDescriptors.cc 
 libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
