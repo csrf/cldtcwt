@@ -131,9 +131,10 @@ public:
 
     CLCalcs(const CLCalcs&) = default;
     CLCalcs() = default;
-    CLCalcs(int width, int height,
-            GLuint textureInImage, GLuint texture[6],
-            GLuint keypointLocationBuffer);
+    CLCalcs(int width, int height);
+            
+    void initBuffers(GLuint textureInImage, GLuint texture[6],
+                     GLuint keypointLocationBuffer);
 
 
     int update();
@@ -143,9 +144,7 @@ public:
 
 
 
-CLCalcs::CLCalcs(int width, int height,
-                 GLuint textureInImage, GLuint texture[6],
-                 GLuint keypointLocationBuffer)
+CLCalcs::CLCalcs(int width, int height)
 {
     std::tie(platform, devices, context, commandQueue) = initOpenCL();
 
@@ -186,7 +185,12 @@ CLCalcs::CLCalcs(int width, int height,
     std::vector<float> zeroV = {0.f};
     numKps = createBuffer(context, commandQueue, zeroV);
  
-    std::cout << "in" << std::endl;
+}
+
+
+void CLCalcs::initBuffers(GLuint textureInImage, GLuint texture[6],
+                     GLuint keypointLocationBuffer)
+{
     // Create the associated OpenCL image
     inImage = cl::ImageGL(context, CL_MEM_READ_WRITE,
     					    GL_TEXTURE_2D, 0,
@@ -205,9 +209,8 @@ CLCalcs::CLCalcs(int width, int height,
  
     keypointLocs = cl::BufferGL(context, CL_MEM_READ_WRITE,
                                 keypointLocationBuffer);
+
 }
-
-
 
 int CLCalcs::update()
 {
@@ -389,13 +392,14 @@ Main::Main()
 
 		const int width = 640, height = 480;
 
+        clCalcs = CLCalcs(width, height);
+
 		createTextures(width, height);
 		createBuffers(1);
 
 
-        clCalcs = CLCalcs(width, height,
-                          textureInImage, texture,
-                          keypointLocationBuffers.getBuffer(0));
+        clCalcs.initBuffers(textureInImage, texture,
+                            keypointLocationBuffers.getBuffer(0));
 
     }
     catch (cl::Error err) {
