@@ -218,12 +218,9 @@ int CLCalcs::update()
 
     std::vector<cl::Memory> mems(&dispImage[0], &dispImage[5] + 1);
     mems.push_back(inImage);
+    mems.push_back(keypointLocs);
 
     commandQueue.enqueueAcquireGLObjects(&mems);
-
-    std::vector<cl::Memory> m;
-    m.push_back(keypointLocs);
-    commandQueue.enqueueAcquireGLObjects(&m);
 
     commandQueue.finish();
 
@@ -460,7 +457,6 @@ bool Main::update(void)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-    glColor3f(1.0, 1.0, 1.0);
     glEnable(GL_TEXTURE_2D);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -469,6 +465,8 @@ bool Main::update(void)
 	// Select texture positioning
     glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(0));
     glTexCoordPointer(2, GL_FLOAT, 0, 0);
+
+    glColor4f(1.0, 1.0, 1.0, 1.0);
 
     // Select vertex positioning
     glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers.getBuffer(1));
