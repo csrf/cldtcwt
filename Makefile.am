@@ -13,6 +13,8 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src
 	xxd -i $@_src $@
 	rm $@_src
 
+BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h
+
 TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
 

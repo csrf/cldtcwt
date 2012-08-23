@@ -1,20 +1,3 @@
-#include "findMax.h"
-#include "findMaxKernel.h"
-
-#include <string>
-#include <sstream>
-#include <iostream>
-
-#include <stdexcept>
-FindMax::FindMax(cl::Context& context,
-               const std::vector<cl::Device>& devices)
-   : context_(context)
-{
-    // The OpenCL kernel:
-    std::ostringstream kernelInput;
-
-
-    kernelInput
     << "__kernel void findMax(read_only image2d_t input,"
                              "read_only image2d_t inFiner,"
                              "read_only image2d_t inCoarser,"
@@ -132,72 +115,5 @@ FindMax::FindMax(cl::Context& context,
 
             "}"
         "}";
-
-    const std::string sourceCode = kernelInput.str();
-
-    // Bundle the code up
-    cl::Program::Sources source;
-    source.push_back(std::make_pair(sourceCode.c_str(), sourceCode.length()));
-
-    // Compile it...
-    cl::Program program(context, source);
-    try {
-        program.build(devices);
-    } catch(cl::Error err) {
-	    std::cerr 
-		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
-		    << std::endl;
-	    throw;
-    } 
-        
-    // ...and extract the useful part, viz the kernel
-    kernel_ = cl::Kernel(program, "findMax");
-}
-
-static int roundWGs(int l, int lWG)
-{
-    return lWG * (l / lWG + ((l % lWG) ? 1 : 0)); 
-}
-
-void FindMax::operator() 
-      (cl::CommandQueue& commandQueue,
-       const cl::Image2D& input,
-       const cl::Image2D& inputFiner,
-       const cl::Image2D& inputCoarser,
-       float threshold,
-       cl::Buffer& output,
-       cl::Buffer& numOutputs,
-       const std::vector<cl::Event>& waitEvents,
-       cl::Event* doneEvent)
-{
-    // Run the filter for each location in output (which determines
-    // the locations to run at) using commandQueue.  input and output are
-    // both single-component float images.  filter is a vector of floats.
-    // The command will not start until all of waitEvents have completed, and
-    // once done will flag doneEvent.
-
-    cl::NDRange WorkgroupSize = {wgSizeX_, wgSizeY_};
-
-    cl::NDRange GlobalSize = {
-        roundWGs(input.getImageInfo<CL_IMAGE_WIDTH>(), wgSizeX_), 
-        roundWGs(input.getImageInfo<CL_IMAGE_HEIGHT>(), wgSizeY_)
-    }; 
-
-    // Set all the arguments
-    kernel_.setArg(0, input);
-    kernel_.setArg(1, inputFiner);
-    kernel_.setArg(2, inputCoarser);
-    kernel_.setArg(3, (threshold));
-    kernel_.setArg(4, output);
-    kernel_.setArg(5, numOutputs);
-    kernel_.setArg(6, int(output.getInfo<CL_MEM_SIZE>() / (2 * sizeof(int))));
-
-    // Execute
-    commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
-                                      GlobalSize,
-                                      WorkgroupSize,
-                                      &waitEvents, doneEvent);
-}
-
 
 
