@@ -1,6 +1,7 @@
 ACLOCAL_AMFLAGS=-I m4
 
-AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src
+AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
+			-I${builddir}/src
 
 # Rule to turn an OpenCL source file into a C string within a header file.
 # xxd uses its input's filename to name the string and its length, so we

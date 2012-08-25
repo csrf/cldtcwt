@@ -1,5 +1,5 @@
 #include "findMax.h"
-#include "findMaxKernel.h"
+#include "KeypointDetector/findMaxKernel.h"
 
 #include <string>
 #include <sstream>
