@@ -5,6 +5,9 @@
 #include <string>
 #include <sstream>
 
+// Specify to build everything for debug
+static const char clBuildOptions[] = "-g";
+
 // Central sampler creating function (to make changing the addressing
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
 cl::Sampler createSampler(cl::Context& context)
@@ -159,7 +162,7 @@ Filter::Filter(cl::Context& context,
     // Compile it...
     cl::Program program(context, source);
     try {
-        program.build(devices);
+        program.build(devices, clBuildOptions);
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
@@ -390,7 +393,7 @@ DecimateFilter::DecimateFilter(cl::Context& context,
     // Compile it...
     cl::Program program(context, source);
     try {
-        program.build(devices);
+        program.build(devices, clBuildOptions);
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
@@ -538,7 +541,7 @@ QuadToComplex::QuadToComplex(cl::Context& context_,
     cl::Program program(context, source);
 
     try {
-        program.build(devices);
+        program.build(devices, clBuildOptions);
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
@@ -637,7 +640,7 @@ Rescale::Rescale(cl::Context& context,
     cl::Program program(context, source);
 
     try {
-        program.build(devices);
+        program.build(devices, clBuildOptions);
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])

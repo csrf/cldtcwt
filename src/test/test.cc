@@ -57,11 +57,12 @@ int main()
         std::cout << "Running DTCWT" << std::endl;
 
         timeb start, end;
-        const int numFrames = 100;
+        const int numFrames = 1;
         ftime(&start);
             dtcwt(cq, inImage, env, out);
             for (int n = 0; n < (numFrames-1); ++n) {
-                dtcwt(cq, inImage, env, out, out.subbands.back().done);
+                cq.finish();
+                dtcwt(cq, inImage, env, out); //, out.subbands.back().done);
             }
                 cq.finish();
         ftime(&end);

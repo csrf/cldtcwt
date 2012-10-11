@@ -1,3 +1,36 @@
+
+// Load a rectangular region from a floating-point image
+void readImageRegionToShared(__read_only image2d_t input,
+                sampler_t sampler,
+                float2 regionStart,
+                int2 regionSize, 
+                __local float* output)
+{
+    // We'll extract a rectangle the size of a workgroup each time.
+    int2 base = (int2) (0, 0);
+
+    // The position within the workgroup
+    int2 localPos = (int2) (get_local_id(0), get_local_id(1));
+
+    // Loop over the rectangles
+    for (; base.x < regionSize.x; base.x += get_local_size(0)) {
+        for (; base.y < regionSize.y; base.y += get_local_size(1)) {
+
+            int2 readPosOffset = base + localPos;
+
+            bool inRegion = all(readPosOffset < regionSize);
+
+            // Make sure we are still in the rectangular region asked for
+            if (inRegion)
+                output[get_local_id(0) + get_local_id(1) * regionSize.x]
+                    = read_imagef(input, sampler, 
+                                  regionStart + readPosOffset).x;
+
+        }
+    }
+}
+
+
 // Parameters: WG_SIZE_X
 __kernel void findMax(read_only image2d_t input,
                       const float inputScale,
@@ -25,6 +58,10 @@ __kernel void findMax(read_only image2d_t input,
               lx = get_local_id(0),
               ly = get_local_id(1);
 
+    // Load region ------------------------
+
+    readImageRegionToShared(input, isNorm,
+
     // Load in the complete region, with its border
     inputLocal[ly][lx] = read_imagef(input, isNorm, (float2) (gx-1, gy-1)).x;
 
@@ -42,6 +79,8 @@ __kernel void findMax(read_only image2d_t input,
         inputLocal[ly+" << wgSizeY_ << "][lx+" << wgSizeX_ << "]
             = read_imagef(input, isNorm,
   (float2) (gx-1+" << wgSizeX_ << ", gy-1 + " << wgSizeY_ << ")).x;
+
+    // ------------------------------------
 
     // No need to do anything further if we're outside the image's
     // boundary

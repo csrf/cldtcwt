@@ -3,6 +3,9 @@
 
 #include "util/clUtil.h"
 
+// Specify to build everything for debug
+static const char clBuildOptions[] = "-g";
+
 Filters createLevel1Filters(cl::Context& context, 
                             cl::CommandQueue& commandQueue,
                             float scaleFactor = 1.f);
@@ -353,7 +356,7 @@ EnergyMap::EnergyMap(cl::Context& context,
     cl::Program program(context, source);
 
     try {
-        program.build(devices);
+        program.build(devices, clBuildOptions);
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
