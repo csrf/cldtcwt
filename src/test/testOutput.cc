@@ -38,6 +38,11 @@ std::tuple<cl::Platform, std::vector<cl::Device>,
     initOpenCL();
 
 
+#if defined(CL_VERSION_1_2)
+    typedef cl::ImageGL GLImage;
+#else
+    typedef cl::Image2DGL GLImage;
+#endif
 
 
 
@@ -115,12 +120,12 @@ private:
 
     cl::Image2D zeroImage;
 
-    cl::ImageGL inImage;
+    GLImage inImage;
 
     DtcwtTemps env;
     DtcwtOutput out;
 
-    cl::ImageGL dispImage[6];
+    GLImage dispImage[6];
 
     std::vector<cl::Image2D> energyMaps;
 
@@ -192,7 +197,7 @@ void CLCalcs::initBuffers(GLuint textureInImage, GLuint texture[6],
                      GLuint keypointLocationBuffer)
 {
     // Create the associated OpenCL image
-    inImage = cl::ImageGL(context, CL_MEM_READ_WRITE,
+    inImage = GLImage(context, CL_MEM_READ_WRITE,
     					    GL_TEXTURE_2D, 0,
     					    textureInImage);
 
@@ -201,7 +206,7 @@ void CLCalcs::initBuffers(GLuint textureInImage, GLuint texture[6],
         std::cout << n << std::endl;
 
     	// Create the associated OpenCL image
-    	dispImage[n] = cl::ImageGL(context, CL_MEM_READ_WRITE,
+    	dispImage[n] = GLImage(context, CL_MEM_READ_WRITE,
     								 GL_TEXTURE_2D, 0,
     								 texture[n]);
 
