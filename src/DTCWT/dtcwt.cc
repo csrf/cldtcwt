@@ -4,7 +4,7 @@
 #include "util/clUtil.h"
 
 // Specify to build everything for debug
-static const char clBuildOptions[] = "-g";
+static const char clBuildOptions[] = "";
 
 Filters createLevel1Filters(cl::Context& context, 
                             cl::CommandQueue& commandQueue,

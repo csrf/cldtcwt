@@ -6,7 +6,7 @@
 #include <sstream>
 
 // Specify to build everything for debug
-static const char clBuildOptions[] = "-g";
+static const char clBuildOptions[] = "";
 
 // Central sampler creating function (to make changing the addressing
 // overflow behaviour easy, for upgrade to OpenCL 1.1)
