@@ -54,12 +54,12 @@ void writeImage2D(cl::CommandQueue& commandQueue,
 
     // Set up where and how far to read
     cl::size_t<3> origin, extents;
-    origin.push_back(0);
-    origin.push_back(0);
-    origin.push_back(0);
-    extents.push_back(width);
-    extents.push_back(height);
-    extents.push_back(1);
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+    extents[0] = width;
+    extents[1] = height;
+    extents[2] = 1;
 
     // Perform the write, blocking
     commandQueue.enqueueWriteImage(image, CL_TRUE, origin, extents, 0, 0,
@@ -80,12 +80,12 @@ void readImage2D(cl::CommandQueue& commandQueue,
 
     // Set up where and how far to read
     cl::size_t<3> origin, extents;
-    origin.push_back(0);
-    origin.push_back(0);
-    origin.push_back(0);
-    extents.push_back(width);
-    extents.push_back(height);
-    extents.push_back(1);
+    origin[0] = 0;
+    origin[1] = 0;
+    origin[2] = 0;
+    extents[0] = width;
+    extents[1] = height;
+    extents[2] = 1;
 
     // Do the read, blocking style
     commandQueue.enqueueReadImage(image, CL_TRUE, origin, extents,
