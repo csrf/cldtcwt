@@ -19,10 +19,10 @@ cl::Buffer createBuffer(cl::Context&, cl::CommandQueue&,
 
 template <typename T>
 void writeBuffer(cl::CommandQueue& cq, const cl::Buffer& buffer,
-                 const std::vector<T>& vals)
+                 const std::vector<T>& vals, cl::Event* done = nullptr)
 {
-    cq.enqueueWriteBuffer(buffer, CL_TRUE, 0, sizeof(T) * vals.size(),
-                          &vals[0]);
+    cq.enqueueWriteBuffer(buffer, CL_FALSE, 0, sizeof(T) * vals.size(),
+                          &vals[0], {}, done);
 }
 
 
