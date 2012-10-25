@@ -33,7 +33,7 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 
 noinst_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
-			 verifyBasic testDescriptor
+			 verifyBasic testDescriptor testOutputEigenDetector
 
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
@@ -48,6 +48,20 @@ testOutput_SOURCES = src/test/testOutput.cc \
 					 src/MiscKernels/abs.cc
 testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 				   @opencv_LIBS@
+
+testOutputEigenDetector_SOURCES = src/test/testOutputEigenDetector.cc \
+					 src/MiscKernels/abs.cc \
+					 src/DTCWT/energyMapEigen.cc
+testOutputEigenDetector_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
+				   @opencv_LIBS@
+
+
+testOutput2_SOURCES = src/test/testOutput.cc \
+					  src/DisplayOutput/calculator.cc \
+					 src/MiscKernels/abs.cc
+testOutput2_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
+				   @opencv_LIBS@
+
 
 testFilter_SOURCES = src/test/testFilter.cc 
 testFilter_LDADD = libdtcwt.la @opencv_LIBS@

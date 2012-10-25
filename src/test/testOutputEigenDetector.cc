@@ -33,6 +33,9 @@
 
 #include "CL/cl.hpp"
 
+
+#include "DTCWT/energyMapEigen.h"
+
 std::tuple<cl::Platform, std::vector<cl::Device>, 
            cl::Context, cl::CommandQueue> 
     initOpenCL();
@@ -115,7 +118,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    EnergyMap energyMap;
+    EnergyMapEigen energyMap;
     FindMax findMax;
 
     cl::Image2D zeroImage;
@@ -184,7 +187,7 @@ CLCalcs::CLCalcs(int width, int height)
 
     // Create the kernels
     abs = Abs(context, devices);
-    energyMap = EnergyMap(context, devices);
+    energyMap = EnergyMapEigen(context, devices);
     findMax = FindMax(context, devices);
 
     std::vector<float> zeroV = {0.f};
