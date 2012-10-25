@@ -31,9 +31,12 @@ private:
     DtcwtOutput dtcwtOut;
 
     std::vector<cl::Image2D> energyMaps;
+    std::vector<cl::Event> energyMapsDone;
 
-    cl::Buffer numKps;
-    cl::Buffer keypointLocs;
+    cl::Buffer keypointCounts_; // per level, how many were found
+    cl::Buffer keypointLocs_;   // where were they?
+
+    cl::Event findMaxDone_;  // Whether the keypoint detection has finished
 
 public:
 
@@ -41,10 +44,12 @@ public:
     Calculator() = default;
 
     Calculator(cl::Context& context,
-               const std::vector<cl::Device>& devices,
-               int width, int height);
+               const cl::Device& device,
+               int width, int height,
+               int maxNumKeypointsPerLevel = 1000);
 
-    void operator() (const cl::Image& input);
+    void operator() (cl::Image& input, 
+                     const std::vector<cl::Event>& waitEvents = {});
 
     std::vector<::LevelOutput*> levelOutputs(void);
 
