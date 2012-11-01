@@ -22,6 +22,10 @@ private:
 
     // For interop OpenGL/OpenCL
 
+    VBOBuffers pboBuffer_;
+    // Used for quickly transfering the image
+
+
     // Image input and CL interface
     GLTexture imageTexture_;
     GLImage imageTextureCL_;
@@ -35,6 +39,8 @@ private:
 
     // Where to put the keypoints
     VBOBuffers keypointLocationBuffers;
+
+
 
 public:
 
