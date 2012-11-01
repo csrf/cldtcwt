@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS=-I m4
 
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
-			-I${builddir}/src
+			-I${builddir}/src @V4L2_CFLAGS@
 
 # Rule to turn an OpenCL source file into a C string within a header file.
 # xxd uses its input's filename to name the string and its length, so we
@@ -55,9 +55,10 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/MiscKernels/abs.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
-					   src/DisplayOutput/viewer.cc
+					   src/DisplayOutput/viewer.cc \
+					   src/DisplayOutput/VideoReader.cc
 displayDTCWT_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
-				   @opencv_LIBS@
+				   @opencv_LIBS@ @V4L2_LIBS@
 
 
 testOutputEigenDetector_SOURCES = src/test/testOutputEigenDetector.cc \

@@ -26,12 +26,19 @@
 // For timing
 #include <sys/timeb.h>
 
+
+#include "DisplayOutput/VideoReader.h"
+
 std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context> 
     initOpenCL();
 
 int main(void)
 {
     Viewer viewer(1280, 720);
+
+    {
+    VideoReader videoReader("/dev/video0", 1280, 720);
+    }
 
     cv::VideoCapture video(0);
 

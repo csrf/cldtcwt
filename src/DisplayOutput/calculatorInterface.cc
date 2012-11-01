@@ -45,8 +45,6 @@ void CalculatorInterface::processImage(const cv::Mat& input)
     			 input.cols, input.rows, 
     			 GL_BGR, GL_UNSIGNED_BYTE,  // Input format
                  0);
-                 //input.data);
-
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 

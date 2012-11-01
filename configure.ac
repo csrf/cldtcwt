@@ -20,6 +20,7 @@ if test "X$no_cl" = "Xyes"; then
 fi
 
 PKG_CHECK_MODULES([opencv], [opencv glew])
+PKG_CHECK_MODULES([V4L2], [libv4l2])
 
 
 AC_CONFIG_FILES([Makefile])
