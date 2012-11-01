@@ -4,7 +4,15 @@
 
 #include "DisplayOutput/calculator.h"
 #include "DisplayOutput/VBOBuffer.h"
+#include "DisplayOutput/texture.h"
 #include <opencv2/imgproc/imgproc.hpp>
+
+#if defined(CL_VERSION_1_2)
+    typedef cl::ImageGL GLImage;
+#else
+    typedef cl::Image2DGL GLImage;
+#endif
+
 
 
 class CalculatorInterface {
@@ -13,7 +21,16 @@ private:
     Calculator calculator_;
 
     // For interop OpenGL/OpenCL
-    GLuint imageTexture_;
+
+    // Image input and CL interface
+    GLTexture imageTexture_;
+    GLImage imageTextureCL_;
+
+    // The input needs to be put into greyscale before display
+    cl::Image2D imageGreyscale_;
+    cl::Event imageGreyscaleDone_;
+
+
     GLuint subbandTextures_[6];
 
     // Where to put the keypoints
@@ -25,11 +42,11 @@ public:
                         const cl::Device& device,
                         int width, int height);
 
-    void processImage(cv::Mat input);
+    void processImage(const cv::Mat& input);
 
     void updateGL(void);
 
-
+    GLuint getImageTexture();
 
 };
 
