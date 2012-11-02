@@ -23,6 +23,8 @@
 #include "DisplayOutput/calculatorInterface.h"
 
 
+#include "VideoReader.h"
+
 // For timing
 #include <sys/timeb.h>
 
@@ -36,12 +38,13 @@ int main(void)
 {
     Viewer viewer(1280, 720);
 
-    {
     VideoReader videoReader("/dev/video0", 1280, 720);
-    }
+    videoReader.startCapture();
 
-    cv::VideoCapture video(0);
+    //cv::VideoCapture video(0);
 
+    //video.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+    //video.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
 
     cl::Platform platform;
     cl::Context context;
@@ -50,19 +53,23 @@ int main(void)
    
     CalculatorInterface ci(context, devices[0], 1280, 720);   
 
-    video.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-    video.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
 
     int n = 0;
     while (1) {
 
         timeb start, end;
 
-        ftime(&start);
-        cv::Mat input;
-        video >> input;
+        //cv::Mat input;
+        //video >> input;
 
-        ci.processImage(input);
+        VideoReaderBuffer buffer = videoReader.getFrame();
+        ftime(&start);
+        ci.processImage(buffer.start, buffer.length);
+        videoReader.returnBuffers();
+
+        viewer.setImageTexture(ci.getImageTexture());
+        viewer.update();
+
         ftime(&end);
 
         // Work out what the difference between these is
@@ -71,13 +78,11 @@ int main(void)
         
         std::cout << n++ << " " << (1000*t) << "ms\n";
 
-        viewer.setImageTexture(ci.getImageTexture());
-
-        viewer.update();
-
         if (viewer.isDone())
             break;
     }
+
+    videoReader.stopCapture();
 
     return 0;
 }

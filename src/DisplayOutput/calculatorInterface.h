@@ -18,6 +18,8 @@
 class CalculatorInterface {
 
 private:
+    int width_, height_;
+
     Calculator calculator_;
 
     // For interop OpenGL/OpenCL
@@ -48,7 +50,7 @@ public:
                         const cl::Device& device,
                         int width, int height);
 
-    void processImage(const cv::Mat& input);
+    void processImage(const void* data, size_t length);
 
     void updateGL(void);
 
