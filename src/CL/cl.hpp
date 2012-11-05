@@ -5371,7 +5371,7 @@ public:
         const size_t<3>& region,
         ::size_t row_pitch,
         ::size_t slice_pitch,
-        void* ptr,
+        const void* ptr,
         const VECTOR_CLASS<Event>* events = NULL,
         Event* event = NULL) const
     {
@@ -6333,7 +6333,7 @@ inline cl_int enqueueWriteImage(
     const size_t<3>& region,
     ::size_t row_pitch,
     ::size_t slice_pitch,
-    void* ptr,
+    const void* ptr,
     const VECTOR_CLASS<Event>* events = NULL,
     Event* event = NULL)
 {
