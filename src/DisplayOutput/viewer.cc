@@ -63,7 +63,6 @@ void Viewer::update()
 
     }
 
-    glFinish();
     window.SetActive();
 
     // Display the window
@@ -107,6 +106,7 @@ void Viewer::update()
 
     window.Display();
 
+    glFinish();
 }
 
 
