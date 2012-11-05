@@ -8,9 +8,25 @@
 #include "CL/cl.hpp"
 
 #include <vector>
+#include <array>
 
 #include <highgui.h>
 #include <stdexcept>
+
+
+template <int numDims>
+cl::size_t<numDims> makeCLSizeT(std::array<size_t, numDims> input)
+{
+    // For ease of use of size_t, avoiding having to fill in the members one at
+    // a time
+    cl::size_t<numDims> dims;
+    for (int n = 0; n < numDims; ++n)
+        dims[n] = input[n];
+
+    return dims;
+}
+
+
 
 int roundWGs(int l, int lWG);
 

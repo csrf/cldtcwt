@@ -5,6 +5,7 @@
 #include "DisplayOutput/calculator.h"
 #include "DisplayOutput/VBOBuffer.h"
 #include "DisplayOutput/texture.h"
+#include "MiscKernels/greyscaleToRGBA.h"
 #include <opencv2/imgproc/imgproc.hpp>
 
 #if defined(CL_VERSION_1_2)
@@ -18,7 +19,7 @@
 class CalculatorInterface {
 
 private:
-    int width_, height_;
+    unsigned int width_, height_;
 
     Calculator calculator_;
 
@@ -27,10 +28,18 @@ private:
     VBOBuffers pboBuffer_;
     // Used for quickly transfering the image
 
+    cl::CommandQueue cq_;
+    // Used for upload and output conversion
+
+    // Kernel to convert into RGBA for display
+    GreyscaleToRGBA greyscaleToRGBA_;
 
     // Image input and CL interface
     GLTexture imageTexture_;
     GLImage imageTextureCL_;
+    cl::Event imageTextureCLDone_;
+
+    cl::Event glObjsReady_;
 
     // The input needs to be put into greyscale before display
     cl::Image2D imageGreyscale_;
@@ -44,6 +53,7 @@ private:
 
 
 
+
 public:
 
     CalculatorInterface(cl::Context& context,
@@ -51,6 +61,8 @@ public:
                         int width, int height);
 
     void processImage(const void* data, size_t length);
+
+    bool isDone();
 
     void updateGL(void);
 

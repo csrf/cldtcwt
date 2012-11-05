@@ -54,10 +54,11 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
 					   src/MiscKernels/abs.cc \
+					   src/MiscKernels/greyscaleToRGBA.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
 					   src/DisplayOutput/viewer.cc \
-					   src/DisplayOutput/VideoReader.cc
+					   src/DisplayOutput/VideoReader.cc 
 displayDTCWT_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 				   @opencv_LIBS@ @V4L2_LIBS@
 
@@ -66,13 +67,6 @@ testOutputEigenDetector_SOURCES = src/test/testOutputEigenDetector.cc \
 					 src/MiscKernels/abs.cc \
 					 src/DTCWT/energyMapEigen.cc
 testOutputEigenDetector_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
-				   @opencv_LIBS@
-
-
-testOutput2_SOURCES = src/test/testOutput.cc \
-					  src/DisplayOutput/calculator.cc \
-					 src/MiscKernels/abs.cc
-testOutput2_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 				   @opencv_LIBS@
 
 
