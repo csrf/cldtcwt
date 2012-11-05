@@ -110,8 +110,16 @@ void CalculatorInterface::updateGL(void)
 }
 
 
+
 GLuint CalculatorInterface::getImageTexture()
 {
     return imageTexture_.getTexture();
+}
+
+
+
+GLuint CalculatorInterface::getSubbandTexture(int subband)
+{
+    return subbandTextures_[subband].getTexture();
 }
 

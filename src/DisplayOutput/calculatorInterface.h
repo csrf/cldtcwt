@@ -73,6 +73,7 @@ public:
     void updateGL(void);
 
     GLuint getImageTexture();
+    GLuint getSubbandTexture(int subband);
 
 };
 
