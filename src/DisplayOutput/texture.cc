@@ -37,11 +37,30 @@ GLTexture::GLTexture(GLTexture&& obj)
 }
 
 
+
 GLTexture::~GLTexture()
 {
     if (texture_ != 0)
         glDeleteTextures(1, &texture_);
 }
+
+
+
+GLTexture& GLTexture::operator= (GLTexture&& obj)
+{
+    // Get rid of current texture (if any)
+    if (texture_ != 0)
+        glDeleteTextures(1, &texture_);
+
+    // Acquire
+    texture_ = obj.texture_;
+
+    // Deactivate the other texture
+    obj.texture_ = 0;
+   
+    return *this;
+}
+
 
 
 GLuint GLTexture::getTexture()

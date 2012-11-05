@@ -25,6 +25,10 @@ public:
 
     GLTexture(GLTexture&&);
     // Move another texture in, acquiring ownership of it
+    
+    GLTexture& operator= (GLTexture&&);
+    // Likewise, move another texture in, but this time also get rid of the
+    // current one.
 
     ~GLTexture();
 

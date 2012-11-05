@@ -59,17 +59,17 @@ int main(void)
 
         timeb start, end;
 
-        VideoReaderBuffer buffer = videoReader.getFrame();
         ftime(&start);
+        VideoReaderBuffer buffer = videoReader.getFrame();
         ci.processImage(buffer.start, buffer.length);
         while (!ci.isDone())
             ;
-        ftime(&end);
         videoReader.returnBuffers();
 
         viewer.setImageTexture(ci.getImageTexture());
         viewer.update();
 
+        ftime(&end);
         // Work out what the difference between these is
         double t = end.time - start.time 
                  + 0.001 * (end.millitm - start.millitm);

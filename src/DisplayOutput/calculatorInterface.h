@@ -6,7 +6,9 @@
 #include "DisplayOutput/VBOBuffer.h"
 #include "DisplayOutput/texture.h"
 #include "MiscKernels/greyscaleToRGBA.h"
+#include "MiscKernels/absToRGBA.h"
 #include <opencv2/imgproc/imgproc.hpp>
+#include <array>
 
 #if defined(CL_VERSION_1_2)
     typedef cl::ImageGL GLImage;
@@ -15,6 +17,8 @@
 #endif
 
 
+// Number of subbands the DTCWT produces
+const size_t numSubbands = 6;
 
 class CalculatorInterface {
 
@@ -33,6 +37,7 @@ private:
 
     // Kernel to convert into RGBA for display
     GreyscaleToRGBA greyscaleToRGBA_;
+    AbsToRGBA absToRGBA_;
 
     // Image input and CL interface
     GLTexture imageTexture_;
@@ -45,8 +50,9 @@ private:
     cl::Image2D imageGreyscale_;
     cl::Event imageGreyscaleDone_;
 
-
-    GLuint subbandTextures_[6];
+    // For subband displays
+    std::array<GLTexture, numSubbands> subbandTextures_;
+    std::array<GLImage, numSubbands> subbandTexturesCL_;
 
     // Where to put the keypoints
     VBOBuffers keypointLocationBuffers;

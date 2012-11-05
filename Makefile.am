@@ -15,7 +15,8 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 	rm $@_src
 
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
-				src/MiscKernels/greyscaleToRGBAKernel.h
+				src/MiscKernels/greyscaleToRGBAKernel.h \
+				src/MiscKernels/absToRGBAKernel.h
 
 TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
@@ -55,6 +56,7 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
 					   src/MiscKernels/abs.cc \
 					   src/MiscKernels/greyscaleToRGBA.cc \
+					   src/MiscKernels/absToRGBA.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
 					   src/DisplayOutput/viewer.cc \
