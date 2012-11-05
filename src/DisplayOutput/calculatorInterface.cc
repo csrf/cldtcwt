@@ -32,7 +32,6 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 {
     // Upload using OpenCL, not copying the data into its own memory.  This
     // means we can't use the data until the transfer is done.
-
     cq_.enqueueWriteImage(imageGreyscale_, 
                           // Don't block
                           CL_FALSE, 
@@ -43,15 +42,19 @@ void CalculatorInterface::processImage(const void* data, size_t length)
                           0, 0, data,
                           nullptr, &imageGreyscaleDone_);
 
+    // Go over to using the OpenGL objects.  glFinish should already have
+    // been called
     std::vector<cl::Memory> glTransferObjs = {imageTextureCL_};
 
     cl::Event glObjsAcquired;
     cq_.enqueueAcquireGLObjects(&glTransferObjs, nullptr, &glObjsAcquired);
 
+    // Convert the input image to RGBA for display
     greyscaleToRGBA_(cq_, imageGreyscale_, imageTextureCL_,
                      {imageGreyscaleDone_, glObjsAcquired}, 
                      &imageTextureCLDone_);
 
+    // Stop using the OpenGL objects
     std::vector<cl::Event> releaseEvents = {imageTextureCLDone_};
     cq_.enqueueReleaseGLObjects(&glTransferObjs,
                                 &releaseEvents, &glObjsReady_);
