@@ -34,7 +34,7 @@ AbsToRGBA::AbsToRGBA(cl::Context& context,
 
 
 void AbsToRGBA::operator() (cl::CommandQueue& cq, cl::Image& input,
-                                       cl::Image& output,
+                            cl::Image& output, float gain,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -51,6 +51,7 @@ void AbsToRGBA::operator() (cl::CommandQueue& cq, cl::Image& input,
     // Set all the arguments
     kernel_.setArg(0, sizeof(input), &input);
     kernel_.setArg(1, sizeof(output), &output);
+    kernel_.setArg(2, float(gain));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,

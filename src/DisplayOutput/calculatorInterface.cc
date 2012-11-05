@@ -84,7 +84,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
               std::back_inserter(subbandsInputReady));
     
     for (size_t n = 0; n < numSubbands; ++n) 
-        absToRGBA_(cq_, subbands[0]->sb[n], subbandTexturesCL_[n],
+        absToRGBA_(cq_, subbands[0]->sb[n], subbandTexturesCL_[n], 4.0f,
                         subbandsInputReady, &subbandsConverted[n]);
 
     // Stop using the OpenGL objects

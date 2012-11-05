@@ -44,6 +44,13 @@ void Viewer::setImageTexture(GLuint texture)
 }
 
 
+
+void Viewer::setSubbandTexture(int subband, GLuint texture)
+{
+    subbandTextures_[subband] = texture;
+}
+
+
 #include <iostream>
 
 void Viewer::update()
@@ -88,21 +95,8 @@ void Viewer::update()
     glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(1));
     glVertexPointer(2, GL_FLOAT, 0, 0);
 
-    // Select the texture
-    glBindTexture(GL_TEXTURE_2D, imageTexture_);
-
-    glColor4f(1.0, 1.0, 1.0, 1.0);
-
-    // Display the original image
-
-    glPushMatrix();
-
-    glTranslatef(-1.f, 0.f, 0.f);
-
-    // Draw it
-    glDrawArrays(GL_QUADS, 0, 4);
-
-    glPopMatrix();
+    drawPicture();
+    drawSubbands();
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -114,6 +108,53 @@ void Viewer::update()
 
     glFinish();
 }
+
+
+void Viewer::drawPicture() 
+{
+    // Draw the webcam picture
+
+    // Select the texture
+    glBindTexture(GL_TEXTURE_2D, imageTexture_);
+
+    // Display the original image
+
+    glPushMatrix();
+
+    glTranslatef(-1.f, 0.f, 0.f);
+
+    // Draw it
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    glPopMatrix();
+}
+
+
+
+void Viewer::drawSubbands() 
+{
+    // Coordinates to display at
+    std::vector<std::array<int, 2>> positions = {
+        {0, 0}, {1, 0}, {2, 0},
+        {2, 1}, {1, 1}, {0, 1}
+    };
+
+    for (int n = 0; n < subbandTextures_.size(); ++n) {
+        // Select the texture
+        glBindTexture(GL_TEXTURE_2D, subbandTextures_[n]);
+
+        glPushMatrix();
+
+        glScalef(0.25f, 0.25f, 0.f);
+        glTranslatef(positions[n][1], positions[n][0], 0.f);
+
+        // Draw it
+        glDrawArrays(GL_QUADS, 0, 4);
+
+        glPopMatrix();
+    }
+}
+
 
 
 bool Viewer::isDone()

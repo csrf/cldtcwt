@@ -66,7 +66,11 @@ int main(void)
             ;
         videoReader.returnBuffers();
 
+        // Set the texture sources for the viewer
         viewer.setImageTexture(ci.getImageTexture());
+        for (int n = 0; n < 6; ++n)
+            viewer.setSubbandTexture(n, ci.getSubbandTexture(n));
+
         viewer.update();
 
         ftime(&end);

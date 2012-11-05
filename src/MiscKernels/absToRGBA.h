@@ -21,6 +21,7 @@ public:
 
     void operator() (cl::CommandQueue& cq, cl::Image& input,
                                            cl::Image& output,
+                                           float gain = 1.0f,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);
