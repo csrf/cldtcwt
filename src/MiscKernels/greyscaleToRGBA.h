@@ -10,7 +10,7 @@
 
 class GreyscaleToRGBA {
     // Kernel that takes a single-component image, and puts out an
-    // RGBA (A=1) image.
+    // RGBA (A=1) image.  Multiplies by the gain specified.
 
 public:
 
@@ -21,6 +21,7 @@ public:
 
     void operator() (cl::CommandQueue& cq, cl::Image& input,
                                            cl::Image& output,
+                                           float gain,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);

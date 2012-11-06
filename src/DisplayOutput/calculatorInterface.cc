@@ -92,7 +92,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
     cq_.enqueueAcquireGLObjects(&glTransferObjs, nullptr, &glObjsAcquired);
 
     // Convert the input image to RGBA for display
-    greyscaleToRGBA_(cq_, imageGreyscale_, imageTextureCL_,
+    greyscaleToRGBA_(cq_, imageGreyscale_, imageTextureCL_, 1.0f,
                      {imageGreyscaleDone_, glObjsAcquired}, 
                      &imageTextureCLDone_);
 
@@ -130,6 +130,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
     // Convert the energy map
     greyscaleToRGBA_(cq_, energyMapInput,
                           energyMapTextureCL_,
+                          10.0f,
                           energyMapReady, &energyMapTextureCLDone_);
 
     // Stop using the OpenGL objects
