@@ -60,7 +60,8 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
 					   src/DisplayOutput/viewer.cc \
-					   src/DisplayOutput/VideoReader.cc 
+					   src/DisplayOutput/VideoReader.cc \
+					   src/DTCWT/energyMapEigen.cc
 displayDTCWT_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 				   @opencv_LIBS@ @V4L2_LIBS@
 

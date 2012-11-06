@@ -6,6 +6,7 @@
 
 #include "DTCWT/dtcwt.h"
 #include "MiscKernels/abs.h"
+#include "DTCWT/energyMapEigen.h"
 #include "KeypointDetector/findMax.h"
 
 
@@ -22,7 +23,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    EnergyMap energyMap;
+    EnergyMapEigen energyMap;
     FindMax findMax;
 
     cl::Image2D zeroImage;
