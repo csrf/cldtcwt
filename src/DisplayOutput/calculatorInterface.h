@@ -44,6 +44,13 @@ private:
     GLImage imageTextureCL_;
     cl::Event imageTextureCLDone_;
 
+
+    // Energy map and CL interface
+    GLTexture energyMapTexture_;
+    GLImage energyMapTextureCL_;
+    cl::Event energyMapTextureCLDone_;
+
+    // Done when everything is copied over to the GL objects
     cl::Event glObjsReady_;
 
     // The input needs to be put into greyscale before display
@@ -76,6 +83,7 @@ public:
     void updateGL(void);
 
     GLuint getImageTexture();
+    GLuint getEnergyMapTexture();
     GLuint getSubband2Texture(int subband);
     GLuint getSubband3Texture(int subband);
 

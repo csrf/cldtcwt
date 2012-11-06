@@ -67,6 +67,7 @@ int main(void)
             viewer.setSubband2Texture(n, ci.getSubband2Texture(n));
             viewer.setSubband3Texture(n, ci.getSubband3Texture(n));
         }
+        viewer.setEnergyMapTexture(ci.getEnergyMapTexture());
 
         viewer.update();
 

@@ -79,6 +79,11 @@ void Calculator::operator() (cl::Image& input,
 }
 
 
+cl::Image2D Calculator::getEnergyMapLevel2()
+{
+    return energyMaps[0];
+}
+
 
 std::vector<LevelOutput*> Calculator::levelOutputs(void)
 {
@@ -111,6 +116,8 @@ std::vector<cl::Event> Calculator::keypointLocationEvents(void)
     std::vector<cl::Event> doneEvents;
 
     doneEvents.push_back(findMaxDone_);
+
+    return doneEvents;
 }
 
 

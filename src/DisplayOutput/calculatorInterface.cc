@@ -13,6 +13,7 @@ CalculatorInterface::CalculatorInterface(cl::Context& context,
                                          const cl::Device& device,
                                          int width, int height)
  : width_(width), height_(height),
+   calculator_(context, device, width, height),
    cq_(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE),
    greyscaleToRGBA_(context, {device}),
    absToRGBA_(context, {device}),
@@ -22,7 +23,6 @@ CalculatorInterface::CalculatorInterface(cl::Context& context,
    imageGreyscale_(context, CL_MEM_READ_WRITE, 
                    cl::ImageFormat(CL_LUMINANCE, CL_UNORM_INT8),
                    width, height),
-   calculator_(context, device, width, height),
    pboBuffer_(1)
 {
     // Set up the subband textures
@@ -48,6 +48,17 @@ CalculatorInterface::CalculatorInterface(cl::Context& context,
 
 
     }
+
+    // Set up for the energy map texture
+    energyMapTexture_ = GLTexture(GL_RGBA8, 
+        calculator_.getEnergyMapLevel2().getImageInfo<CL_IMAGE_WIDTH>(),
+        calculator_.getEnergyMapLevel2().getImageInfo<CL_IMAGE_HEIGHT>());
+
+    // Add OpenCL link to it
+    energyMapTextureCL_ = GLImage(context, CL_MEM_READ_WRITE, 
+                                  GL_TEXTURE_2D, 0, 
+                                  energyMapTexture_.getTexture());
+
 }
 
 #include <cstring>
@@ -70,7 +81,8 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     // Go over to using the OpenGL objects.  glFinish should already have
     // been called
-    std::vector<cl::Memory> glTransferObjs = {imageTextureCL_};
+    std::vector<cl::Memory> glTransferObjs = {imageTextureCL_,
+                                              energyMapTextureCL_};
     std::copy(subbandTextures2CL_.begin(), subbandTextures2CL_.end(), 
               std::back_inserter(glTransferObjs));
     std::copy(subbandTextures3CL_.begin(), subbandTextures3CL_.end(), 
@@ -111,8 +123,18 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     }
 
+    std::vector<cl::Event> energyMapReady = calculator_.keypointLocationEvents();
+    energyMapReady.push_back(glObjsAcquired);
+
+    cl::Image2D energyMapInput = calculator_.getEnergyMapLevel2();
+    // Convert the energy map
+    greyscaleToRGBA_(cq_, energyMapInput,
+                          energyMapTextureCL_,
+                          energyMapReady, &energyMapTextureCLDone_);
+
     // Stop using the OpenGL objects
-    std::vector<cl::Event> releaseEvents = {imageTextureCLDone_};
+    std::vector<cl::Event> releaseEvents = {imageTextureCLDone_,
+                                            energyMapTextureCLDone_};
     std::copy(subbandsConverted.begin(), subbandsConverted.end(),
               std::back_inserter(releaseEvents));
 
@@ -138,6 +160,13 @@ void CalculatorInterface::updateGL(void)
 GLuint CalculatorInterface::getImageTexture()
 {
     return imageTexture_.getTexture();
+}
+
+
+
+GLuint CalculatorInterface::getEnergyMapTexture()
+{
+    return energyMapTexture_.getTexture();
 }
 
 

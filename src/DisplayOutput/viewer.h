@@ -23,6 +23,9 @@ private:
     // Name of the OpenGL texture
     GLuint imageTexture_ = 0;
 
+    // Name of the energy map texture
+    GLuint energyMapTexture_ = 0;
+
     // And those of the subbands
     std::array<GLuint, numSubbands> subbandTextures2_;
     std::array<GLuint, numSubbands> subbandTextures3_;
@@ -35,6 +38,7 @@ private:
     bool done_ = false;
 
     void drawPicture();
+    void drawEnergyMap();
     void drawSubbands(const GLuint textures[]);
 
 public:
@@ -42,6 +46,7 @@ public:
     Viewer(int width, int height);
 
     void setImageTexture(GLuint texture);
+    void setEnergyMapTexture(GLuint texture);
     void setSubband2Texture(int subband, GLuint texture);
     void setSubband3Texture(int subband, GLuint texture);
 

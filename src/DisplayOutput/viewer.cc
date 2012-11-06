@@ -45,6 +45,13 @@ void Viewer::setImageTexture(GLuint texture)
 
 
 
+void Viewer::setEnergyMapTexture(GLuint texture)
+{
+    energyMapTexture_ = texture;
+}
+
+
+
 void Viewer::setSubband2Texture(int subband, GLuint texture)
 {
     subbandTextures2_[subband] = texture;
@@ -105,6 +112,8 @@ void Viewer::update()
 
     drawPicture();
 
+    drawEnergyMap();
+
     // Draw the level 2 subbands
     glPushMatrix();
     glTranslatef(0.f, 0.25f, 0.f);
@@ -144,6 +153,28 @@ void Viewer::drawPicture()
     glPushMatrix();
 
     glTranslatef(-1.f, 0.f, 0.f);
+
+    // Draw it
+    glDrawArrays(GL_QUADS, 0, 4);
+
+    glPopMatrix();
+}
+
+
+
+void Viewer::drawEnergyMap() 
+{
+    // Draw the energy map picture
+
+    // Select the texture
+    glBindTexture(GL_TEXTURE_2D, energyMapTexture_);
+
+    // Display the original image
+
+    glPushMatrix();
+
+    glTranslatef(0.f, -0.25f, 0.f);
+    glScalef(0.25f, 0.25f, 0.f);
 
     // Draw it
     glDrawArrays(GL_QUADS, 0, 4);

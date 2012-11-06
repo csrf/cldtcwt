@@ -53,6 +53,7 @@ public:
 
     std::vector<::LevelOutput*> levelOutputs(void);
 
+    cl::Image2D getEnergyMapLevel2(void);
     std::vector<cl::Buffer*> keypointLocations(void);
     cl::Buffer* keypointCounts(void);
     std::vector<cl::Event> keypointLocationEvents(void);
