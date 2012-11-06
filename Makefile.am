@@ -16,7 +16,9 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/MiscKernels/greyscaleToRGBAKernel.h \
-				src/MiscKernels/absToRGBAKernel.h
+				src/MiscKernels/absToRGBAKernel.h \
+				src/MiscKernels/accumulateKernel.h 
+
 
 TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
@@ -35,7 +37,8 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 
 noinst_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
-			 verifyBasic testDescriptor testOutputEigenDetector displayDTCWT
+			 verifyBasic testDescriptor testOutputEigenDetector displayDTCWT \
+			 testAccumulate
 
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
@@ -45,6 +48,10 @@ testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
 
 testFindMax_SOURCES = src/test/testFindMax.cc
 testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
+
+testAccumulate_SOURCES = src/test/testAccumulate.cc \
+					  src/MiscKernels/accumulate.cc
+testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
 
 testOutput_SOURCES = src/test/testOutput.cc \
 					 src/MiscKernels/abs.cc
