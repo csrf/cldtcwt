@@ -36,9 +36,10 @@ std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context>
 
 int main(void)
 {
-    Viewer viewer(1280, 720);
+    const size_t width = 1280, height = 720;
+    Viewer viewer(width, height);
 
-    VideoReader videoReader("/dev/video0", 1280, 720);
+    VideoReader videoReader("/dev/video0", width, height);
     videoReader.startCapture();
 
     //cv::VideoCapture video(0);
@@ -51,7 +52,7 @@ int main(void)
     std::vector<cl::Device> devices;
     std::tie(platform, devices, context) = initOpenCL();
    
-    CalculatorInterface ci(context, devices[0], 1280, 720);   
+    CalculatorInterface ci(context, devices[0], width, height);   
 
 
     int n = 0;
