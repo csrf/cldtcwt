@@ -10,7 +10,7 @@ void absToRGBA(__read_only image2d_t input,
     // Make sure we're within the valid region
     if (all(pos < get_image_dim(output))) {
 
-        float v = gain * length(read_imagef(input, s, pos).s01);
+        float v = gain * fast_length(read_imagef(input, s, pos).s01);
         write_imagef(output, pos, (float4) (v, v, v, 1.0f));
 
     }
