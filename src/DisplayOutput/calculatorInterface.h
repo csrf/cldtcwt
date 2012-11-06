@@ -50,9 +50,12 @@ private:
     cl::Image2D imageGreyscale_;
     cl::Event imageGreyscaleDone_;
 
-    // For subband displays
-    std::array<GLTexture, numSubbands> subbandTextures_;
-    std::array<GLImage, numSubbands> subbandTexturesCL_;
+    // For subband displays for levels 2 and 3
+    std::array<GLTexture, numSubbands> subbandTextures2_;
+    std::array<GLImage, numSubbands> subbandTextures2CL_;
+
+    std::array<GLTexture, numSubbands> subbandTextures3_;
+    std::array<GLImage, numSubbands> subbandTextures3CL_;
 
     // Where to put the keypoints
     VBOBuffers keypointLocationBuffers;
@@ -73,7 +76,8 @@ public:
     void updateGL(void);
 
     GLuint getImageTexture();
-    GLuint getSubbandTexture(int subband);
+    GLuint getSubband2Texture(int subband);
+    GLuint getSubband3Texture(int subband);
 
 };
 

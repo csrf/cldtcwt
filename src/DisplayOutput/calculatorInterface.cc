@@ -26,16 +26,26 @@ CalculatorInterface::CalculatorInterface(cl::Context& context,
    pboBuffer_(1)
 {
     // Set up the subband textures
-    for (size_t n = 0; n < subbandTextures_.size(); ++n) {
+    for (size_t n = 0; n < numSubbands; ++n) {
 
         // Create OpenGL texture
-        subbandTextures_[n] = GLTexture(GL_RGBA8, width / 4, height / 4);
+        subbandTextures2_[n] = GLTexture(GL_RGBA8, width / 4, height / 4);
 
         // Add OpenCL link to it
-        subbandTexturesCL_[n]
+        subbandTextures2CL_[n]
             = GLImage(context, CL_MEM_READ_WRITE, 
                       GL_TEXTURE_2D, 0, 
-                      subbandTextures_[n].getTexture());
+                      subbandTextures2_[n].getTexture());
+
+        // Create OpenGL texture
+        subbandTextures3_[n] = GLTexture(GL_RGBA8, width / 8, height / 8);
+
+        // Add OpenCL link to it
+        subbandTextures3CL_[n]
+            = GLImage(context, CL_MEM_READ_WRITE, 
+                      GL_TEXTURE_2D, 0, 
+                      subbandTextures3_[n].getTexture());
+
 
     }
 }
@@ -61,7 +71,9 @@ void CalculatorInterface::processImage(const void* data, size_t length)
     // Go over to using the OpenGL objects.  glFinish should already have
     // been called
     std::vector<cl::Memory> glTransferObjs = {imageTextureCL_};
-    std::copy(subbandTexturesCL_.begin(), subbandTexturesCL_.end(), 
+    std::copy(subbandTextures2CL_.begin(), subbandTextures2CL_.end(), 
+              std::back_inserter(glTransferObjs));
+    std::copy(subbandTextures3CL_.begin(), subbandTextures3CL_.end(), 
               std::back_inserter(glTransferObjs));
 
     cl::Event glObjsAcquired;
@@ -74,18 +86,30 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     auto subbands = calculator_.levelOutputs();
 
-    std::array<cl::Event, numSubbands> subbandsConverted;
+    std::vector<cl::Event> subbandsConverted(2*numSubbands);
 
     // Convert the subbands to absolute images
 
     // Wait for the level and the GL objects to be acquired
-    std::vector<cl::Event> subbandsInputReady = {glObjsAcquired};
+    std::vector<cl::Event> subbandsInput2Ready = {glObjsAcquired};
     std::copy(subbands[0]->done.begin(), subbands[0]->done.end(),
-              std::back_inserter(subbandsInputReady));
+              std::back_inserter(subbandsInput2Ready));
+
+    std::vector<cl::Event> subbandsInput3Ready = {glObjsAcquired};
+    std::copy(subbands[1]->done.begin(), subbands[1]->done.end(),
+              std::back_inserter(subbandsInput3Ready));
     
-    for (size_t n = 0; n < numSubbands; ++n) 
-        absToRGBA_(cq_, subbands[0]->sb[n], subbandTexturesCL_[n], 4.0f,
-                        subbandsInputReady, &subbandsConverted[n]);
+    for (size_t n = 0; n < numSubbands; ++n) {
+
+        absToRGBA_(cq_, subbands[0]->sb[n], 
+                        subbandTextures2CL_[n], 4.0f, subbandsInput2Ready, 
+                        &subbandsConverted[n]);
+
+        absToRGBA_(cq_, subbands[1]->sb[n], 
+                        subbandTextures3CL_[n], 4.0f, subbandsInput3Ready, 
+                        &subbandsConverted[numSubbands+n]);
+
+    }
 
     // Stop using the OpenGL objects
     std::vector<cl::Event> releaseEvents = {imageTextureCLDone_};
@@ -118,8 +142,15 @@ GLuint CalculatorInterface::getImageTexture()
 
 
 
-GLuint CalculatorInterface::getSubbandTexture(int subband)
+GLuint CalculatorInterface::getSubband2Texture(int subband)
 {
-    return subbandTextures_[subband].getTexture();
+    return subbandTextures2_[subband].getTexture();
+}
+
+
+
+GLuint CalculatorInterface::getSubband3Texture(int subband)
+{
+    return subbandTextures3_[subband].getTexture();
 }
 

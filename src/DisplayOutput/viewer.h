@@ -24,7 +24,8 @@ private:
     GLuint imageTexture_ = 0;
 
     // And those of the subbands
-    std::array<GLuint, numSubbands> subbandTextures_;
+    std::array<GLuint, numSubbands> subbandTextures2_;
+    std::array<GLuint, numSubbands> subbandTextures3_;
 
     // Two buffers, used for placing (0) texture coordinates
     // and (1) vertex coordinates, both in 2D
@@ -34,14 +35,15 @@ private:
     bool done_ = false;
 
     void drawPicture();
-    void drawSubbands();
+    void drawSubbands(const GLuint textures[]);
 
 public:
 
     Viewer(int width, int height);
 
     void setImageTexture(GLuint texture);
-    void setSubbandTexture(int subband, GLuint texture);
+    void setSubband2Texture(int subband, GLuint texture);
+    void setSubband3Texture(int subband, GLuint texture);
 
 
     void update();

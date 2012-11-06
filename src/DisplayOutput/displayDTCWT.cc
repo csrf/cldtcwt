@@ -42,18 +42,12 @@ int main(void)
     VideoReader videoReader("/dev/video0", width, height);
     videoReader.startCapture();
 
-    //cv::VideoCapture video(0);
-
-    //video.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-    //video.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
-
     cl::Platform platform;
     cl::Context context;
     std::vector<cl::Device> devices;
     std::tie(platform, devices, context) = initOpenCL();
    
     CalculatorInterface ci(context, devices[0], width, height);   
-
 
     int n = 0;
     while (1) {
@@ -69,8 +63,10 @@ int main(void)
 
         // Set the texture sources for the viewer
         viewer.setImageTexture(ci.getImageTexture());
-        for (int n = 0; n < 6; ++n)
-            viewer.setSubbandTexture(n, ci.getSubbandTexture(n));
+        for (int n = 0; n < 6; ++n) {
+            viewer.setSubband2Texture(n, ci.getSubband2Texture(n));
+            viewer.setSubband3Texture(n, ci.getSubband3Texture(n));
+        }
 
         viewer.update();
 

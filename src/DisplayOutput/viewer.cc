@@ -45,10 +45,18 @@ void Viewer::setImageTexture(GLuint texture)
 
 
 
-void Viewer::setSubbandTexture(int subband, GLuint texture)
+void Viewer::setSubband2Texture(int subband, GLuint texture)
 {
-    subbandTextures_[subband] = texture;
+    subbandTextures2_[subband] = texture;
 }
+
+
+
+void Viewer::setSubband3Texture(int subband, GLuint texture)
+{
+    subbandTextures3_[subband] = texture;
+}
+
 
 
 #include <iostream>
@@ -96,7 +104,21 @@ void Viewer::update()
     glVertexPointer(2, GL_FLOAT, 0, 0);
 
     drawPicture();
-    drawSubbands();
+
+    // Draw the level 2 subbands
+    glPushMatrix();
+    glTranslatef(0.f, 0.25f, 0.f);
+    glScalef(0.25f, 0.25f, 0.f);
+    drawSubbands(&subbandTextures2_[0]);
+    glPopMatrix();
+
+    // Draw the level 3 subbands
+    glPushMatrix();
+    glTranslatef(-1.f, -0.5f, 0.f);
+    glScalef(0.125f, 0.125f, 0.f);
+    drawSubbands(&subbandTextures3_[0]);
+    glPopMatrix();
+
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -131,7 +153,7 @@ void Viewer::drawPicture()
 
 
 
-void Viewer::drawSubbands() 
+void Viewer::drawSubbands(const GLuint textures[]) 
 {
     // Coordinates to display at
     std::vector<std::array<int, 2>> positions = {
@@ -139,13 +161,12 @@ void Viewer::drawSubbands()
         {2, 1}, {1, 1}, {0, 1}
     };
 
-    for (int n = 0; n < subbandTextures_.size(); ++n) {
+    for (int n = 0; n < positions.size(); ++n) {
         // Select the texture
-        glBindTexture(GL_TEXTURE_2D, subbandTextures_[n]);
+        glBindTexture(GL_TEXTURE_2D, textures[n]);
 
         glPushMatrix();
 
-        glScalef(0.25f, 0.25f, 0.f);
         glTranslatef(positions[n][1], positions[n][0], 0.f);
 
         // Draw it
