@@ -26,7 +26,6 @@ int main()
 
         CLContext context;
 
-        const size_t posLen = 4;
 
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
@@ -35,6 +34,9 @@ int main()
         // Starting test code
         
         FindMax findMax(context.context, context.devices);
+
+        const size_t posLen = findMax.getPosLength();
+        // Number of floats in each position
 
         const int width = 20, height = 20;
         // Set up data for the input image

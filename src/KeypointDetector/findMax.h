@@ -31,6 +31,10 @@ public:
        const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
        cl::Event* doneEvent = nullptr);
 
+    size_t getPosLength() const;
+    // Returns the number of floats included in each output.  At the moment, that
+    // is (x, y, scale, --), so 4.
+
 private:
     cl::Context context_;
     cl::Kernel kernel_;
@@ -40,7 +44,7 @@ private:
 
     // Number of floats long to make each output position.  Comes in format
     // x, y, scale.
-    const int posLen = 4;
+    const size_t posLen_ = 4;
 };
 
 

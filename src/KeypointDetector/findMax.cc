@@ -18,7 +18,7 @@ FindMax::FindMax(cl::Context& context,
     // Define some constants
     kernelInput << "#define WG_SIZE_X (16)\n"
                    "#define WG_SIZE_Y (16)\n"
-                   "#define POS_LEN (" << posLen << ")\n";
+                   "#define POS_LEN (" << posLen_ << ")\n";
    
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
@@ -99,7 +99,7 @@ void FindMax::operator()
     kernel_.setArg(8, numOutputs);
     kernel_.setArg(9, (numOutputsOffset));
     kernel_.setArg(10, int(output.getInfo<CL_MEM_SIZE>() 
-                            / (3 * sizeof(float)))); // Max number of outputs
+                            / (posLen_ * sizeof(float)))); // Max number of outputs
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
@@ -109,4 +109,8 @@ void FindMax::operator()
 }
 
 
+size_t FindMax::getPosLength() const
+{
+    return posLen_;
+}
 
