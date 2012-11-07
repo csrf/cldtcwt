@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 
 #include <stdexcept>
 FindMax::FindMax(cl::Context& context,
@@ -13,126 +15,19 @@ FindMax::FindMax(cl::Context& context,
     // The OpenCL kernel:
     std::ostringstream kernelInput;
 
+    // Define some constants
+    kernelInput << "#define WG_SIZE_X (16)\n"
+                   "#define WG_SIZE_Y (16)\n";
+   
+    // Get input from the source file
+    const char* fileText = reinterpret_cast<const char*>
+            (src_KeypointDetector_findMaxKernel_h_src);
+    size_t fileTextLength = src_KeypointDetector_findMaxKernel_h_src_len;
 
-    kernelInput
-    << "__kernel void findMax(read_only image2d_t input,"
-                             "read_only image2d_t inFiner,"
-                             "read_only image2d_t inCoarser,"
-                             "const float threshold,"
-                             "global float2* maxCoords,"
-                             "global int* numOutputs,"
-                             "const int maxNumOutputs)"
-        "{"
-            "sampler_t isNorm ="
-                "CLK_NORMALIZED_COORDS_FALSE"
-                "| CLK_ADDRESS_MIRRORED_REPEAT"
-                "| CLK_FILTER_NEAREST;\n"
+    std::copy(fileText, fileText + fileTextLength,
+              std::ostream_iterator<char>(kernelInput));
 
-            // Include extra one on each side to find whether edges are
-            // maxima
-            "__local float inputLocal[1+" << wgSizeY_ << "+1]"
-                                    "[1+" << wgSizeX_ << "+1];\n"
-
-            "const int gx = get_global_id(0),"
-                      "gy = get_global_id(1),"
-                      "lx = get_local_id(0),"
-                      "ly = get_local_id(1);\n"
-
-            // Load in the complete region, with its border
-            "inputLocal[ly][lx] = read_imagef(input, isNorm,"
-                                    "(float2) (gx-1, gy-1)).x;\n"
-
-            "if (lx < 2)"
-                "inputLocal[ly][lx+" << wgSizeX_ << "]"
-                    "= read_imagef(input, isNorm,"
-                          "(float2) (gx-1 + " << wgSizeX_ << ", gy-1)).x;\n"
-
-            "if (ly < 2)"
-                "inputLocal[ly+" << wgSizeY_ << "][lx]"
-                    "= read_imagef(input, isNorm,"
-                          "(float2) (gx-1, gy-1 + " << wgSizeY_ << ")).x;"
-
-            "if (lx < 2 && ly < 2)"
-                "inputLocal[ly+" << wgSizeY_ << "][lx+" << wgSizeX_ << "]"
-                    "= read_imagef(input, isNorm,"
-          "(float2) (gx-1+" << wgSizeX_ << ", gy-1 + " << wgSizeY_ << ")).x;"
-
-            // No need to do anything further if we're outside the image's
-            // boundary
-            "if (gx >= get_image_width(input)"
-             "|| gy >= get_image_height(input))"
-                "return;"
-
-            // Consider each of the surrounds; must be at least threshold,
-            // anyway
-            "float surroundMax = threshold;"
-            "surroundMax = max(surroundMax, inputLocal[ly  ][lx  ]);"
-            "surroundMax = max(surroundMax, inputLocal[ly+1][lx  ]);"
-            "surroundMax = max(surroundMax, inputLocal[ly+2][lx  ]);"
-            "surroundMax = max(surroundMax, inputLocal[ly  ][lx+1]);"
-            "surroundMax = max(surroundMax, inputLocal[ly+2][lx+1]);"
-            "surroundMax = max(surroundMax, inputLocal[ly  ][lx+2]);"
-            "surroundMax = max(surroundMax, inputLocal[ly+1][lx+2]);"
-            "surroundMax = max(surroundMax, inputLocal[ly+2][lx+2]);"
-
-            "if (inputLocal[ly+1][lx+1] > surroundMax) {"
-                
-                // Now refine the position.  Not so refined as original
-                // version: we ignore the cross term between x and y (since
-                // they would involve pseudo-inverses)
-                "float ratioX = "
-                       "(inputLocal[ly+1][lx+2] - inputLocal[ly+1][lx+1])"
-                     "/ (inputLocal[ly+1][lx  ] - inputLocal[ly+1][lx+1]);"
-
-                "float xOut = 0.5f * (1-ratioX) / (1+ratioX) + (float) gx;"
-
-                "float ratioY = "
-                       "(inputLocal[ly+2][lx+1] - inputLocal[ly+1][lx+1])"
-                     "/ (inputLocal[ly  ][lx+1] - inputLocal[ly+1][lx+1]);"
-
-                "float yOut = 0.5f * (1-ratioY) / (1+ratioY) + (float) gy;"
-
-                // Check levels up and level down.  Conveniently (in a way)
-                // the centres of the images remain the centre from level to
-                // level.
-
-                // Get positions relative to centre
-                "float xc = xOut - 0.5f * (get_image_width(input) - 1.0f);"
-                "float yc = xOut - 0.5f * (get_image_height(input) - 1.0f);"
-
-                // Check the level coarser
-                "float2 coarserCoords = (float2)"
-                   "(xc / 2.0f + 0.5f * (get_image_width(inCoarser) - 1.0f),"
-                   " yc / 2.0f + 0.5f * (get_image_height(inCoarser) - 1.0f));"
-
-                "float coarserVal = read_imagef(inCoarser, isNorm,"
-                                               "coarserCoords).x;"
-
-                // Check the level finer
-                "float2 finerCoords = (float2)"
-                   "(xc * 2.0f + 0.5f * (get_image_width(inFiner) - 1.0f),"
-                   " yc * 2.0f + 0.5f * (get_image_height(inFiner) - 1.0f));"
-
-                "float finerVal = read_imagef(inFiner, isNorm,"
-                                             "finerCoords).x;"
-
-                // We also need the current level at the max point
-                "float inputVal = read_imagef(input, isNorm,"
-                                             "(float2) (xOut, yOut)).x;"
-
-                "if (inputVal > coarserVal && inputVal > finerVal) {"
-
-                    "int ourOutputPos = atomic_inc(numOutputs);"
-
-                    // Write it out (if there's enough space)
-                    "if (ourOutputPos < maxNumOutputs)"
-                        "maxCoords[ourOutputPos] = (float2) (xOut, yOut);"
-
-                "}"
-
-            "}"
-        "}";
-
+    // Convert to string
     const std::string sourceCode = kernelInput.str();
 
     // Bundle the code up
@@ -150,7 +45,7 @@ FindMax::FindMax(cl::Context& context,
 	    throw;
     } 
         
-    // ...and extract the useful part, viz the kernel
+    // ...and extract the useful part, i.e. the kernel
     kernel_ = cl::Kernel(program, "findMax");
 }
 
@@ -161,18 +56,26 @@ static int roundWGs(int l, int lWG)
 
 void FindMax::operator() 
       (cl::CommandQueue& commandQueue,
-       const cl::Image2D& input,
-       const cl::Image2D& inputFiner,
-       const cl::Image2D& inputCoarser,
+       cl::Image& input,        float inputScale,
+       cl::Image& inputFiner,   float finerScale,
+       cl::Image& inputCoarser, float coarserScale,
        float threshold,
        cl::Buffer& output,
        cl::Buffer& numOutputs,
+       unsigned int numOutputsOffset,
        const std::vector<cl::Event>& waitEvents,
        cl::Event* doneEvent)
 {
-    // Run the filter for each location in output (which determines
-    // the locations to run at) using commandQueue.  input and output are
-    // both single-component float images.  filter is a vector of floats.
+    // Looks at the input, and finds the locations of the maxima that are at least
+    // threshold, and greater than the corresponding locations in inputFiner and
+    // inputCoarser.  The centres of the images are assumed to be the same.  The
+    // *Scale says how many real distance units there are per pixel of input*.
+    //
+    // No more outputs are produced than will fit into the buffer output, and the
+    // values placed there are floats in (x, y) format relative to the centre of the
+    // image, in real distance units.  The total number of maxima found is placed in
+    // numOutputs[numOutputsOffset] as an integer.
+    //
     // The command will not start until all of waitEvents have completed, and
     // once done will flag doneEvent.
 
@@ -184,13 +87,18 @@ void FindMax::operator()
     }; 
 
     // Set all the arguments
-    kernel_.setArg(0, input);
-    kernel_.setArg(1, inputFiner);
-    kernel_.setArg(2, inputCoarser);
-    kernel_.setArg(3, (threshold));
-    kernel_.setArg(4, output);
-    kernel_.setArg(5, numOutputs);
-    kernel_.setArg(6, int(output.getInfo<CL_MEM_SIZE>() / (2 * sizeof(int))));
+    kernel_.setArg(0, sizeof(input), &input);
+    kernel_.setArg(1, (inputScale));
+    kernel_.setArg(2, sizeof(inputFiner), &inputFiner);
+    kernel_.setArg(3, (finerScale));
+    kernel_.setArg(4, sizeof(inputCoarser), &inputCoarser);
+    kernel_.setArg(5, (coarserScale));
+    kernel_.setArg(6, (threshold));
+    kernel_.setArg(7, output);
+    kernel_.setArg(8, numOutputs);
+    kernel_.setArg(9, (numOutputsOffset));
+    kernel_.setArg(10, int(output.getInfo<CL_MEM_SIZE>() 
+                            / (2 * sizeof(float)))); // Max number of outputs
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,

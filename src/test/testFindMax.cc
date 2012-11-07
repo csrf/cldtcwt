@@ -34,19 +34,17 @@ int main()
         
         FindMax findMax(context.context, context.devices);
 
-        const int width = 40, height = 40;
+        const int width = 20, height = 20;
         // Set up data for the input image
         float data[height][width];
         for (int x = 0; x < width; ++x)
             for (int y = 0; y < height; ++y)
                 data[y][x] = 0.0f;
-        //data[10][5] = 1.0f;
-        data[15][15] = 1.0f;
-        data[16][15] = 0.5f;
-        data[18][12] = 0.05f;
-        data[13][15] = 1.0f;
+        data[10][5] = 1.0f;
+        data[13][12] = 1.0f;
+        data[14][12] = 2.0f;
+        data[1][1] = 1.0f;
 
-        data[24][30] = 0.5f;
 
         cl::Image2D inImage = {
             context.context, 
@@ -70,19 +68,13 @@ int main()
 
         cl::Buffer numOutputs = {
             context.context,
-            CL_MEM_COPY_HOST_PTR,              // Flags
-            sizeof(int), // Size to allocate
-            &zero
+            CL_MEM_READ_WRITE,              // Flags
+            sizeof(int) // Size to allocate
         };
 
-        cl::Buffer lock = {
-            context.context,
-            CL_MEM_COPY_HOST_PTR,              // Flags
-            sizeof(int), // Size to allocate
-            &zero 
-        };
+        cq.enqueueWriteBuffer(numOutputs, CL_TRUE, 0, sizeof(int), &zero);
 
-        float zerof = 0.5f;
+        float zerof = 0.0f;
 
         cl::Image2D zeroImg = {
             context.context, 
@@ -93,9 +85,12 @@ int main()
         };
 
 
-        findMax(cq, inImage, zeroImg, zeroImg, 
-                0.1f, outputs, numOutputs);
-        cq.finish();
+        findMax(cq, inImage, 1.0,
+                    zeroImg, 1.0,
+                    zeroImg, 4.0, 
+                    0.1f, 
+                    outputs, 
+                    numOutputs, 0);
 
         int numOutputsVal;
         cq.enqueueReadBuffer(numOutputs, true, 0, sizeof(int),
@@ -114,6 +109,7 @@ int main()
             for (auto v: results)
                 std::cout << v << std::endl;
         }
+
 
     }
     catch (cl::Error err) {

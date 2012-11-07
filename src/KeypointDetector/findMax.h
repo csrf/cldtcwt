@@ -21,14 +21,15 @@ public:
 
     // The filter operation
     void operator() (cl::CommandQueue& commandQueue,
-           const cl::Image2D& input,
-           const cl::Image2D& inputFiner,
-           const cl::Image2D& inputCoarser,
-           float threshold,
-           cl::Buffer& output,
-           cl::Buffer& numOutputs,
-           const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
-           cl::Event* doneEvent = nullptr);
+       cl::Image& input,        float inputScale,
+       cl::Image& inputFiner,   float finerScale,
+       cl::Image& inputCoarser, float coarserScale,
+       float threshold,
+       cl::Buffer& output,
+       cl::Buffer& numOutputs,
+       unsigned int numOutputsOffset,
+       const std::vector<cl::Event>& waitEvents = std::vector<cl::Event>(),
+       cl::Event* doneEvent = nullptr);
 
 private:
     cl::Context context_;

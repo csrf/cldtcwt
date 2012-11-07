@@ -36,7 +36,7 @@ libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 
-noinst_PROGRAMS=testDTCWT testFilter verify testOutput testFindMax testRescale \
+noinst_PROGRAMS=testDTCWT testFilter verify testFindMax testRescale \
 			 verifyBasic testDescriptor testOutputEigenDetector displayDTCWT \
 			 testAccumulate
 
@@ -53,10 +53,10 @@ testAccumulate_SOURCES = src/test/testAccumulate.cc \
 					  src/MiscKernels/accumulate.cc
 testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
 
-testOutput_SOURCES = src/test/testOutput.cc \
-					 src/MiscKernels/abs.cc
-testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
-				   @opencv_LIBS@
+#testOutput_SOURCES = src/test/testOutput.cc \
+#					 src/MiscKernels/abs.cc
+#testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
+#				   @opencv_LIBS@
 
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
