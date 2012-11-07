@@ -26,6 +26,8 @@ int main()
 
         CLContext context;
 
+        const size_t posLen = 4;
+
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
@@ -63,7 +65,7 @@ int main()
         cl::Buffer outputs = {
             context.context,
             0,              // Flags
-            10 * 2 * sizeof(float) // Size to allocate
+            10 * posLen * sizeof(float) // Size to allocate
         };
 
         cl::Buffer numOutputs = {
@@ -85,9 +87,9 @@ int main()
         };
 
 
-        findMax(cq, inImage, 1.0,
-                    zeroImg, 1.0,
-                    zeroImg, 4.0, 
+        findMax(cq, inImage, 4.0,
+                    zeroImg, 2.0,
+                    zeroImg, 8.0, 
                     0.1f, 
                     outputs, 
                     numOutputs, 0);
@@ -101,9 +103,9 @@ int main()
         numOutputsVal = (numOutputsVal > 10) ? 10 : numOutputsVal;
         
         if (numOutputsVal > 0) {
-            std::vector<float> results(numOutputsVal * 2);
+            std::vector<float> results(numOutputsVal * posLen);
             cq.enqueueReadBuffer(outputs, true, 0, 
-                                           numOutputsVal * 2 * sizeof(float),
+                                           numOutputsVal * posLen * sizeof(float),
                                            &results[0]);
 
             for (auto v: results)

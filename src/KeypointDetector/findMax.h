@@ -37,6 +37,10 @@ private:
 
     static const int wgSizeX_ = 16;
     static const int wgSizeY_ = 16;
+
+    // Number of floats long to make each output position.  Comes in format
+    // x, y, scale.
+    const int posLen = 4;
 };
 
 

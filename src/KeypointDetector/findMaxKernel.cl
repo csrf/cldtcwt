@@ -1,4 +1,5 @@
 
+
 // Load a rectangular region from a floating-point image
 void readImageRegionToShared(__read_only image2d_t input,
                 sampler_t sampler,
@@ -34,20 +35,21 @@ void readImageRegionToShared(__read_only image2d_t input,
 }
 
 
-// Parameters: WG_SIZE_X, WG_SIZE_Y need to be set
+// Parameters: WG_SIZE_X, WG_SIZE_Y need to be set for the work group size.
+// POS_LEN should be the number of floats to make the output structure.
 __kernel __attribute__((reqd_work_group_size(WG_SIZE_X, WG_SIZE_Y, 1)))
 void findMax(__read_only image2d_t input,
              const float inputScale,
 
-             read_only image2d_t inFiner,
+             __read_only image2d_t inFiner,
              const float finerScale,
 
-             read_only image2d_t inCoarser,
+             __read_only image2d_t inCoarser,
              const float coarserScale,
 
              const float threshold,
 
-             global float2* maxCoords,
+             __write_only __global float* maxCoords,
 
              global volatile unsigned int* numOutputs,
              int numOutputsOffset,
@@ -152,9 +154,11 @@ void findMax(__read_only image2d_t input,
             int ourOutputPos = atomic_inc(&numOutputs[numOutputsOffset]);
 
             // Write it out (if there's enough space)
-            if (ourOutputPos < maxNumOutputs)
-                maxCoords[ourOutputPos] = outPos;
-            else
+            if (ourOutputPos < maxNumOutputs) {
+                maxCoords[ourOutputPos*POS_LEN + 0] = outPos.x;
+                maxCoords[ourOutputPos*POS_LEN + 1] = outPos.y;
+                maxCoords[ourOutputPos*POS_LEN + 2] = inputScale;
+            } else
                 numOutputs[numOutputsOffset] = maxNumOutputs;
 
         }
