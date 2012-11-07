@@ -15,6 +15,7 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 	rm $@_src
 
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
+				src/KeypointDetector/concatKernel.h \
 				src/MiscKernels/greyscaleToRGBAKernel.h \
 				src/MiscKernels/absToRGBAKernel.h \
 				src/MiscKernels/accumulateKernel.h 
@@ -28,8 +29,9 @@ noinst_LTLIBRARIES = libdtcwt.la libclutil.la
 libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/DTCWT/filterer.cc \
 					  src/DTCWT/fourTree.cc \
+					  src/KeypointDescriptor/extractDescriptors.cc \
 					  src/KeypointDetector/findMax.cc \
-					  src/KeypointDescriptor/extractDescriptors.cc 
+					  src/KeypointDetector/concat.cc
 libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
 
 libclutil_la_SOURCES = src/util/clUtil.cc
@@ -38,7 +40,7 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 noinst_PROGRAMS=testDTCWT testFilter verify testFindMax testRescale \
 			 verifyBasic testDescriptor displayDTCWT \
-			 testAccumulate
+			 testAccumulate testConcat
 
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
@@ -48,6 +50,9 @@ testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
 
 testFindMax_SOURCES = src/test/testFindMax.cc
 testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
+
+testConcat_SOURCES = src/test/testConcat.cc
+testConcat_LDADD = libdtcwt.la @opencv_LIBS@
 
 testAccumulate_SOURCES = src/test/testAccumulate.cc \
 					  src/MiscKernels/accumulate.cc
