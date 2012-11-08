@@ -16,7 +16,8 @@ struct PeakDetectorResults {
     // Number of floats used for each position detected
     size_t numFloatsPerPosition;
 
-    // Intermediates: the per-level lists (as opposed to the full one
+    // Intermediates: the per-level lists (as opposed to the full one)
+    std::vector<cl_uint> zeroCounts; // For zeroing the counts
     cl::Buffer counts;
     cl::Event countsCleared;
     std::vector<cl::Buffer> levelLists;

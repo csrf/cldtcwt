@@ -33,6 +33,11 @@ PeakDetectorResults PeakDetector::createResultsStructure
     results.counts = cl::Buffer(context_, CL_MEM_READ_WRITE,
                                 maxLevelCounts.size() * sizeof(cl_uint));
 
+    // For use when zeroing the counts: we need memory that will persist
+    // even when not in a particular function, and which is in no danger
+    // of going away while doing an operation.
+    results.zeroCounts = std::vector<cl_uint>(maxLevelCounts.size(), 0);
+
     // Per-level lists
     for (size_t maxCount: maxLevelCounts) 
         // Allocate space to put the results into, and somewhere to store
@@ -75,11 +80,12 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
         throw std::logic_error("PeakDetector: wrong number of scales");
 
     // Clear the counts
-    std::vector<cl_uint> zeroV(energyMaps.size(), 0);
-    cq.enqueueWriteBuffer(results.counts, CL_TRUE, 
-                          0, zeroV.size() * sizeof(cl_uint), &zeroV[0],
+    cq.enqueueWriteBuffer(results.counts, CL_FALSE, 
+                          0, results.zeroCounts.size() * sizeof(cl_uint), 
+                          &results.zeroCounts[0],
                           nullptr, &results.countsCleared);
     
+
     // Find the maxima (which means clearing needs to have finished)
     std::vector<cl::Event> findWaitEvents = waitEvents;
     findWaitEvents.push_back(results.countsCleared);
