@@ -7,7 +7,7 @@
 #include "DTCWT/dtcwt.h"
 #include "MiscKernels/abs.h"
 #include "DTCWT/energyMapEigen.h"
-#include "KeypointDetector/findMax.h"
+#include "KeypointDetector/peakDetector.h"
 
 
 class Calculator {
@@ -24,7 +24,7 @@ private:
     Dtcwt dtcwt;
     Abs abs;
     EnergyMapEigen energyMap;
-    FindMax findMax;
+    PeakDetector peakDetector;
 
     cl::Image2D zeroImage;
 
@@ -34,10 +34,10 @@ private:
     std::vector<cl::Image2D> energyMaps;
     std::vector<cl::Event> energyMapsDone;
 
-    cl::Buffer keypointCounts_; // per level, how many were found
-    cl::Buffer keypointLocs_;   // where were they?
-
-    cl::Event findMaxDone_;  // Whether the keypoint detection has finished
+    PeakDetectorResults peakDetectorResults;
+    std::vector<float> scales; // List of the scale of each energy map, i.e. 
+                               // how many pixels in the original image each
+                               // pixel in the new image represents
 
 public:
 
@@ -55,8 +55,8 @@ public:
     std::vector<::LevelOutput*> levelOutputs(void);
 
     cl::Image2D getEnergyMapLevel2(void);
-    std::vector<cl::Buffer*> keypointLocations(void);
-    cl::Buffer* keypointCounts(void);
+    cl::Buffer keypointLocations(void);
+    cl::Buffer keypointCumCounts(void);
     std::vector<cl::Event> keypointLocationEvents(void);
 
 };

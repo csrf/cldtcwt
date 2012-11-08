@@ -10,7 +10,7 @@ Calculator::Calculator(cl::Context& context,
     dtcwt(context, {device}, commandQueue),
     abs(context, {device}),
     energyMap(context, {device}),
-    findMax(context, {device})
+    peakDetector(context, {device})
 {
     const int numLevels = 6;
     const int startLevel = 1;
@@ -33,24 +33,19 @@ Calculator::Calculator(cl::Context& context,
     }
 
 
+    // Create the temporaries and results for peak detection
+    peakDetectorResults = peakDetector.createResultsStructure
+        (std::vector<size_t>(energyMaps.size(), 1000), 2000);
+    // i.e. allow 1000 keypoints at any given level, and up to 2000 overall.
 
-    // Zero image for use off the ends of maximum finding
-    float zerof = 0;
-    zeroImage = {
-        context, 
-        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-        cl::ImageFormat(CL_LUMINANCE, CL_FLOAT), 
-        1, 1, 0,
-        &zerof
-    };
+    // Set up the scales (used in peak detection)
+    float s = 4.0f;
+    for (int n = 0; n < energyMaps.size(); ++n) {
+        scales.push_back(s);
+        s *= 2.0f;
+    }
 
-    // Create store space for how many keypoints were detected at each level 
-    std::vector<float> zeroV = {0.f};
-    keypointCounts_ = createBuffer(context, commandQueue, zeroV);
 
-    // And for keypoint locations
-    std::vector<float> kpLocsV(2*maxNumKeypointsPerLevel);
-    keypointLocs_ = createBuffer(context, commandQueue, kpLocsV);
 }
 
 
@@ -66,16 +61,15 @@ void Calculator::operator() (cl::Image& input,
         energyMap(commandQueue, dtcwtOut.subbands[l], 
                                 energyMaps[l], &energyMapsDone[l]);
 
-    // Clear the peak counts
-    std::vector<char> zeros(keypointCounts_.getInfo<CL_MEM_SIZE>(), 0);
-    cl::Event clearDone;
-    writeBuffer(commandQueue, keypointCounts_, zeros, &clearDone);
+    // Adapt to input format of peakDetector, which takes a list of pointers
+    std::vector<cl::Image*> emPointers;
+    for (auto& e: energyMaps)
+        emPointers.push_back(&e);
 
     // Look for peaks
-    findMax(commandQueue, energyMaps[0], zeroImage, zeroImage, 0.1f,
-                          keypointLocs_, keypointCounts_,
-                          {energyMapsDone[0], clearDone},
-                          &findMaxDone_);
+    peakDetector(commandQueue, emPointers, scales, 0.1f,
+                               peakDetectorResults,
+                               energyMapsDone);
 }
 
 
@@ -97,27 +91,21 @@ std::vector<LevelOutput*> Calculator::levelOutputs(void)
 
 
 
-std::vector<cl::Buffer*> Calculator::keypointLocations(void)
+cl::Buffer Calculator::keypointLocations(void)
 {
-    std::vector<cl::Buffer*> locations;
-    locations.push_back(&keypointLocs_);
-    return locations;
+    return peakDetectorResults.list;
 }
 
 
-cl::Buffer* Calculator::keypointCounts(void)
+cl::Buffer Calculator::keypointCumCounts(void)
 {
-    return &keypointCounts_;
+    return peakDetectorResults.cumCounts;
 }
 
 
 std::vector<cl::Event> Calculator::keypointLocationEvents(void)
 {
-    std::vector<cl::Event> doneEvents;
-
-    doneEvents.push_back(findMaxDone_);
-
-    return doneEvents;
+    return peakDetectorResults.listDone;
 }
 
 
