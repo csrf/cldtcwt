@@ -31,7 +31,9 @@ libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/DTCWT/fourTree.cc \
 					  src/KeypointDescriptor/extractDescriptors.cc \
 					  src/KeypointDetector/findMax.cc \
-					  src/KeypointDetector/concat.cc
+					  src/KeypointDetector/concat.cc \
+					  src/MiscKernels/accumulate.cc \
+					  src/KeypointDetector/peakDetector.cc
 libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
 
 libclutil_la_SOURCES = src/util/clUtil.cc
@@ -40,7 +42,7 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 noinst_PROGRAMS=testDTCWT testFilter verify testFindMax testRescale \
 			 verifyBasic testDescriptor displayDTCWT \
-			 testAccumulate testConcat
+			 testAccumulate testConcat testPeakDetector
 
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
@@ -54,9 +56,11 @@ testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
 testConcat_SOURCES = src/test/testConcat.cc
 testConcat_LDADD = libdtcwt.la @opencv_LIBS@
 
-testAccumulate_SOURCES = src/test/testAccumulate.cc \
-					  src/MiscKernels/accumulate.cc
+testAccumulate_SOURCES = src/test/testAccumulate.cc 
 testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
+
+testPeakDetector_SOURCES = src/test/testPeakDetector.cc 
+testPeakDetector_LDADD = libdtcwt.la @opencv_LIBS@
 
 #testOutput_SOURCES = src/test/testOutput.cc \
 #					 src/MiscKernels/abs.cc
