@@ -17,6 +17,9 @@ class Viewer {
     static const int numSubbands = 6;
 
 private:
+
+    float width_, height_;
+
     // The actual display window
     sf::Window window;
 
@@ -34,6 +37,11 @@ private:
     // and (1) vertex coordinates, both in 2D
     VBOBuffers imageDisplayVertexBuffers_;
 
+    // Controls drawing the keypoints
+    GLuint keypointLocations_ = 0;
+    size_t numKeypointLocations_ = 0;
+    size_t numFloatsPerKeypoint_ = 0;
+
     // Whether the user has asked for the window to be closed
     bool done_ = false;
 
@@ -49,7 +57,9 @@ public:
     void setEnergyMapTexture(GLuint texture);
     void setSubband2Texture(int subband, GLuint texture);
     void setSubband3Texture(int subband, GLuint texture);
-
+    
+    void setKeypointLocations(GLuint buffer, size_t numKeypoints);
+    void setNumFloatsPerKeypoint(size_t);
 
     void update();
     // Update the display

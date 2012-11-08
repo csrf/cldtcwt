@@ -3,7 +3,8 @@
 
 
 Viewer::Viewer(int width, int height)
- : window(sf::VideoMode(width*1.5, height*1.5, 32), "SFML OpenGL"),
+ : width_(width), height_(height),
+   window(sf::VideoMode(width*1.5, height*1.5, 32), "SFML OpenGL"),
    imageDisplayVertexBuffers_(2)
 {
 	// The buffers setting coords for displaying the images: first, the texture
@@ -64,7 +65,16 @@ void Viewer::setSubband3Texture(int subband, GLuint texture)
     subbandTextures3_[subband] = texture;
 }
 
+void Viewer::setKeypointLocations(GLuint buffer, size_t numKeypoints)
+{
+    keypointLocations_ = buffer;
+    numKeypointLocations_ = numKeypoints;
+}
 
+void Viewer::setNumFloatsPerKeypoint(size_t n)
+{
+    numFloatsPerKeypoint_ = n;
+}
 
 #include <iostream>
 
@@ -105,10 +115,6 @@ void Viewer::update()
 	// Select texture positioning
     glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(0));
     glTexCoordPointer(2, GL_FLOAT, 0, 0);
-
-    // Select vertex positioning
-    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(1));
-    glVertexPointer(2, GL_FLOAT, 0, 0);
 
     drawPicture();
 
@@ -154,9 +160,34 @@ void Viewer::drawPicture()
 
     glTranslatef(-1.f, 0.f, 0.f);
 
+    // Select vertex positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(1));
+    glVertexPointer(2, GL_FLOAT, 0, 0);
+
+
     // Draw it
     glDrawArrays(GL_QUADS, 0, 4);
 
+    // Draw the keypoints
+
+	// Draw with red, 7-pixel large dots
+	glColor4f(1.0, 0.0, 0.0, 1.0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_POINT_SMOOTH);
+	glPointSize(7.f);
+
+	glBindBuffer(GL_ARRAY_BUFFER, keypointLocations_);
+	glVertexPointer(2, GL_FLOAT, numFloatsPerKeypoint_ * sizeof(float), 0);
+
+    // Got to the right place to overlay the display: the middle of the
+    // image 
+    glTranslatef(0.5f, 0.5f, 0.f);
+    glScalef(1.f / width_, -1.f / height_, 1.f);
+   
+	glDrawArrays(GL_POINTS, 0, numKeypointLocations_);
+
+	glColor4f(1.0, 1.0, 1.0, 1.0);
     glPopMatrix();
 }
 
@@ -176,6 +207,11 @@ void Viewer::drawEnergyMap()
     glTranslatef(0.f, -0.25f, 0.f);
     glScalef(0.25f, 0.25f, 0.f);
 
+    // Select vertex positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(1));
+    glVertexPointer(2, GL_FLOAT, 0, 0);
+
+
     // Draw it
     glDrawArrays(GL_QUADS, 0, 4);
 
@@ -191,6 +227,10 @@ void Viewer::drawSubbands(const GLuint textures[])
         {0, 0}, {1, 0}, {2, 0},
         {2, 1}, {1, 1}, {0, 1}
     };
+
+    // Select vertex positioning
+    glBindBuffer(GL_ARRAY_BUFFER, imageDisplayVertexBuffers_.getBuffer(1));
+    glVertexPointer(2, GL_FLOAT, 0, 0);
 
     for (int n = 0; n < positions.size(); ++n) {
         // Select the texture

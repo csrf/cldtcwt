@@ -7,7 +7,7 @@ Calculator::Calculator(cl::Context& context,
                        int width, int height,
                        int maxNumKeypointsPerLevel)
  :  commandQueue(context, device),
-    dtcwt(context, {device}, commandQueue),
+    dtcwt(context, {device}, commandQueue, 0.5f),
     abs(context, {device}),
     energyMap(context, {device}),
     peakDetector(context, {device})
@@ -49,6 +49,7 @@ Calculator::Calculator(cl::Context& context,
 }
 
 
+#include <iostream>
 
 void Calculator::operator() (cl::Image& input,
                              const std::vector<cl::Event>& waitEvents)
@@ -67,9 +68,44 @@ void Calculator::operator() (cl::Image& input,
         emPointers.push_back(&e);
 
     // Look for peaks
-    peakDetector(commandQueue, emPointers, scales, 0.1f,
+    peakDetector(commandQueue, emPointers, scales, 0.0001f,
                                peakDetectorResults,
                                energyMapsDone);
+
+
+#if 0
+    // Display keypoint locations
+    commandQueue.finish();
+    // Read the last accumulated value for the total number of peaks
+        int numOutputsVal;
+        commandQueue.enqueueReadBuffer(peakDetectorResults.cumCounts, CL_TRUE, 
+                             peakDetectorResults.levelLists.size() * sizeof(cl_uint), 
+                             sizeof(cl_uint),
+                             &numOutputsVal);
+
+
+
+    // Now read the peaks themselves out
+        std::vector<float> outputs(numOutputsVal 
+                                    * peakDetectorResults.numFloatsPerPosition);
+        commandQueue.enqueueReadBuffer(peakDetectorResults.list, CL_TRUE, 
+                             0, outputs.size() * sizeof(float), 
+                             &outputs[0]);
+
+        std::cout << numOutputsVal << " outputs" << std::endl;
+
+        // Display all the keypoints found: (x, y, scale, -)
+        for (int n = 0; n < numOutputsVal; ++n) {
+
+            for (int m = 0; m < peakDetectorResults.numFloatsPerPosition; ++m)
+                std::cout << outputs[n * peakDetectorResults.numFloatsPerPosition + m] 
+                          << "\t";
+            std::cout << "\n";
+
+        }
+#endif
+
+
 }
 
 
@@ -90,6 +126,10 @@ std::vector<LevelOutput*> Calculator::levelOutputs(void)
 }
 
 
+size_t Calculator::numFloatsPerKPLocation(void)
+{
+    return peakDetectorResults.numFloatsPerPosition;
+}
 
 cl::Buffer Calculator::keypointLocations(void)
 {

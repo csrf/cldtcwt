@@ -65,9 +65,9 @@ private:
     std::array<GLImage, numSubbands> subbandTextures3CL_;
 
     // Where to put the keypoints
-    VBOBuffers keypointLocationBuffers;
-
-
+    VBOBuffers keypointLocationsBuffer_;
+    cl::BufferGL keypointLocationsBufferCL_;
+    cl::Event kpLocsCopied_;
 
 
 public:
@@ -86,6 +86,10 @@ public:
     GLuint getEnergyMapTexture();
     GLuint getSubband2Texture(int subband);
     GLuint getSubband3Texture(int subband);
+
+    GLuint getKeypointLocations();
+    size_t getNumKeypointLocations();
+    size_t getNumFloatsPerKeypointLocation();
 
 };
 

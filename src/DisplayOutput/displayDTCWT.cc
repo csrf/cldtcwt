@@ -37,6 +37,7 @@ std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context>
 int main(void)
 {
     const size_t width = 1280, height = 720;
+    //const size_t width = 640, height = 480;
     Viewer viewer(width, height);
 
     VideoReader videoReader("/dev/video0", width, height);
@@ -48,6 +49,11 @@ int main(void)
     std::tie(platform, devices, context) = initOpenCL();
    
     CalculatorInterface ci(context, devices[0], width, height);   
+
+    // Set up the keypoint transfer format
+    viewer.setNumFloatsPerKeypoint(ci.getNumFloatsPerKeypointLocation());
+
+    cl::CommandQueue cq(context, devices[0]);
 
     int n = 0;
     while (1) {
@@ -67,16 +73,20 @@ int main(void)
             viewer.setSubband2Texture(n, ci.getSubband2Texture(n));
             viewer.setSubband3Texture(n, ci.getSubband3Texture(n));
         }
+        size_t numKPs = ci.getNumKeypointLocations();
         viewer.setEnergyMapTexture(ci.getEnergyMapTexture());
-
+        viewer.setKeypointLocations(ci.getKeypointLocations(),
+                                    numKPs);
+        
         viewer.update();
-
         ftime(&end);
+
         // Work out what the difference between these is
         double t = end.time - start.time 
                  + 0.001 * (end.millitm - start.millitm);
         
-        std::cout << n++ << " " << (1000*t) << "ms\n";
+        std::cout << n++ << " " << numKPs 
+                         << " " << (1000*t) << "ms\n";
 
         if (viewer.isDone())
             break;
