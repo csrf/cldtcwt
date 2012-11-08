@@ -34,7 +34,7 @@ int main()
         PeakDetector peakDetector(context.context, context.devices);
 
         PeakDetectorResults results
-            = peakDetector.createResultsStructure({20}, 20);
+            = peakDetector.createResultsStructure({20, 20}, 20);
 
         const size_t posLen = 4;
         // Number of floats in each position
@@ -61,34 +61,37 @@ int main()
 
         writeImage2D(cq, inImage, &data[0][0]);
         cq.finish();
-
-        std::cout << "Running" << std::endl;
                                        
-        peakDetector(cq, {&inImage}, {1.0f}, 0.1f,
+        peakDetector(cq, {&inImage, &inImage}, {1.0f, 2.0f}, 0.1f,
                          results);
 
         cq.finish();
-        std::cout << "Done" << std::endl;
 
+        // Read the last accumulated value for the total number of peaks
         int numOutputsVal;
         cq.enqueueReadBuffer(results.cumCounts, CL_TRUE, 
-                             sizeof(cl_uint), sizeof(cl_uint),
+                             results.levelLists.size() * sizeof(cl_uint), 
+                             sizeof(cl_uint),
                              &numOutputsVal);
+
+        // Now read the peaks themselves out
+        std::vector<float> outputs(numOutputsVal 
+                                    * results.numFloatsPerPosition);
+        cq.enqueueReadBuffer(results.list, CL_TRUE, 
+                             0, outputs.size() * sizeof(float), 
+                             &outputs[0]);
 
         std::cout << numOutputsVal << " outputs" << std::endl;
 
-        /*numOutputsVal = (numOutputsVal > 10) ? 10 : numOutputsVal;
-        
-        if (numOutputsVal > 0) {
-            std::vector<float> results(numOutputsVal * posLen);
-            cq.enqueueReadBuffer(outputs, true, 0, 
-                                           numOutputsVal * posLen * sizeof(float),
-                                           &results[0]);
+        // Display all the keypoints found: (x, y, scale, -)
+        for (int n = 0; n < numOutputsVal; ++n) {
 
-            for (auto v: results)
-                std::cout << v << std::endl;
-        }*/
+            for (int m = 0; m < results.numFloatsPerPosition; ++m)
+                std::cout << outputs[n * results.numFloatsPerPosition + m] 
+                          << "\t";
+            std::cout << "\n";
 
+        }
 
     }
     catch (cl::Error err) {
