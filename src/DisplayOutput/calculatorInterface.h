@@ -79,6 +79,7 @@ public:
     void processImage(const void* data, size_t length);
 
     bool isDone();
+    void waitUntilDone();
 
     void updateGL(void);
 

@@ -9,6 +9,7 @@
 #include <iostream>
 
 
+
 CalculatorInterface::CalculatorInterface(cl::Context& context,
                                          const cl::Device& device,
                                          int width, int height)
@@ -168,9 +169,17 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
 bool CalculatorInterface::isDone()
 {
+    // Warning: this seems to complete much too early.  Strange.
     return glObjsReady_.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>()
                 == CL_COMPLETE;
 }
+
+
+void CalculatorInterface::waitUntilDone()
+{
+    cq_.finish();
+}
+
 
 
 void CalculatorInterface::updateGL(void)

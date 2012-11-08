@@ -60,11 +60,11 @@ int main(void)
 
         timeb start, end;
 
-        ftime(&start);
         VideoReaderBuffer buffer = videoReader.getFrame();
+        ftime(&start);
         ci.processImage(buffer.start, buffer.length);
-        while (!ci.isDone())
-            ;
+        ci.waitUntilDone();
+        ftime(&end);
         videoReader.returnBuffers();
 
         // Set the texture sources for the viewer
@@ -79,7 +79,6 @@ int main(void)
                                     numKPs);
         
         viewer.update();
-        ftime(&end);
 
         // Work out what the difference between these is
         double t = end.time - start.time 
