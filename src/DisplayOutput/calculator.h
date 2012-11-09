@@ -23,7 +23,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    EnergyMapEigen energyMap;
+    EnergyMap energyMap;
     PeakDetector peakDetector;
 
     cl::Image2D zeroImage;

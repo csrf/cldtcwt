@@ -101,6 +101,8 @@ void findMax(__read_only image2d_t input,
 
     if (inputLocal[l.y+1][l.x+1] > surroundMax) {
         
+        float2 inputCoords = (float2) ((float)g.x, (float)g.y);
+
         // Now refine the position.  Not so refined as original
         // version: we ignore the cross term between x and y (since
         // they would involve pseudo-inverses)
@@ -116,7 +118,6 @@ void findMax(__read_only image2d_t input,
 
         float yOut = 0.5f * (1-ratioY) / (1+ratioY) + (float) g.y;*/
 
-        float2 inputCoords = (float2) ((float)g.x, (float)g.y);
 
 
         // Output position relative to the centre of the image in the native
@@ -149,7 +150,8 @@ void findMax(__read_only image2d_t input,
         float coarserVal = read_imagef(inCoarser, sampler, 
                                        coarserCoords + (float2) 0.5f).s0;
 
-        if (inputVal > coarserVal && inputVal > finerVal) {
+        if ((inputLocal[l.y+1][l.x+1] > coarserVal)
+         && (inputLocal[l.y+1][l.x+1] > finerVal)) {
 
             int ourOutputPos = atomic_inc(&numOutputs[numOutputsOffset]);
 
