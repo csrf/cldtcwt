@@ -34,6 +34,77 @@ void readImageRegionToShared(__read_only image2d_t input,
     }
 }
 
+typedef struct {
+    float a0, ax, ay, axx, ayy, axy;
+} QuadraticCoeffs;
+
+
+void solveQuadraticCoefficients(__private QuadraticCoeffs* coeffs,
+                                __local const volatile float* row0,
+                                __local const volatile float* row1,
+                                __local const volatile float* row2)
+{
+    // Takes a 3x3 area (one value of y for each row), and fits a quadratic
+    // surface.  Corners are given 1/4 the weight for fitting purposes.
+
+    // Octave/MATLAB script to generate the pseudoinverse
+    // [x, y] = ind2sub([3 3], (1:9)'); x = x-2; y = y-2;
+    // 
+    // % Values to multiply a_0, a_x, a_y, a_xx, a_yy, a_xy by
+    // P = [ones(9,1), x, y, x.*x, y.*y, x.*y] 
+    // 
+    // % Scaling so corners are weighted down
+    // s = ones(9,1);
+    // s(x.*y ~= 0) = 0.25;
+    // S = diag(s)
+    // 
+    // inverse = ((S*P)'*(S*P)) \ (S*P)' * S
+
+    const float inverse[6][9] = 
+    {
+        {-0.04167,  0.08333, -0.04167,  0.08333,  0.83333,  
+          0.08333, -0.04167,  0.08333, -0.04167},
+        {-0.02778,  0.00000,  0.02778, -0.44444,  0.00000,  
+          0.44444, -0.02778,  0.00000,  0.02778},
+        {-0.02778, -0.44444, -0.02778,  0.00000,  0.00000,  
+          0.00000,  0.02778,  0.44444,  0.02778},
+        { 0.06250, -0.12500,  0.06250,  0.37500, -0.75000,  
+          0.37500,  0.06250, -0.12500,  0.06250},
+        { 0.06250,  0.37500,  0.06250, -0.12500, -0.75000, 
+         -0.12500,  0.06250,  0.37500,  0.06250},
+        { 0.25000,  0.00000, -0.25000,  0.00000,  0.00000,  
+          0.00000, -0.25000,  0.00000,  0.25000}
+    };
+
+    coeffs->a0 = 0;
+    coeffs->ax = 0;
+    coeffs->ay = 0;
+    coeffs->axx = 0;
+    coeffs->ayy = 0;
+    coeffs->axy = 0;
+
+    for (size_t n = 0; n < 9; ++n) {
+
+        float v;
+
+        if (n < 3)
+            v = row0[n];
+        else if (n < 6)
+            v = row1[n-3];
+        else 
+            v = row2[n-6];
+
+        coeffs->a0 += v * inverse[0][n];
+        coeffs->ax += v * inverse[1][n];
+        coeffs->ay += v * inverse[2][n];
+        coeffs->axx += v * inverse[3][n];
+        coeffs->ayy += v * inverse[4][n];
+        coeffs->axy += v * inverse[5][n];
+    }
+
+}
+
+
 
 // Parameters: WG_SIZE_X, WG_SIZE_Y need to be set for the work group size.
 // POS_LEN should be the number of floats to make the output structure.
@@ -103,21 +174,26 @@ void findMax(__read_only image2d_t input,
         
         float2 inputCoords = (float2) ((float)g.x, (float)g.y);
 
-        // Now refine the position.  Not so refined as original
-        // version: we ignore the cross term between x and y (since
-        // they would involve pseudo-inverses)
-        /*float ratioX = 
-               (inputLocal[l.y+1][l.x+2] - inputLocal[l.y+1][l.x+1])
-             / (inputLocal[l.y+1][l.x  ] - inputLocal[l.y+1][l.x+1]);
+        // Fit coefficients of a quadratic to the surface
+        QuadraticCoeffs fitCoeffs;
+        solveQuadraticCoefficients(&fitCoeffs,
+                                   &inputLocal[l.y  ][l.x],
+                                   &inputLocal[l.y+1][l.x],
+                                   &inputLocal[l.y+2][l.x]);
 
-        float xOut = 0.5f * (1-ratioX) / (1+ratioX) + (float) g.x;
+        // Find the peak of the surface
+        float denom = 4 * fitCoeffs.axx * fitCoeffs.ayy 
+                       - fitCoeffs.axy * fitCoeffs.axy;
 
-        float ratioY = 
-               (inputLocal[l.y+2][l.x+1] - inputLocal[l.y+1][l.x+1])
-             / (inputLocal[l.y  ][l.x+1] - inputLocal[l.y+1][l.x+1]);
+        float dx = (fitCoeffs.axy * fitCoeffs.ay 
+                      - 2 * fitCoeffs.ayy * fitCoeffs.ax)
+                    / denom,
 
-        float yOut = 0.5f * (1-ratioY) / (1+ratioY) + (float) g.y;*/
+              dy = (fitCoeffs.axy * fitCoeffs.ax 
+                      - 2 * fitCoeffs.axx * fitCoeffs.ay)
+                    / denom;
 
+        inputCoords += (float2)(dx, dy);
 
 
         // Output position relative to the centre of the image in the native
@@ -150,8 +226,7 @@ void findMax(__read_only image2d_t input,
         float coarserVal = read_imagef(inCoarser, sampler, 
                                        coarserCoords + (float2) 0.5f).s0;
 
-        if ((inputLocal[l.y+1][l.x+1] > coarserVal)
-         && (inputLocal[l.y+1][l.x+1] > finerVal)) {
+        if ((inputVal > coarserVal) && (inputVal > finerVal)) {
 
             int ourOutputPos = atomic_inc(&numOutputs[numOutputsOffset]);
 
