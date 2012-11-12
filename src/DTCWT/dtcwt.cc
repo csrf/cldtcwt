@@ -336,7 +336,7 @@ EnergyMap::EnergyMap(cl::Context& context,
                     "(  sqrt(abs_h0_2 * abs_h3_2) "
                     " + sqrt(abs_h1_2 * abs_h4_2) "
                     " + sqrt(abs_h2_2 * abs_h5_2))"
-                    ") /"
+                    "/"
                     "sqrt(0.01 + "
                     "   1.5 * (  abs_h0_2 + abs_h1_2 + abs_h2_2"
                                " + abs_h3_2 + abs_h4_2 + abs_h5_2));" 
