@@ -16,6 +16,7 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/KeypointDetector/concatKernel.h \
+				src/KeypointDescriptor/extractDescriptorsKernel.h \
 				src/MiscKernels/greyscaleToRGBAKernel.h \
 				src/MiscKernels/absToRGBAKernel.h \
 				src/MiscKernels/accumulateKernel.h 
