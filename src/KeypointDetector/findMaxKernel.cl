@@ -119,6 +119,7 @@ void findMax(__read_only image2d_t input,
              const float coarserScale,
 
              const float threshold,
+             const float eigenRatioThreshold,
 
              __write_only __global float* maxCoords,
 
@@ -175,26 +176,39 @@ void findMax(__read_only image2d_t input,
         float2 inputCoords = (float2) ((float)g.x, (float)g.y);
 
         // Fit coefficients of a quadratic to the surface
-        QuadraticCoeffs fitCoeffs;
-        solveQuadraticCoefficients(&fitCoeffs,
+        QuadraticCoeffs c;
+        solveQuadraticCoefficients(&c,
                                    &inputLocal[l.y  ][l.x],
                                    &inputLocal[l.y+1][l.x],
                                    &inputLocal[l.y+2][l.x]);
 
         // Find the peak of the surface
-        float denom = 4 * fitCoeffs.axx * fitCoeffs.ayy 
-                       - fitCoeffs.axy * fitCoeffs.axy;
+        float denom = 4 * c.axx * c.ayy 
+                       - c.axy * c.axy;
 
-        float dx = (fitCoeffs.axy * fitCoeffs.ay 
-                      - 2 * fitCoeffs.ayy * fitCoeffs.ax)
+        float dx = (c.axy * c.ay 
+                      - 2 * c.ayy * c.ax)
                     / denom,
 
-              dy = (fitCoeffs.axy * fitCoeffs.ax 
-                      - 2 * fitCoeffs.axx * fitCoeffs.ay)
+              dy = (c.axy * c.ax 
+                      - 2 * c.axx * c.ay)
                     / denom;
 
         inputCoords += (float2)(dx, dy);
 
+        // Check the eigenvalues of the Hessian of this fit to check that it
+        // enough of a dot, rather than a line
+        float s = sqrt((c.axx - c.ayy) * (c.axx - c.ayy) + c.axy * c.axy);
+
+        float l0t = fabs(c.axx + c.ayy - s);
+        float l1t = fabs(c.axx + c.ayy + s);
+
+        float lmin = min(l0t, l1t);
+        float lmax = max(l0t, l1t);
+
+        // Return if too edge-like
+        if (lmin < (eigenRatioThreshold * lmax))
+            return;
 
         // Output position relative to the centre of the image in the native
         // scaling

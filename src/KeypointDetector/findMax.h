@@ -24,7 +24,7 @@ public:
        cl::Image& input,        float inputScale,
        cl::Image& inputFiner,   float finerScale,
        cl::Image& inputCoarser, float coarserScale,
-       float threshold,
+       float threshold, float eigenRatioThreshold,
        cl::Buffer& output,
        cl::Buffer& numOutputs,
        unsigned int numOutputsOffset,

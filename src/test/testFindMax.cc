@@ -45,6 +45,8 @@ int main()
             for (int y = 0; y < height; ++y)
                 data[y][x] = 0.0f;
         data[10][5] = 1.0f;
+        data[13][2] = 1.0f;
+        data[14][4] = 1.0f;
         data[13][12] = 1.0f;
         data[14][12] = 2.0f;
         data[1][1] = 1.0f;
@@ -92,7 +94,7 @@ int main()
         findMax(cq, inImage, 4.0,
                     zeroImg, 2.0,
                     zeroImg, 8.0, 
-                    0.1f, 
+                    0.1f, 0.4f,
                     outputs, 
                     numOutputs, 0);
 

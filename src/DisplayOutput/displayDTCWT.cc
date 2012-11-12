@@ -60,11 +60,11 @@ int main(void)
 
         timeb start, end;
 
-        VideoReaderBuffer buffer = videoReader.getFrame();
         ftime(&start);
+        VideoReaderBuffer buffer = videoReader.getFrame();
+        ftime(&end);
         ci.processImage(buffer.start, buffer.length);
         ci.waitUntilDone();
-        ftime(&end);
         videoReader.returnBuffers();
 
         // Set the texture sources for the viewer

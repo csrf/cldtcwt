@@ -60,7 +60,7 @@ void FindMax::operator()
        cl::Image& input,        float inputScale,
        cl::Image& inputFiner,   float finerScale,
        cl::Image& inputCoarser, float coarserScale,
-       float threshold,
+       float threshold, float eigenRatioThreshold,
        cl::Buffer& output,
        cl::Buffer& numOutputs,
        unsigned int numOutputsOffset,
@@ -95,10 +95,11 @@ void FindMax::operator()
     kernel_.setArg(4, sizeof(inputCoarser), &inputCoarser);
     kernel_.setArg(5, (coarserScale));
     kernel_.setArg(6, (threshold));
-    kernel_.setArg(7, output);
-    kernel_.setArg(8, numOutputs);
-    kernel_.setArg(9, (numOutputsOffset));
-    kernel_.setArg(10, int(output.getInfo<CL_MEM_SIZE>() 
+    kernel_.setArg(7, (eigenRatioThreshold));
+    kernel_.setArg(8, output);
+    kernel_.setArg(9, numOutputs);
+    kernel_.setArg(10, (numOutputsOffset));
+    kernel_.setArg(11, int(output.getInfo<CL_MEM_SIZE>() 
                             / (posLen_ * sizeof(float)))); // Max number of outputs
 
     // Execute

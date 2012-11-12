@@ -68,7 +68,7 @@ PeakDetectorResults PeakDetector::createResultsStructure
 void PeakDetector::operator() (cl::CommandQueue& cq,
                                const std::vector<cl::Image*> energyMaps,
                                const std::vector<float> scales,
-                               float threshold,
+                               float threshold, float eigenRatioThreshold,
                                PeakDetectorResults& results,
                                const std::vector<cl::Event>& waitEvents)
 {
@@ -112,7 +112,7 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
         findMax_(cq, *energyMaps[n], scales[n],
                      *finerImage, finerScale,
                      *coarserImage, coarserScale,
-                     threshold,
+                     threshold, eigenRatioThreshold,
                      results.levelLists[n], 
                      results.counts, n,
                      findWaitEvents, &results.levelListsDone[n]);

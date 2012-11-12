@@ -62,7 +62,7 @@ int main()
         writeImage2D(cq, inImage, &data[0][0]);
         cq.finish();
                                        
-        peakDetector(cq, {&inImage, &inImage}, {1.0f, 2.0f}, 0.1f,
+        peakDetector(cq, {&inImage, &inImage}, {1.0f, 2.0f}, 0.1f, 0.4f,
                          results);
 
         cq.finish();

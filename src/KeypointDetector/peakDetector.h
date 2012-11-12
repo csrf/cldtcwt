@@ -69,6 +69,9 @@ public:
                      const std::vector<float> scales, // Scales of the corresponding
                                                       // maps
                      float threshold, // Minimum peak height to detect
+                     float eigenRatioThreshold, // Minimum ratio between the 
+                                    // eigenvalues of the curvature, to 
+                                    // try to supress edges
                      PeakDetectorResults& results,
                      const std::vector<cl::Event>& waitEvents = {});
 
