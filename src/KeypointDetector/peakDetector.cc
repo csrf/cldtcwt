@@ -135,3 +135,9 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
 }
 
 
+
+size_t PeakDetector::getPosLength()
+{
+    return findMax_.getPosLength();
+}
+

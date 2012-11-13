@@ -75,6 +75,9 @@ public:
                      PeakDetectorResults& results,
                      const std::vector<cl::Event>& waitEvents = {});
 
+    size_t getPosLength();
+    // Returns the number of floats in the position vector
+
 };
 
 #endif
