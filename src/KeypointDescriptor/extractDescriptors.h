@@ -87,6 +87,7 @@ public:
                 cl::Event* doneEventFine = nullptr,
                 cl::Event* doneEventCoarse = nullptr);
 
+    size_t getNumFloatsInDescriptor() const;
 
 private:
 

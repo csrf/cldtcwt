@@ -5,12 +5,14 @@
 Calculator::Calculator(cl::Context& context,
                        const cl::Device& device,
                        int width, int height,
-                       int maxNumKeypointsPerLevel)
+                       int maxNumKeypoints)
  :  commandQueue(context, device),
     dtcwt(context, {device}, commandQueue, 0.5f),
     abs(context, {device}),
     energyMap(context, {device}),
-    peakDetector(context, {device})
+    peakDetector(context, {device}),
+    descriptorExtracter_(context, {device}, peakDetector.getPosLength()),
+    maxNumKeypoints_(maxNumKeypoints)
 {
     const int numLevels = 6;
     const int startLevel = 1;
@@ -33,10 +35,20 @@ Calculator::Calculator(cl::Context& context,
     }
 
 
+    descriptors_ = cl::Buffer(context, CL_MEM_READ_WRITE,
+            maxNumKeypoints * 
+              descriptorExtracter_.getNumFloatsInDescriptor() * sizeof(float));
+
+
     // Create the temporaries and results for peak detection
     peakDetectorResults = peakDetector.createResultsStructure
-        (std::vector<size_t>(energyMaps.size(), 1000), 2000);
-    // i.e. allow 1000 keypoints at any given level, and up to 2000 overall.
+        (std::vector<size_t>(energyMaps.size(), maxNumKeypoints), 
+         maxNumKeypoints);
+    // i.e. allow the maximum number to appear in any given level, but
+    // cap overall too to prevent getting more than we can store.
+    
+    descriptorsDone_ = std::vector<cl::Event>(energyMaps.size() * 2);
+    // Enough for coarse and fine parts of descriptors being done
 
     // Set up the scales (used in peak detection)
     float s = 4.0f;
@@ -71,6 +83,27 @@ void Calculator::operator() (cl::Image& input,
     peakDetector(commandQueue, emPointers, scales, 0.0001, 0.4f,
                                peakDetectorResults,
                                energyMapsDone);
+
+    // Extract the descriptors
+    for (size_t l = 0; l < (energyMaps.size() - 1); ++l) {
+        descriptorExtracter_(commandQueue, 
+                dtcwtOut.subbands[l], scales[l],      // Subband
+                dtcwtOut.subbands[l+1], scales[l+1],  // Parent subband
+                peakDetectorResults.list,         // Locations of keypoints
+                peakDetectorResults.cumCounts, l, maxNumKeypoints_, 
+                        // Start indices within list of the different 
+                        // levels; which level to extract; what the maximum
+                        // number of keypoints we could be asking for is.
+                descriptors_,
+                {peakDetectorResults.cumCountsDone},
+                        // The cumulative counts rely on everything else
+                        // in the peak detector being done
+                &descriptorsDone_[l], &descriptorsDone_[l + energyMaps.size()]
+                        // Wait for both coarse and fine to be done
+                );
+    }
+    
+
 
 
 #if 0

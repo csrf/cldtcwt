@@ -8,6 +8,7 @@
 #include "MiscKernels/abs.h"
 #include "DTCWT/energyMapEigen.h"
 #include "KeypointDetector/peakDetector.h"
+#include "KeypointDescriptor/extractDescriptors.h"
 
 
 class Calculator {
@@ -34,10 +35,18 @@ private:
     std::vector<cl::Image2D> energyMaps;
     std::vector<cl::Event> energyMapsDone;
 
+    size_t maxNumKeypoints_;
+
     PeakDetectorResults peakDetectorResults;
     std::vector<float> scales; // List of the scale of each energy map, i.e. 
                                // how many pixels in the original image each
                                // pixel in the new image represents
+
+    // Output of descriptors
+    cl::Buffer descriptors_;
+    std::vector<cl::Event> descriptorsDone_;
+
+    DescriptorExtracter descriptorExtracter_;
 
 public:
 
@@ -47,7 +56,7 @@ public:
     Calculator(cl::Context& context,
                const cl::Device& device,
                int width, int height,
-               int maxNumKeypointsPerLevel = 1000);
+               int maxNumKeypoints = 1000);
 
     void operator() (cl::Image& input, 
                      const std::vector<cl::Event>& waitEvents = {});

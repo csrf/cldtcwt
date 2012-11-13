@@ -180,3 +180,9 @@ void DescriptorExtracter::operator()
 }
 
 
+size_t DescriptorExtracter::getNumFloatsInDescriptor() const
+{
+    return 14*6*2;
+}
+
+
