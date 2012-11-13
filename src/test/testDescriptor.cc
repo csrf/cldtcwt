@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
         // Create locations to sample at
         cl::Buffer kplocs = createBuffer(context.context, cq, 
-                                         {14.f, 14.5f});
+                                         {56, 58});
 
         std::vector<cl_uint> kpOffsetsV
             = {0, 1};

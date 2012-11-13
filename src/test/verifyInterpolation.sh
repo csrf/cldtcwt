@@ -45,7 +45,7 @@ out = dlmread('interpolations.dat', ',');
     disp('Was:')
     reshape(out, 6, numel(out) / 6)
 
-if any(abs(out - ref(:)) > 1e-5)
+if any(abs(out(1:numel(ref)) - ref(:)) > 1e-5)
     disp('Interpolations did not give the same results as Octave!')
     quit(1)
 else
