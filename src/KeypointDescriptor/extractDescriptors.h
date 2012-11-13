@@ -25,8 +25,7 @@ public:
 
     Interpolator(cl::Context& context,
                         const std::vector<cl::Device>& devices,
-                        cl::CommandQueue& cq,
-                        const std::vector<Coord>& samplingPattern,
+                        std::vector<Coord> samplingPattern,
                         int outputStride, int outputOffset,
                         int diameter,
                         int numFloatsPerPos);
@@ -71,7 +70,6 @@ public:
 
     DescriptorExtracter(cl::Context& context, 
                         const std::vector<cl::Device>& devices,
-                        cl::CommandQueue& cq,
                         int numFloatsPerPos);
 
     void

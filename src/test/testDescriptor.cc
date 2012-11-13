@@ -38,9 +38,8 @@ int main(int argc, char** argv)
         cl::CommandQueue cq(context.context, context.devices[0]);
         Dtcwt dtcwt(context.context, context.devices, cq);
 
-        DescriptorExtracter describer(context.context,
-                                      context.devices,
-                                      cq, 2);
+        DescriptorExtracter describer(context.context, context.devices,
+                                      2);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0) / 255.0f;

@@ -15,8 +15,7 @@
 
 Interpolator::Interpolator(cl::Context& context,
                 const std::vector<cl::Device>& devices,
-                cl::CommandQueue& cq,
-                const std::vector<Coord>& samplingPattern,
+                std::vector<Coord> samplingPattern,
                 int outputStride, int outputOffset,
                 int diameter,
                 int numFloatsPerPos)
@@ -61,12 +60,10 @@ Interpolator::Interpolator(cl::Context& context,
     const size_t samplingPatternSize 
         = samplingPattern.size() * 2 * sizeof(float);
 
-    samplingPattern_ = cl::Buffer(context_, CL_MEM_READ_ONLY, 
-                                  samplingPatternSize);
-
-    cq.enqueueWriteBuffer(samplingPattern_, CL_TRUE, 
-                          0, samplingPatternSize,
-                          &samplingPattern[0]);
+    samplingPattern_ = cl::Buffer(context_, 
+                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 
+                                  samplingPatternSize,
+                                  &samplingPattern[0]);
 
     // ...and extract the useful part, viz the kernel
     kernel_ = cl::Kernel(program, "extractDescriptor");
@@ -132,7 +129,6 @@ void Interpolator::operator()
 DescriptorExtracter::DescriptorExtracter
     (cl::Context& context, 
      const std::vector<cl::Device>& devices,
-     cl::CommandQueue& cq,
      int numFloatsPerPos)
 {
     const float pi = 4 * atan(1);
@@ -150,9 +146,9 @@ DescriptorExtracter::DescriptorExtracter
     std::vector<Coord> coarsePattern = {{0, 0}};
 
     // Set up the kernels
-    fineInterpolator_ = Interpolator(context, devices, cq,
+    fineInterpolator_ = Interpolator(context, devices,
                                      finePattern, 14, 0, 2, numFloatsPerPos);
-    coarseInterpolator_ = Interpolator(context, devices, cq,
+    coarseInterpolator_ = Interpolator(context, devices,
                                      coarsePattern, 14, 13, 0, numFloatsPerPos);
 }
 
