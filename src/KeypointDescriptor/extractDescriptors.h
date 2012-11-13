@@ -27,18 +27,26 @@ public:
                         const std::vector<cl::Device>& devices,
                         cl::CommandQueue& cq,
                         const std::vector<Coord>& samplingPattern,
-                        float scaleFactor,
                         int outputStride, int outputOffset,
-                        int diameter);
+                        int diameter,
+                        int numFloatsPerPos);
+    // numFloatsPerPos - The number of floating points taken to describe
+    // each position. The first two of these are x and y relative to the
+    // centre of the image at the untransformed image scale.
 
     void
     operator() (cl::CommandQueue& cq,
                 const LevelOutput& subbands,
                 const cl::Buffer& locations,
-                int numLocations,
+                float scale,
+                const cl::Buffer& kpOffsets,
+                int kpOffsetsIdx,
+                int maxNumKPs,
                 cl::Buffer& output,
                 std::vector<cl::Event> waitEvents = std::vector<cl::Event>(),
                 cl::Event* doneEvent = nullptr);
+    // scale - the number of original image pixels per pixel at this level 
+    // of transform.
 
 
 private:
@@ -63,14 +71,19 @@ public:
 
     DescriptorExtracter(cl::Context& context, 
                         const std::vector<cl::Device>& devices,
-                        cl::CommandQueue& cq);
+                        cl::CommandQueue& cq,
+                        int numFloatsPerPos);
 
     void
     operator() (cl::CommandQueue& cq,
-                const LevelOutput& fineSubbands,
+                const LevelOutput& fineSubbands,   
+                float fineScale,
                 const LevelOutput& coarseSubbands,
+                float coarseScale,
                 const cl::Buffer& locations,
-                int numLocations,
+                const cl::Buffer& kpOffsets,
+                int kpOffsetsIdx,
+                int maxNumKPs,
                 cl::Buffer& output,
                 std::vector<cl::Event> waitEvents = std::vector<cl::Event>(),
                 cl::Event* doneEventFine = nullptr,

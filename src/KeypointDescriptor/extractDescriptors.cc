@@ -17,16 +17,18 @@ Interpolator::Interpolator(cl::Context& context,
                 const std::vector<cl::Device>& devices,
                 cl::CommandQueue& cq,
                 const std::vector<Coord>& samplingPattern,
-                float scaleFactor,
                 int outputStride, int outputOffset,
-                int diameter)
+                int diameter,
+                int numFloatsPerPos)
  : context_(context), diameter_(diameter)
 {
     // Define the diameter (total width/height of sampling pattern)
     // to begin with
     std::ostringstream kernelInput;
 
-    kernelInput << "#define DIAMETER (" << diameter << ")\n";
+    kernelInput 
+        << "#define DIAMETER (" << diameter << ")\n"
+        << "#define NUM_FLOATS_PER_POS (" << numFloatsPerPos << ")\n";
 
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
@@ -70,11 +72,10 @@ Interpolator::Interpolator(cl::Context& context,
     kernel_ = cl::Kernel(program, "extractDescriptor");
 
     // Set arguments we already know
-    kernel_.setArg(2, samplingPattern_);
-    kernel_.setArg(3, int(samplingPattern.size()));
-    kernel_.setArg(4, int(outputStride));
-    kernel_.setArg(5, int(outputOffset));
-    kernel_.setArg(6, float(scaleFactor));
+    kernel_.setArg(4, samplingPattern_);
+    kernel_.setArg(5, int(samplingPattern.size()));
+    kernel_.setArg(6, int(outputStride));
+    kernel_.setArg(7, int(outputOffset));
 }
 
 
@@ -83,27 +84,34 @@ void Interpolator::operator()
                (cl::CommandQueue& cq,
                 const LevelOutput& subbands,
                 const cl::Buffer& locations,
-                int numLocations,
+                float scale,
+                const cl::Buffer& kpOffsets,
+                int kpOffsetsIdx,
+                int maxNumKPs,
                 cl::Buffer& output,
                 std::vector<cl::Event> waitEvents,
                 cl::Event* doneEvent)
 {
     // Set subband arguments
-    kernel_.setArg(8, subbands.sb[0]);
-    kernel_.setArg(9, subbands.sb[1]);
-    kernel_.setArg(10, subbands.sb[2]);
-    kernel_.setArg(11, subbands.sb[3]);
-    kernel_.setArg(12, subbands.sb[4]);
-    kernel_.setArg(13, subbands.sb[5]);
+    kernel_.setArg(9, subbands.sb[0]);
+    kernel_.setArg(10, subbands.sb[1]);
+    kernel_.setArg(11, subbands.sb[2]);
+    kernel_.setArg(12, subbands.sb[3]);
+    kernel_.setArg(13, subbands.sb[4]);
+    kernel_.setArg(14, subbands.sb[5]);
 
-    // Set descriptor location arguments (which are scaled by scaleFactor,
-    // set on creation), and are relative to the centre of the subband
-    // images
+    // Set descriptor location arguments relative to the centre of the 
+    // image.  scale should be the number of original image pixels per 
+    // pixel at the subband level.  locations must be of format 
+    // (x, y, ...), with each record being of length numFloatsPerPos
+    // (set at creation).  
     kernel_.setArg(0, locations);
-    kernel_.setArg(1, int(numLocations));
+    kernel_.setArg(1, float(scale));
+    kernel_.setArg(2, kpOffsets);
+    kernel_.setArg(3, kpOffsetsIdx);
 
     // Set output argument
-    kernel_.setArg(7, output);
+    kernel_.setArg(8, output);
 
     // Wait for the subbands to be done too
     std::copy(subbands.done.begin(), subbands.done.end(),
@@ -111,7 +119,7 @@ void Interpolator::operator()
 
     // Enqueue the kernel
     cl::NDRange workgroupSize = {1, diameter_+4, diameter_+4};
-    cl::NDRange globalSize = {numLocations, diameter_+4, diameter_+4};
+    cl::NDRange globalSize = {maxNumKPs, diameter_+4, diameter_+4};
 
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
                             globalSize, workgroupSize,
@@ -124,7 +132,8 @@ void Interpolator::operator()
 DescriptorExtracter::DescriptorExtracter
     (cl::Context& context, 
      const std::vector<cl::Device>& devices,
-     cl::CommandQueue& cq)
+     cl::CommandQueue& cq,
+     int numFloatsPerPos)
 {
     const float pi = 4 * atan(1);
 
@@ -142,28 +151,36 @@ DescriptorExtracter::DescriptorExtracter
 
     // Set up the kernels
     fineInterpolator_ = Interpolator(context, devices, cq,
-                                     finePattern, 1.0f, 14, 0, 2);
+                                     finePattern, 14, 0, 2, numFloatsPerPos);
     coarseInterpolator_ = Interpolator(context, devices, cq,
-                                     coarsePattern, 0.5f, 14, 13, 0);
+                                     coarsePattern, 14, 13, 0, numFloatsPerPos);
 }
 
 
-void DescriptorExtracter:: operator() 
+void DescriptorExtracter::operator() 
                (cl::CommandQueue& cq,
-                const LevelOutput& fineSubbands,
+                const LevelOutput& fineSubbands,   
+                float fineScale,
                 const LevelOutput& coarseSubbands,
+                float coarseScale,
                 const cl::Buffer& locations,
-                int numLocations,
+                const cl::Buffer& kpOffsets,
+                int kpOffsetsIdx,
+                int maxNumKPs,
                 cl::Buffer& output,
                 std::vector<cl::Event> waitEvents,
                 cl::Event* doneEventFine, cl::Event* doneEventCoarse)
 {
     // Call the fine and coarse levels
-    fineInterpolator_(cq, fineSubbands, locations, numLocations, output,
-                      waitEvents, doneEventFine);
+    fineInterpolator_(cq, fineSubbands, locations, fineScale,
+                          kpOffsets, kpOffsetsIdx, maxNumKPs, 
+                          output,
+                          waitEvents, doneEventFine);
 
-    coarseInterpolator_(cq, coarseSubbands, locations, numLocations, output,
-                      waitEvents, doneEventCoarse);
+    coarseInterpolator_(cq, coarseSubbands, locations, coarseScale,
+                            kpOffsets, kpOffsetsIdx, maxNumKPs, 
+                            output,
+                            waitEvents, doneEventCoarse);
 }
 
 

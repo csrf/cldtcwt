@@ -59,12 +59,13 @@ float2 centrePos(__read_only image2d_t img, float2 posRelToImgCentre)
 
 
 
-__kernel void extractDescriptor(__read_only __global float2* pos,
-                                int numPos,
+__kernel void extractDescriptor(__read_only __global float* pos,
+                                float scale,
+                                __read_only __global int* kpOffsets,
+                                int kpOffsetsIdx,
                                 __read_only __global float2* sampleLocs,
                                 const int numSampleLocs,
                                 int stride, int offset,
-                                float scaleFactor,
                                 __write_only __global float2* output,
                                 __read_only image2d_t sb0,
                                 __read_only image2d_t sb1,
@@ -95,9 +96,21 @@ __kernel void extractDescriptor(__read_only __global float2* pos,
     int xIdx = get_global_id(1);
     int yIdx = get_global_id(2);
 
+    size_t kpIdxsBegin = kpOffsets[kpOffsetsIdx],
+           kpIdxsEnd = kpOffsets[kpOffsetsIdx+1];
+
+    // Work out which input/output index we're working with
+    size_t kpIdx = kpIdxsBegin + idx;
+
+    // See whether we need to do anything
+    if (kpIdx >= kpIdxsEnd)
+        return;
 
     // Read coordinates from the input matrix
-    float2 posFromCentre = pos[idx] * scaleFactor;
+    float2 posFromCentre = (float2) (pos[NUM_FLOATS_PER_POS * kpIdx],
+                                     pos[NUM_FLOATS_PER_POS * kpIdx + 1])
+                            / (float2) scale;
+
     
     // Calculate how far the keypoint is from the upper-left nearest pixel,
     // and the nearest lower integer location
@@ -208,7 +221,7 @@ __kernel void extractDescriptor(__read_only __global float2* pos,
 
 
             // Save to matrix
-            output[n + samplerIdx * 6 + idx * stride * 6 + offset * 6]
+            output[n + samplerIdx * 6 + kpIdx * stride * 6 + offset * 6]
                 = result;
 
         }

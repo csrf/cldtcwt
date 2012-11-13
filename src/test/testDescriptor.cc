@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
         DescriptorExtracter describer(context.context,
                                       context.devices,
-                                      cq);
+                                      cq, 2);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0) / 255.0f;
@@ -55,6 +55,14 @@ int main(int argc, char** argv)
         cl::Buffer kplocs = createBuffer(context.context, cq, 
                                          {14.f, 14.5f});
 
+        std::vector<cl_uint> kpOffsetsV
+            = {0, 1};
+
+        cl::Buffer kpOffsets = {context.context,
+                                CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                kpOffsetsV.size() * sizeof(cl_uint),
+                                &kpOffsetsV[0]};
+
         cl::Buffer output = createBuffer(context.context, cq, 
                                  std::vector<float>(14 * 12));
 
@@ -62,7 +70,10 @@ int main(int argc, char** argv)
         dtcwt(cq, inImage, env, out);
 
         // Extract descriptors
-        describer(cq, out.subbands[0], out.subbands[1], kplocs, 1,
+        describer(cq, out.subbands[0], 4.0f,
+                      out.subbands[1], 8.0f,
+                      kplocs, 
+                      kpOffsets, 0, 1,
                       output);
         
         // Read them out
