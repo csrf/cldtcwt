@@ -19,6 +19,7 @@ BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/KeypointDescriptor/extractDescriptorsKernel.h \
 				src/MiscKernels/greyscaleToRGBAKernel.h \
 				src/MiscKernels/absToRGBAKernel.h \
+				src/MiscKernels/pyramidSumKernel.h \
 				src/MiscKernels/accumulateKernel.h 
 
 
@@ -43,7 +44,8 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 noinst_PROGRAMS=testDTCWT testFilter verify testFindMax testRescale \
 			 verifyBasic testDescriptor displayDTCWT \
-			 testAccumulate testConcat testPeakDetector
+			 testAccumulate testConcat testPeakDetector \
+			 testPyramidSum
 
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
@@ -62,6 +64,10 @@ testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
 
 testPeakDetector_SOURCES = src/test/testPeakDetector.cc 
 testPeakDetector_LDADD = libdtcwt.la @opencv_LIBS@
+
+testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
+						 src/test/testPyramidSum.cc 
+testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
 
 #testOutput_SOURCES = src/test/testOutput.cc \
 #					 src/MiscKernels/abs.cc
