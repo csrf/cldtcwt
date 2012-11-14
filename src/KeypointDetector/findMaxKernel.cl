@@ -28,7 +28,7 @@ void readImageRegionToShared(__read_only image2d_t input,
             if (inRegion)
                 output[readPosOffset.y * regionSize.x + readPosOffset.x]
                     = read_imagef(input, sampler, 
-                            regionStart + readPosOffset).x;
+                            regionStart + convert_float2(readPosOffset)).x;
 
         }
     }
