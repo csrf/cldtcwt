@@ -7,7 +7,13 @@ Viewer::Viewer(int width, int height)
    window(sf::VideoMode(width*1.5, height*1.5, 32), "SFML OpenGL"),
    imageDisplayVertexBuffers_(2)
 {
-	// The buffers setting coords for displaying the images: first, the texture
+}
+
+
+
+void Viewer::initBuffers()
+{
+    // The buffers setting coords for displaying the images: first, the texture
 	// coordinates, then the vertex coordinates
 
 	// Texture coordinates
@@ -35,8 +41,8 @@ Viewer::Viewer(int width, int height)
 			     GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
 
+}
 
 
 void Viewer::setImageTexture(GLuint texture)
