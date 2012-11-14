@@ -8,6 +8,7 @@
 #include "MiscKernels/abs.h"
 #include "DTCWT/energyMapEigen.h"
 #include "KeypointDetector/peakDetector.h"
+#include "KeypointDetector/EnergyMaps/interpMap.h"
 #include "KeypointDescriptor/extractDescriptors.h"
 
 
@@ -24,7 +25,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    EnergyMapEigen energyMap;
+    InterpMapEigen energyMap;
     PeakDetector peakDetector;
 
     cl::Image2D zeroImage;
