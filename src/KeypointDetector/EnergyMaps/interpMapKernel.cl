@@ -66,12 +66,25 @@ typedef struct {
 } Matrix2x2ConjSymmetric;
 
 
-void clearMatrix2x2ConjSymmetric(__private Matrix2x2ConjSymmetric* M)
+void clearMatrix2x2ConjSymmetric(__local Matrix2x2ConjSymmetric* M)
 {
     M->s00 = 0.f;
     M->s01 = (Complex) (0.f, 0.f);
     M->s11 = 0.f;
 }
+
+
+
+
+void accumMatrix2x2ConjSymmetric(__private Matrix2x2ConjSymmetric* M,
+                                 __local Matrix2x2ConjSymmetric* input,
+                                 float gain)
+{
+    M->s00 += gain * input->s00;
+    M->s01 += (float2) gain * input->s01;
+    M->s11 += gain * input->s11;
+}
+
 
 
 float2 eigsMatrix2x2ConjSymmetric(__private const Matrix2x2ConjSymmetric* M)
@@ -84,7 +97,7 @@ float2 eigsMatrix2x2ConjSymmetric(__private const Matrix2x2ConjSymmetric* M)
 }
 
 
-void addDiff(__private Matrix2x2ConjSymmetric* M, Complex Dx, Complex Dy)
+void addDiff(__local Matrix2x2ConjSymmetric* M, Complex Dx, Complex Dy)
 {
     M->s00 += dot(Dx, Dx);
     M->s01 += (Complex) (Dx.x * Dy.x + Dx.y * Dy.y,
@@ -143,21 +156,33 @@ void interpMap(__read_only image2d_t sb0,
     int2 l = (int2) (get_local_id(0), get_local_id(1));
 
     // Storage for the subband values
-    __local volatile Complex sbVals[WG_SIZE_Y+2][WG_SIZE_X+2];
+    __local volatile Complex sbVals[WG_SIZE_Y+4][WG_SIZE_X+4];
 
     // Holds the covariance-like matrix for working out the distance
     // the subbands change for a small change in position
-    Matrix2x2ConjSymmetric Q;
-    float energy = 0.f;
+    __local Matrix2x2ConjSymmetric Q[WG_SIZE_Y+2][WG_SIZE_X+2];
+    __local float energy [WG_SIZE_Y+2][WG_SIZE_X+2];
 
-    clearMatrix2x2ConjSymmetric(&Q);
+    for (int a = 0; a < 2; ++a) {
+        for (int b = 0; b < 2; ++b) {
 
+            int2 p = l + (int2) (a * WG_SIZE_X, b * WG_SIZE_Y);
+            
+            if (all(p < (int2) (WG_SIZE_X+2, WG_SIZE_Y+2))) {
+
+                clearMatrix2x2ConjSymmetric(&Q[p.y][p.x]);
+
+                energy[p.y][p.x] = 0.f;
+
+            }
+        }
+    }
 
     float2 regionStart = convert_float2((int2)
-        (get_group_id(0) * get_local_size(0) - 1,
-         get_group_id(1) * get_local_size(1) - 1));
+        (get_group_id(0) * get_local_size(0) - 2,
+         get_group_id(1) * get_local_size(1) - 2));
 
-    int2 regionSize = (int2) (WG_SIZE_X+2, WG_SIZE_Y+2);
+    int2 regionSize = (int2) (WG_SIZE_X+4, WG_SIZE_Y+4);
 
     // For each subband
     for (int n = 0; n < 6; ++n) {
@@ -193,36 +218,59 @@ void interpMap(__read_only image2d_t sb0,
         // Make sure we don't start using values until they're valid
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        Complex Dx = differentiate(sbVals[l.y+1][l.x  ],
-                                   sbVals[l.y+1][l.x+1],
-                                   sbVals[l.y+1][l.x+2],
-                                   angularFreq[n].x,
-                                   expjAngFreq[n][0]);
 
-        Complex Dy = differentiate(sbVals[l.y  ][l.x+1],
-                                   sbVals[l.y+1][l.x+1],
-                                   sbVals[l.y+2][l.x+1],
-                                   angularFreq[n].y,
-                                   expjAngFreq[n][1]);
+        for (int a = 0; a < 2; ++a) {
+            for (int b = 0; b < 2; ++b) {
 
-        energy += dot(sbVals[l.y+1][l.x+1], sbVals[l.y+1][l.x+1]);
+                int2 p = l + (int2) (a * WG_SIZE_X, b * WG_SIZE_Y);
+                
+                if (all(p < (int2) (WG_SIZE_X+2, WG_SIZE_Y+2))) {
+
+                    energy[p.y][p.x] += dot(sbVals[p.y+1][p.x+1],
+                                            sbVals[p.y+1][p.x+1]);
+
+                    Complex Dx = differentiate(sbVals[p.y+1][p.x  ],
+                                               sbVals[p.y+1][p.x+1],
+                                               sbVals[p.y+1][p.x+2],
+                                               angularFreq[n].x,
+                                               expjAngFreq[n][0]);
+
+                    Complex Dy = differentiate(sbVals[p.y  ][p.x+1],
+                                               sbVals[p.y+1][p.x+1],
+                                               sbVals[p.y+2][p.x+1],
+                                               angularFreq[n].y,
+                                               expjAngFreq[n][1]);
+
+                    // Append to the differences matrix
+                    addDiff(&Q[p.y][p.x], Dx, Dy);
+
+                }
+            }
+        }
 
         // Make sure values aren't overwritten while they might still be
         // being used
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        // Append to the differences matrix
-        addDiff(&Q, Dx, Dy);
     }
 
     if (all(g < get_image_dim(output))) {
 
+        Matrix2x2ConjSymmetric R = {0, (float2) 0, 0};
+
+        float h[] = {0.5, 1, 0.5};
+
+        for (int n = 0; n < 2; ++n) 
+            for (int m = 0; m < 2; ++m)
+                accumMatrix2x2ConjSymmetric(&R, &Q[l.y+n][l.x+m], 
+                                                h[n] * h[m]);
+
         // Calculate eigenvalues: how quickly does the distance
         // to the interpolated subbands change in the most and least 
         // variable directions
-        float2 eigs = eigsMatrix2x2ConjSymmetric(&Q);
+        float2 eigs = eigsMatrix2x2ConjSymmetric(&R);
 
-        float result = eigs.s0 / (1.f + eigs.s1); // / (1.0f + energy); //  + fmax(eigs.s0, eigs.s1));
+        float result = eigs.s0;// / (1.f + eigs.s1); // / (1.0f + energy); //  + fmax(eigs.s0, eigs.s1));
 
         write_imagef(output, g, result);
     }

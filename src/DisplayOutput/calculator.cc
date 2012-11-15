@@ -14,7 +14,7 @@ Calculator::Calculator(cl::Context& context,
     descriptorExtracter_(context, {device}, peakDetector.getPosLength()),
     maxNumKeypoints_(maxNumKeypoints)
 {
-    const int numLevels = 6;
+    const int numLevels = 3;
     const int startLevel = 1;
 
     // Create the DTCWT, temporaries and outputs
