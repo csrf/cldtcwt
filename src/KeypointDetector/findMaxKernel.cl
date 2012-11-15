@@ -145,9 +145,13 @@ void findMax(__read_only image2d_t input,
     const int2 g = (int2) (get_global_id(0), get_global_id(1)),
                l = (int2) (get_local_id(0), get_local_id(1));
 
+    const float2 startCorner = (float2) 
+        (get_group_id(0) * get_local_size(0) - 0.5f,
+         get_group_id(1) * get_local_size(1) - 0.5f);
+
     // Load region, with a border of one all around
     readImageRegionToShared(input, sampler, 
-                            convert_float2(g) - (float2) 0.5f, // Corner
+                            startCorner, // Corner
                             (int2) (WG_SIZE_X+2, WG_SIZE_Y+2), // Size
                             &inputLocal[0][0]);
 
