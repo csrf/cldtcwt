@@ -170,7 +170,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 bool CalculatorInterface::isDone()
 {
     // Warning: this seems to complete much too early.  Strange.
-    return glObjsReady_.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>()
+    return kpLocsCopied_.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>()
                 == CL_COMPLETE;
 }
 

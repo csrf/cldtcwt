@@ -8,6 +8,7 @@
 
 // Handy structure to return saying where the memory mapped region is
 struct VideoReaderBuffer {
+    __u32 idx;
     void* start;
     size_t length;
 };
@@ -50,6 +51,10 @@ public:
     VideoReaderBuffer getFrame(); 
     // Return the memory-mapped region for a frame
 
+    void returnBuffer(const VideoReaderBuffer&);
+    // Return a buffer that has previously been dequeued, so that the driver
+    // can start using them again
+    
     void returnBuffers();
     // Return buffers that have previously been dequeued, so that the driver
     // can start using them again

@@ -28,6 +28,8 @@
 // For timing
 #include <sys/timeb.h>
 
+#include <queue>
+#include <utility>
 
 #include "DisplayOutput/VideoReader.h"
 
@@ -48,48 +50,87 @@ int main(void)
    
     viewer.initBuffers();
 
-    CalculatorInterface ci(context, devices[0], width, height);   
+    CalculatorInterface ci1(context, devices[0], width, height);   
+    CalculatorInterface ci2(context, devices[0], width, height);   
+    CalculatorInterface ci3(context, devices[0], width, height);   
 
+    std::queue<CalculatorInterface*> ready;
+    std::queue<std::pair<CalculatorInterface*, VideoReaderBuffer>> processing;
+    ready.push(&ci1);
+    ready.push(&ci2);
+    ready.push(&ci3);
 
     // Set up the keypoint transfer format
-    viewer.setNumFloatsPerKeypoint(ci.getNumFloatsPerKeypointLocation());
-
-    cl::CommandQueue cq(context, devices[0]);
+    viewer.setNumFloatsPerKeypoint(ci1.getNumFloatsPerKeypointLocation());
 
     VideoReader videoReader("/dev/video0", width, height);
     videoReader.startCapture();
 
+    timeb prevTime;
+    ftime(&prevTime);
     int n = 0;
+
     while (1) {
 
-        timeb start, end;
 
-        VideoReaderBuffer buffer = videoReader.getFrame();
-        ftime(&start);
-        ci.processImage(buffer.start, buffer.length);
-        ci.waitUntilDone();
-        ftime(&end);
-        videoReader.returnBuffers();
+        if (!ready.empty()) {
+            
+            // Acquire the new image
+            VideoReaderBuffer buffer = videoReader.getFrame();
 
-        // Set the texture sources for the viewer
-        viewer.setImageTexture(ci.getImageTexture());
-        for (int n = 0; n < 6; ++n) {
-            viewer.setSubband2Texture(n, ci.getSubband2Texture(n));
-            viewer.setSubband3Texture(n, ci.getSubband3Texture(n));
+            // Set it being processed
+            ready.back()->processImage(buffer.start, buffer.length);
+
+            // Transfer the calculator to the processing queue
+            processing.push(std::make_pair(ready.back(), buffer));
+            ready.pop();
+
         }
-        size_t numKPs = ci.getNumKeypointLocations();
-        viewer.setEnergyMapTexture(ci.getEnergyMapTexture());
-        viewer.setKeypointLocations(ci.getKeypointLocations(),
-                                    numKPs);
-        
-        viewer.update();
 
-        // Work out what the difference between these is
-        double t = end.time - start.time 
-                 + 0.001 * (end.millitm - start.millitm);
-        
-        std::cout << n++ << " " << numKPs 
-                         << " " << (1000*t) << "ms\n";
+
+        if (!processing.empty()) {
+
+            CalculatorInterface* ci = processing.back().first;
+
+            if (ci->isDone()) {
+
+                ci->waitUntilDone();
+     
+                // Return the buffer
+                videoReader.returnBuffer(processing.back().second);
+
+                // Set the texture sources for the viewer
+                viewer.setImageTexture(ci->getImageTexture());
+                for (int n = 0; n < 6; ++n) {
+                    viewer.setSubband2Texture(n, ci->getSubband2Texture(n));
+                    viewer.setSubband3Texture(n, ci->getSubband3Texture(n));
+                }
+                size_t numKPs = ci->getNumKeypointLocations();
+                viewer.setEnergyMapTexture(ci->getEnergyMapTexture());
+                viewer.setKeypointLocations(ci->getKeypointLocations(),
+                                            numKPs);
+
+                viewer.update();
+
+                // Transfer to the ready queue
+                ready.push(ci);
+                processing.pop();
+                
+                timeb newTime;
+                ftime(&newTime);
+
+                // Work out what the difference between these is
+                double t = newTime.time - prevTime.time 
+                         + 0.001 * (newTime.millitm - prevTime.millitm);
+
+                prevTime = newTime;
+                
+                std::cout << n++ << " " << numKPs 
+                                 << " " << (1000*t) << "ms\n";
+
+
+            } 
+        }
 
         if (viewer.isDone())
             break;

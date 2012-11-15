@@ -5,6 +5,7 @@
 #include <sys/mman.h>
 #include <cstring>
 #include <iostream>
+#include <algorithm>
 
 
 
@@ -93,6 +94,7 @@ std::vector<VideoReaderBuffer> VideoReader::mmapBuffers(int numBuffers)
 
         // Use it to memory map
         VideoReaderBuffer returnBuffer = {
+           buf.index,
            v4l2_mmap(nullptr, buf.length,
                      PROT_READ | PROT_WRITE, MAP_SHARED,
                      fd_, buf.m.offset),
@@ -181,6 +183,27 @@ VideoReaderBuffer VideoReader::getFrame()
     dequeuedBufferIdxs_.push_back(buf.index);
 
     return activeMmaps_[buf.index];
+}
+
+
+void VideoReader::returnBuffer(const VideoReaderBuffer& buffer)
+{
+    // Enqueue the index
+    v4l2_buffer newBuf;
+    memset(&newBuf, 0, sizeof(newBuf));
+    newBuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    newBuf.index = buffer.idx;
+    newBuf.memory = V4L2_MEMORY_MMAP;
+
+    if (v4l2_ioctl(fd_, VIDIOC_QBUF, &newBuf) == -1)
+        throw std::runtime_error("V4L2 failed to enqueue buffer");
+    
+    auto pos = std::find(dequeuedBufferIdxs_.begin(),
+                         dequeuedBufferIdxs_.end(),
+                         buffer.idx);
+
+    dequeuedBufferIdxs_.erase(pos);
+
 }
 
 
