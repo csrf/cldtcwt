@@ -258,7 +258,7 @@ void interpMap(__read_only image2d_t sb0,
 
         Matrix2x2ConjSymmetric R = {0, (float2) 0, 0};
 
-        float h[] = {0.5, 1, 0.5};
+        float h[] = {1, 1, 1};
 
         for (int n = 0; n < 2; ++n) 
             for (int m = 0; m < 2; ++m)
@@ -270,7 +270,8 @@ void interpMap(__read_only image2d_t sb0,
         // variable directions
         float2 eigs = eigsMatrix2x2ConjSymmetric(&R);
 
-        float result = eigs.s0;// / (1.f + eigs.s1); // / (1.0f + energy); //  + fmax(eigs.s0, eigs.s1));
+        float result = (eigs.s0 * sqrt(eigs.s1)) / (eigs.s0 + eigs.s1 + 0.1f);
+        // / (1.f + eigs.s1); // / (1.0f + energy); //  + fmax(eigs.s0, eigs.s1));
 
         write_imagef(output, g, result);
     }
