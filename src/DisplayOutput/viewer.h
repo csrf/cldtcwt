@@ -53,6 +53,12 @@ public:
 
     Viewer(int width, int height);
 
+    // Call after creation and before any drawing.  Needed because AMD
+    // drivers don't like transfering buffers to OpenCL if we've
+    // already played around with buffers before initialising OpenCL.
+    void initBuffers();
+
+
     void setImageTexture(GLuint texture);
     void setEnergyMapTexture(GLuint texture);
     void setSubband2Texture(int subband, GLuint texture);

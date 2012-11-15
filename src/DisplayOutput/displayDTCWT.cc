@@ -40,20 +40,24 @@ int main(void)
     const size_t width = 640, height = 480;
     Viewer viewer(width, height);
 
-    VideoReader videoReader("/dev/video0", width, height);
-    videoReader.startCapture();
 
     cl::Platform platform;
     cl::Context context;
     std::vector<cl::Device> devices;
     std::tie(platform, devices, context) = initOpenCL();
    
+    viewer.initBuffers();
+
     CalculatorInterface ci(context, devices[0], width, height);   
+
 
     // Set up the keypoint transfer format
     viewer.setNumFloatsPerKeypoint(ci.getNumFloatsPerKeypointLocation());
 
     cl::CommandQueue cq(context, devices[0]);
+
+    VideoReader videoReader("/dev/video0", width, height);
+    videoReader.startCapture();
 
     int n = 0;
     while (1) {

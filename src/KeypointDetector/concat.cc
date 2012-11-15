@@ -64,8 +64,8 @@ void Concat::operator()
     kernel_.setArg(0, inputArray);
     kernel_.setArg(1, outputArray);
     kernel_.setArg(2, cumCounts);
-    kernel_.setArg(3, (cumCountsIndex));
-    kernel_.setArg(4, (numFloatsPerItem));
+    kernel_.setArg(3, cl_uint(cumCountsIndex));
+    kernel_.setArg(4, cl_uint(numFloatsPerItem));
 
     // Execute
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,

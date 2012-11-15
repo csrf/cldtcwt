@@ -4121,7 +4121,7 @@ public:
     ImageGL& operator = (const ImageGL& rhs)
     {
         if (this != &rhs) {
-            ImageGL::operator=(rhs);
+            Image::operator=(rhs);
         }
         return *this;
     }
