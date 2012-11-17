@@ -83,11 +83,13 @@ void Viewer::setNumFloatsPerKeypoint(size_t n)
 }
 
 #include <iostream>
+#include <sys/timeb.h>
 
 void Viewer::update()
 {
     if (!window.IsOpened())
         return;
+
 
     sf::Event event;
     while (window.GetEvent(event)) {
@@ -147,9 +149,15 @@ void Viewer::update()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 
+    timeb t1, t2;
     window.Display();
+    ftime(&t1);
+    glFlush();
+    ftime(&t2);
 
-    glFinish();
+                double dt = t2.time - t1.time 
+                         + 0.001 * (t2.millitm - t1.millitm);
+    std::cout << "R " << (1000*dt) << "ms\n";
 }
 
 

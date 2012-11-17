@@ -38,8 +38,8 @@ std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context>
 
 int main(void)
 {
-    //const size_t width = 1280, height = 720;
-    const size_t width = 640, height = 480;
+    const size_t width = 1280, height = 720;
+    //const size_t width = 640, height = 480;
     Viewer viewer(width, height);
 
 
@@ -79,10 +79,10 @@ int main(void)
             VideoReaderBuffer buffer = videoReader.getFrame();
 
             // Set it being processed
-            ready.back()->processImage(buffer.start, buffer.length);
+            ready.front()->processImage(buffer.start, buffer.length);
 
             // Transfer the calculator to the processing queue
-            processing.push(std::make_pair(ready.back(), buffer));
+            processing.push(std::make_pair(ready.front(), buffer));
             ready.pop();
 
         }
@@ -90,14 +90,14 @@ int main(void)
 
         if (!processing.empty()) {
 
-            CalculatorInterface* ci = processing.back().first;
+            CalculatorInterface* ci = processing.front().first;
 
             if (ci->isDone()) {
 
                 ci->waitUntilDone();
      
                 // Return the buffer
-                videoReader.returnBuffer(processing.back().second);
+                videoReader.returnBuffer(processing.front().second);
 
                 // Set the texture sources for the viewer
                 viewer.setImageTexture(ci->getImageTexture());
