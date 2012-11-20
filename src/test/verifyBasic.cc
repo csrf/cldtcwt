@@ -42,7 +42,11 @@ int main(int argc, char** argv)
         const int startLevel = 0;
 
         // Read the image in
-        cv::Mat bmp = cv::imread(filename, 0) / 255.0f;
+        cv::Mat bmp = cv::imread(filename, 0);
+        cv::Mat floatBmp;
+        bmp.convertTo(floatBmp, CV_32F);
+        floatBmp /= 255.f;
+
         cl::Image2D inImage = createImage2D(context.context, bmp);
 
         // Create the DTCWT itself
