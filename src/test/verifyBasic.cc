@@ -47,7 +47,7 @@ int main(int argc, char** argv)
         bmp.convertTo(floatBmp, CV_32F);
         floatBmp /= 255.f;
 
-        cl::Image2D inImage = createImage2D(context.context, bmp);
+        cl::Image2D inImage = createImage2D(context.context, floatBmp);
 
         // Create the DTCWT itself
         Dtcwt dtcwt(context.context, context.devices, cq);
