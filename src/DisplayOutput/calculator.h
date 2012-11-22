@@ -9,6 +9,7 @@
 #include "DTCWT/energyMapEigen.h"
 #include "KeypointDetector/peakDetector.h"
 #include "KeypointDetector/EnergyMaps/interpMap.h"
+#include "KeypointDetector/EnergyMaps/interpPhaseMap.h"
 #include "KeypointDescriptor/extractDescriptors.h"
 
 
@@ -25,7 +26,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    InterpMapEigen energyMap;
+    InterpPhaseMap energyMap;
     PeakDetector peakDetector;
 
     cl::Image2D zeroImage;

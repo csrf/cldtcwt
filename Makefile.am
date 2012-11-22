@@ -17,6 +17,7 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/KeypointDetector/concatKernel.h \
 				src/KeypointDetector/EnergyMaps/interpMapKernel.h \
+			src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.h \
 				src/KeypointDescriptor/extractDescriptorsKernel.h \
 				src/MiscKernels/greyscaleToRGBAKernel.h \
 				src/MiscKernels/absToRGBAKernel.h \
@@ -36,6 +37,7 @@ libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/KeypointDetector/findMax.cc \
 					  src/KeypointDetector/concat.cc \
 					  src/KeypointDetector/EnergyMaps/interpMap.cc \
+				  src/KeypointDetector/EnergyMaps/interpPhaseMap.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
 libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 

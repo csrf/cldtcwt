@@ -38,8 +38,8 @@ std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context>
 
 int main(void)
 {
-    const size_t width = 1280, height = 720;
-    //const size_t width = 640, height = 480;
+    //const size_t width = 1280, height = 720;
+    const size_t width = 640, height = 480;
     Viewer viewer(width, height);
 
 
