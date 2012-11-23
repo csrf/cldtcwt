@@ -173,6 +173,8 @@ void interpPhaseMap(__read_only image2d_t sb0,
     // Storage for the subband values
     __local volatile ComplexPolar sbVals[WG_SIZE_Y+4][WG_SIZE_X+4];
 
+    __local float energy [WG_SIZE_Y+2][WG_SIZE_X+2];
+
     // Holds the covariance-like matrix for working out the distance
     // the subbands change for a small change in position
     __local Matrix2x2ConjSymmetric Q[WG_SIZE_Y+2][WG_SIZE_X+2];
@@ -185,6 +187,8 @@ void interpPhaseMap(__read_only image2d_t sb0,
             if (all(p < (int2) (WG_SIZE_X+2, WG_SIZE_Y+2))) {
 
                 clearMatrix2x2ConjSymmetric(&Q[p.y][p.x]);
+
+                energy[p.y][p.x] = 0.f;
 
             }
         }
@@ -238,6 +242,9 @@ void interpPhaseMap(__read_only image2d_t sb0,
                 
                 if (all(p < (int2) (WG_SIZE_X+2, WG_SIZE_Y+2))) {
 
+                    energy[p.y][p.x] += sbVals[p.y+1][p.x+1].len
+                                          * sbVals[p.y+1][p.x+1].len;
+
                     Complex Dx = differentiate(sbVals[p.y+1][p.x  ],
                                                sbVals[p.y+1][p.x+1],
                                                sbVals[p.y+1][p.x+2],
@@ -269,10 +276,15 @@ void interpPhaseMap(__read_only image2d_t sb0,
 
         float h[] = {0.9, 1, 0.9};
 
+        float e = 0.f;
+
         for (int n = 0; n < 2; ++n) 
-            for (int m = 0; m < 2; ++m)
+            for (int m = 0; m < 2; ++m) {
                 accumMatrix2x2ConjSymmetric(&R, &Q[l.y+n][l.x+m], 
                                                 h[n] * h[m]);
+
+                e += h[n] * h[m] * energy[l.y+n][l.x+m];
+            }
 
         // Calculate eigenvalues: how quickly does the distance
         // to the interpolated subbands change in the most and least 
@@ -280,7 +292,7 @@ void interpPhaseMap(__read_only image2d_t sb0,
         float2 eigs = eigsMatrix2x2ConjSymmetric(&R);
 
         float ratio = eigs.s0 / (eigs.s1 + 0.001f);
-        float result = eigs.s0 * eigs.s0 / (eigs.s1 + 0.001f);
+        float result = e; //eigs.s0 * eigs.s0 / (eigs.s1 + 0.001f);
         //exp(-20 * clamp(1.f - (eigs.s0 + eigs.s1), 0.f, INFINITY)
                         //    -20 * clamp(0.2f - ratio, 0.f, INFINITY));
                          // * sqrt(eigs.s1)) / (eigs.s0 + eigs.s1 + 0.1f);
