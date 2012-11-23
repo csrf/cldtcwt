@@ -144,7 +144,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
     // Convert the energy map
     greyscaleToRGBA_(cq_, energyMapInput,
                           energyMapTextureCL_,
-                          10.f,
+                          15.f,
                           energyMapReady, &energyMapTextureCLDone_);
 
     // Copy the keypoint locations over

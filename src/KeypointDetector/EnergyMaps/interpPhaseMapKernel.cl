@@ -267,7 +267,7 @@ void interpPhaseMap(__read_only image2d_t sb0,
 
         Matrix2x2ConjSymmetric R = {0, (float2) 0, 0};
 
-        float h[] = {1, 1, 1};
+        float h[] = {0.9, 1, 0.9};
 
         for (int n = 0; n < 2; ++n) 
             for (int m = 0; m < 2; ++m)
@@ -280,7 +280,7 @@ void interpPhaseMap(__read_only image2d_t sb0,
         float2 eigs = eigsMatrix2x2ConjSymmetric(&R);
 
         float ratio = eigs.s0 / (eigs.s1 + 0.001f);
-        float result = eigs.s0;
+        float result = eigs.s0 * eigs.s0 / (eigs.s1 + 0.001f);
         //exp(-20 * clamp(1.f - (eigs.s0 + eigs.s1), 0.f, INFINITY)
                         //    -20 * clamp(0.2f - ratio, 0.f, INFINITY));
                          // * sqrt(eigs.s1)) / (eigs.s0 + eigs.s1 + 0.1f);
