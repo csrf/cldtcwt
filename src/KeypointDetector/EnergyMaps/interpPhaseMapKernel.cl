@@ -279,7 +279,10 @@ void interpPhaseMap(__read_only image2d_t sb0,
         // variable directions
         float2 eigs = eigsMatrix2x2ConjSymmetric(&R);
 
-        float result = eigs.s0 * eigs.s0 / (eigs.s1 + 0.001f);
+        float ratio = eigs.s0 / (eigs.s1 + 0.001f);
+        float result = eigs.s0;
+        //exp(-20 * clamp(1.f - (eigs.s0 + eigs.s1), 0.f, INFINITY)
+                        //    -20 * clamp(0.2f - ratio, 0.f, INFINITY));
                          // * sqrt(eigs.s1)) / (eigs.s0 + eigs.s1 + 0.1f);
         // / (1.f + eigs.s1); // / (1.0f + energy); //  + fmax(eigs.s0, eigs.s1));
 

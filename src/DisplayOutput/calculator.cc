@@ -80,7 +80,7 @@ void Calculator::operator() (cl::Image& input,
         emPointers.push_back(&e);
 
     // Look for peaks
-    peakDetector(commandQueue, emPointers, scales, 0.05, 0.1f,
+    peakDetector(commandQueue, emPointers, scales, 0.1, 0.f,
                                peakDetectorResults,
                                energyMapsDone);
 
