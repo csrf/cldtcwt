@@ -61,7 +61,7 @@ Complex differentiate(Complex y0, Complex y1, Complex y2,
 
 typedef struct {
     float s00;
-    Complex s01;
+    float s01;
     float s11;
 } Matrix2x2ConjSymmetric;
 
@@ -69,7 +69,7 @@ typedef struct {
 void clearMatrix2x2ConjSymmetric(__local Matrix2x2ConjSymmetric* M)
 {
     M->s00 = 0.f;
-    M->s01 = (Complex) (0.f, 0.f);
+    M->s01 = 0.f;
     M->s11 = 0.f;
 }
 
@@ -81,7 +81,7 @@ void accumMatrix2x2ConjSymmetric(__private Matrix2x2ConjSymmetric* M,
                                  float gain)
 {
     M->s00 += gain * input->s00;
-    M->s01 += (float2) gain * input->s01;
+    M->s01 += gain * input->s01;
     M->s11 += gain * input->s11;
 }
 
@@ -90,7 +90,7 @@ void accumMatrix2x2ConjSymmetric(__private Matrix2x2ConjSymmetric* M,
 float2 eigsMatrix2x2ConjSymmetric(__private const Matrix2x2ConjSymmetric* M)
 {
     float s = native_sqrt((M->s00 + M->s11) * (M->s00 + M->s11)
-                   - 4 * (M->s00 * M->s11 - dot(M->s01, M->s01)));
+                   - 4 * (M->s00 * M->s11 - M->s01 * M->s01));
 
     return (float2) (0.5 * (M->s00 + M->s11 - s),
                      0.5 * (M->s00 + M->s11 + s));
@@ -100,9 +100,7 @@ float2 eigsMatrix2x2ConjSymmetric(__private const Matrix2x2ConjSymmetric* M)
 void addDiff(__local Matrix2x2ConjSymmetric* M, Complex Dx, Complex Dy)
 {
     M->s00 += dot(Dx, Dx);
-    M->s01 += (Complex) (Dx.x * Dy.x + Dx.y * Dy.y,
-                         Dx.x * Dy.y - Dx.y * Dy.x);
-                         // conj(Dx) * Dy
+    M->s01 += dot(Dx, Dy); // real(conj(Dx) * Dy)
     M->s11 += dot(Dy, Dy);
 }
 
@@ -256,7 +254,7 @@ void interpMap(__read_only image2d_t sb0,
 
     if (all(g < get_image_dim(output))) {
 
-        Matrix2x2ConjSymmetric R = {0, (float2) 0, 0};
+        Matrix2x2ConjSymmetric R = {0, 0, 0};
 
         float h[] = {1, 1, 1};
 
