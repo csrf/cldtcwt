@@ -185,11 +185,11 @@ void Viewer::drawPicture()
     // Draw the keypoints
 
 	// Draw with red, 7-pixel large dots
-	glColor4f(1.0, 0.0, 0.0, 1.0);
+	glColor4f(0.0, 0.7, 0.0, 1.0);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_POINT_SMOOTH);
-	glPointSize(7.f);
+	glPointSize(5.f);
 
 	glBindBuffer(GL_ARRAY_BUFFER, keypointLocations_);
 	glVertexPointer(2, GL_FLOAT, numFloatsPerKeypoint_ * sizeof(float), 0);
@@ -199,7 +199,11 @@ void Viewer::drawPicture()
     glTranslatef(0.5f, 0.5f, 0.f);
     glScalef(1.f / width_, -1.f / height_, 1.f);
    
+    glDisable(GL_TEXTURE_2D);
+
 	glDrawArrays(GL_POINTS, 0, numKeypointLocations_);
+
+    glEnable(GL_TEXTURE_2D);
 
 	glColor4f(1.0, 1.0, 1.0, 1.0);
     glPopMatrix();
