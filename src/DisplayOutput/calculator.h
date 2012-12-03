@@ -26,7 +26,7 @@ private:
 
     Dtcwt dtcwt;
     Abs abs;
-    InterpPhaseMap energyMap;
+    InterpMapEigen energyMap;
     PeakDetector peakDetector;
 
     cl::Image2D zeroImage;
