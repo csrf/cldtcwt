@@ -119,12 +119,12 @@ void interpMap(__read_only image2d_t sb0,
 
     // Angular frequency for each subband, x and y
     const float2 angularFreq[6] = {
-        (float2) (-1,-3) * M_PI_F / 2.15f, 
+        (float2) (-3*tan(M_PI_F/12.f),-3) * M_PI_F / 2.15f, 
         (float2) (-sqrt(5.f), -sqrt(5.f)) * M_PI_F / 2.15f, 
-        (float2) (-3, -1) * M_PI_F / 2.15f, 
-        (float2) (-3,  1) * M_PI_F / 2.15f, 
+        (float2) (-3, -3*tan(M_PI_F/12.f)) * M_PI_F / 2.15f, 
+        (float2) (-3,  3*tan(M_PI_F/12.f)) * M_PI_F / 2.15f, 
         (float2) (-sqrt(5.f), sqrt(5.f)) * M_PI_F / 2.15f, 
-        (float2) (-1, 3) * M_PI_F / 2.15f 
+        (float2) (-3*tan(M_PI_F/12.f), 3) * M_PI_F / 2.15f 
     };
 
 
