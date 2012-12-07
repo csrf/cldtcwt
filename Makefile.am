@@ -14,22 +14,18 @@ AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 	xxd -i $@_src $@
 	rm $@_src
 
+
+TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
+TEST_EXTENSIONS=.sh
+
+
+noinst_LTLIBRARIES = libdtcwt.la 
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/KeypointDetector/concatKernel.h \
 				src/KeypointDetector/EnergyMaps/interpMapKernel.h \
 			src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.h \
 				src/KeypointDescriptor/extractDescriptorsKernel.h \
-				src/MiscKernels/greyscaleToRGBAKernel.h \
-				src/MiscKernels/absToRGBAKernel.h \
-				src/MiscKernels/pyramidSumKernel.h \
 				src/MiscKernels/accumulateKernel.h 
-
-
-TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
-TEST_EXTENSIONS=.sh
-
-noinst_LTLIBRARIES = libdtcwt.la libclutil.la
-
 libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/DTCWT/filterer.cc \
 					  src/DTCWT/fourTree.cc \
@@ -42,6 +38,7 @@ libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/KeypointDetector/peakDetector.cc
 libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
 
+noinst_LTLIBRARIES += libclutil.la
 libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
@@ -70,6 +67,7 @@ testPeakDetector_SOURCES = src/test/testPeakDetector.cc
 testPeakDetector_LDADD = libdtcwt.la @opencv_LIBS@
 
 noinst_PROGRAMS += testPyramidSum
+BUILT_SOURCES += src/MiscKernels/pyramidSumKernel.h 
 testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
 						 src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
@@ -80,6 +78,8 @@ testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
 #				   @opencv_LIBS@
 
 noinst_PROGRAMS += displayDTCWT
+BUILT_SOURCES += src/MiscKernels/absToRGBAKernel.h \
+				 src/MiscKernels/greyscaleToRGBAKernel.h 
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
