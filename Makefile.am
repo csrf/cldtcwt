@@ -45,30 +45,31 @@ libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la
 libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
-
-noinst_PROGRAMS=testDTCWT testFilter verify testFindMax testRescale \
-			 verifyBasic testDescriptor displayDTCWT \
-			 testAccumulate testConcat testPeakDetector \
-			 testPyramidSum
-
+noinst_PROGRAMS = testDTCWT
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
 testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testFindMax
 testFindMax_SOURCES = src/test/testFindMax.cc
 testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testConcat
 testConcat_SOURCES = src/test/testConcat.cc
 testConcat_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testAccumulate
 testAccumulate_SOURCES = src/test/testAccumulate.cc 
 testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testPeakDetector
 testPeakDetector_SOURCES = src/test/testPeakDetector.cc 
 testPeakDetector_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testPyramidSum
 testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
 						 src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
@@ -78,6 +79,7 @@ testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
 #testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 #				   @opencv_LIBS@
 
+noinst_PROGRAMS += displayDTCWT
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
@@ -99,16 +101,19 @@ displayDTCWT_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 #testOutputEigenDetector_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
 				   #@opencv_LIBS@
 
-
+noinst_PROGRAMS += testFilter
 testFilter_SOURCES = src/test/testFilter.cc 
 testFilter_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testRescale
 testRescale_SOURCES = src/test/testRescale.cc 
 testRescale_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += verify
 verify_SOURCES = src/test/verify.cc 
 verify_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += verifyBasic
 verifyBasic_SOURCES = src/test/verifyBasic.cc 
 verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 
