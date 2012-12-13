@@ -7,6 +7,6 @@ void filterX(__global const float* input,
     int2 g = (int2) (get_global_id(0), get_global_id(1));
 
     if (g.x < width && g.y < height)
-        output[g.y*stride + g.x] = 0.f;
+        output[g.y*stride + g.x] = input[g.y*stride + g.x];
 }
 
