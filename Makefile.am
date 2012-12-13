@@ -117,3 +117,11 @@ noinst_PROGRAMS += verifyBasic
 verifyBasic_SOURCES = src/test/verifyBasic.cc 
 verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 
+noinst_PROGRAMS += testBufferTrial
+BUILT_SOURCES += src/BufferTrials/filterXKernel.h
+testBufferTrial_SOURCES = src/BufferTrials/testBufferTrial.cc \
+						  src/BufferTrials/filter.cc
+testBufferTrial_LDADD   = libclutil.la @CL_LIBS@ @opencv_LIBS@
+
+
+
