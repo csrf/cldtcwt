@@ -7,6 +7,7 @@ inline int wrap(int pos, int width)
     return min(max(pos, -1 - pos), width - pos);
 }
 
+__constant float filter[FILTER_LENGTH];
 
 // Working group width and height should be defined as WG_W and WG_H;
 // the length of the filter is FILTER_LENGTH
@@ -31,7 +32,15 @@ void filterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    if (g.x < width && g.y < height)
-        output[g.y*stride + g.x] = cache[l.y][l.x];
+    if (g.x < width && g.y < height) {
+
+        float v = 0.f;
+
+        for (int n = 0; n < FILTER_LENGTH; ++n) 
+             v = mad(cache[l.y][l.x + n], filter[n], v);        
+
+        output[g.y*stride + g.x] = v;
+
+    }
 }
 
