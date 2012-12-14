@@ -1,9 +1,7 @@
 
-// Working group width and height
-#define WG_W 16
-#define WG_H 16
-
+// Working group width and height should be defined as WG_W and WG_H
 __kernel
+__attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void filterX(__global const float* input,
              __global float* output,
              unsigned int width, unsigned int stride,
@@ -12,7 +10,7 @@ void filterX(__global const float* input,
     int2 g = (int2) (get_global_id(0), get_global_id(1));
     int2 l = (int2) (get_local_id(0), get_local_id(1));
 
-    __local float cache[WG_W][WG_H];
+    __local float cache[WG_H][WG_W];
 
     cache[l.y][l.x] = input[g.y*stride + g.x];
 
