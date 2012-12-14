@@ -19,7 +19,8 @@ FilterX::FilterX(cl::Context& context,
     // Compile it...
     cl::Program program(context, source);
     try {
-        program.build(devices, "-D WG_W=16 -D WG_H=16");
+        program.build(devices, "-D WG_W=32 -D WG_H=8 "
+                               "-D FILTER_LENGTH=13");
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])
@@ -41,7 +42,7 @@ void FilterX::operator() (cl::CommandQueue& cq,
     // Process, multiplying the final result by the gain
     const int wgSize = 16;
 
-    cl::NDRange workgroupSize = {16, 16};
+    cl::NDRange workgroupSize = {32, 8};
 
     cl::NDRange globalSize = {
         roundWGs(output.width, workgroupSize[0]), 
