@@ -1,5 +1,6 @@
 
 #define FILTER_OFFSET ((FILTER_LENGTH-1) >> 1)
+#define HALF_WG_W (WG_W >> 1)
 
 
 inline int wrap(int pos, int width)
@@ -21,26 +22,22 @@ void filterX(__global const float* input,
     int2 g = (int2) (get_global_id(0), get_global_id(1));
     int2 l = (int2) (get_local_id(0), get_local_id(1));
 
-    __local float cache[WG_H][WG_W+FILTER_LENGTH-1];
+    __local float cache[WG_H][2*WG_W];
 
     int px = wrap(g.x - FILTER_OFFSET, width);
-    cache[l.y][l.x] = input[g.y*stride + px];
-
-    if (l.x < (FILTER_LENGTH-1))
-        cache[l.y][l.x+WG_W] 
-            = input[g.y*stride + wrap(g.x+WG_W-FILTER_OFFSET, width)];
+    cache[l.y][l.x] = input[g.y*stride + g.x
+                              + ROW_PADDING - HALF_WG_W];
+    cache[l.y][l.x+WG_W] = input[g.y*stride + g.x
+                              + ROW_PADDING + HALF_WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    if (g.x < width && g.y < height) {
+    float v = 0.f;
+    for (int n = 0; n < FILTER_LENGTH; ++n) 
+         v = mad(cache[l.y][l.x + n + HALF_WG_W - ROW_PADDING], 
+                 filter[n], v);        
 
-        float v = 0.f;
+    output[g.y*stride + g.x] = v;
 
-        for (int n = 0; n < FILTER_LENGTH; ++n) 
-             v = mad(cache[l.y][l.x + n], filter[n], v);        
-
-        output[g.y*stride + g.x] = v;
-
-    }
 }
 

@@ -20,7 +20,8 @@ FilterX::FilterX(cl::Context& context,
     cl::Program program(context, source);
     try {
         program.build(devices, "-D WG_W=16 -D WG_H=16 "
-                               "-D FILTER_LENGTH=13");
+                               "-D FILTER_LENGTH=13 "
+                               "-D ROW_PADDING=8");
     } catch(cl::Error err) {
 	    std::cerr 
 		    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0])

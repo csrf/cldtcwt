@@ -11,6 +11,7 @@
 struct ImageBuffer {
     cl::Buffer buffer;
     size_t width;
+    size_t rowPadding;
     size_t stride;
     size_t height;
 };
