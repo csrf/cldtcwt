@@ -24,7 +24,6 @@ void filterX(__global const float* input,
 
     __local float cache[WG_H][2*WG_W];
 
-    int px = wrap(g.x - FILTER_OFFSET, width);
     cache[l.y][l.x] = input[g.y*stride + g.x
                               + ROW_PADDING - HALF_WG_W];
     cache[l.y][l.x+WG_W] = input[g.y*stride + g.x
@@ -32,9 +31,13 @@ void filterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
+    cache[l.y][l.x] = cache[l.y][max(l.x, -1-l.x)];
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
     float v = 0.f;
     for (int n = 0; n < FILTER_LENGTH; ++n) 
-         v = mad(cache[l.y][l.x + n + HALF_WG_W - ROW_PADDING], 
+         v = mad(cache[l.y][l.x + n + HALF_WG_W - FILTER_OFFSET], 
                  filter[n], v);        
 
     output[g.y*stride + g.x] = v;
