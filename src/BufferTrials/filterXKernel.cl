@@ -24,6 +24,7 @@ void filterX(__global const float* input,
 
     __local float cache[WG_H][2*WG_W];
 
+    // Load a rectangle two workgroups wide
     cache[l.y][l.x] = input[g.y*stride + g.x
                               + ROW_PADDING - HALF_WG_W];
     cache[l.y][l.x+WG_W] = input[g.y*stride + g.x
@@ -31,12 +32,20 @@ void filterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
+    // Wrap the ends, if needed.  Only one level of wrapping
+    // is allowed, and the image must be at least HALF_WG_W
+    // wide.
     if (g.x < HALF_WG_W)
-        cache[l.y][l.x] = cache[l.y][HALF_WG_W + 
-                                       HALF_WG_W - l.x - 1];
+        cache[l.y][l.x] = cache[l.y][WG_W - l.x - 1];
+
+    int upperOffset = g.x + HALF_WG_W - width;
+    if (upperOffset >= 0)
+        cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W
+                                           - upperOffset - 1];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
+    // Calculate the convolution
     float v = 0.f;
     for (int n = 0; n < FILTER_LENGTH; ++n) 
          v = mad(cache[l.y][l.x + n + HALF_WG_W - FILTER_OFFSET], 
