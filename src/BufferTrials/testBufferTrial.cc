@@ -30,26 +30,26 @@ int main()
         // Starting test code
   
         const size_t width = 1280, height = 720, 
-                     rowPadding = 8;
-        const size_t stride = width + 2*rowPadding;
+                     padding = 8;
+        const size_t stride = width + 2*padding;
 
-        std::vector<float> zeros(stride*height, 0);
+        std::vector<float> zeros(stride*(2*padding+height), 0);
 
         ImageBuffer input = {
             cl::Buffer(context.context,
                        CL_MEM_COPY_HOST_PTR,
-                       stride*height*sizeof(float),
+                       stride*(2*padding+height)*sizeof(float),
                        &zeros[0]),
-            width, rowPadding, stride, height
+            width, padding, stride, height
         };
 
 
         ImageBuffer output = {
             cl::Buffer(context.context,
                        CL_MEM_COPY_HOST_PTR,
-                       stride*height*sizeof(float),
+                       stride*(2*padding+height)*sizeof(float),
                        &zeros[0]),
-            width, rowPadding, stride, height
+            width, padding, stride, height
         };
 
 

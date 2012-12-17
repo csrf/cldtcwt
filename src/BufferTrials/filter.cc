@@ -43,7 +43,10 @@ void FilterX::operator() (cl::CommandQueue& cq,
     // Process, multiplying the final result by the gain
     const int wgSize = 16;
 
-    cl::NDRange workgroupSize = {16, 16};
+    cl::NDRange workgroupSize = {wgSize, wgSize};
+
+    // padding
+    cl::NDRange offset = {8, 8};
 
     cl::NDRange globalSize = {
         roundWGs(output.width, workgroupSize[0]), 
@@ -59,7 +62,7 @@ void FilterX::operator() (cl::CommandQueue& cq,
     kernel_.setArg(4, int(input.height));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
+    cq.enqueueNDRangeKernel(kernel_, offset,
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }

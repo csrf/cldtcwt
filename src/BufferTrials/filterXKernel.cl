@@ -19,26 +19,26 @@ void filterX(__global const float* input,
              unsigned int width, unsigned int stride,
              unsigned int height)
 {
-    int2 g = (int2) (get_global_id(0), get_global_id(1));
-    int2 l = (int2) (get_local_id(0), get_local_id(1));
+    const int2 g = (int2) (get_global_id(0), get_global_id(1));
+    const int2 l = (int2) (get_local_id(0), get_local_id(1));
+
+    const int pos = g.y*stride + g.x;
 
     __local float cache[WG_H][2*WG_W];
 
     // Load a rectangle two workgroups wide
-    cache[l.y][l.x] = input[g.y*stride + g.x
-                              + ROW_PADDING - HALF_WG_W];
-    cache[l.y][l.x+WG_W] = input[g.y*stride + g.x
-                              + ROW_PADDING + HALF_WG_W];
+    cache[l.y][l.x] = input[pos - HALF_WG_W];
+    cache[l.y][l.x+WG_W] = input[pos + HALF_WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // Wrap the ends, if needed.  Only one level of wrapping
     // is allowed, and the image must be at least HALF_WG_W
     // wide.
-    if (g.x < HALF_WG_W)
+    if (g.x < (HALF_WG_W + ROW_PADDING))
         cache[l.y][l.x] = cache[l.y][WG_W - l.x - 1];
 
-    int upperOffset = g.x + HALF_WG_W - width;
+    const int upperOffset = g.x - ROW_PADDING + HALF_WG_W - width;
     if (upperOffset >= 0)
         cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W
                                            - upperOffset - 1];
@@ -51,7 +51,7 @@ void filterX(__global const float* input,
          v = mad(cache[l.y][l.x + n + HALF_WG_W - FILTER_OFFSET], 
                  filter[n], v);        
 
-    output[g.y*stride + g.x] = v;
+    output[pos] = v;
 
 }
 
