@@ -31,7 +31,9 @@ void filterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    cache[l.y][l.x] = cache[l.y][max(l.x, -1-l.x)];
+    if (g.x < HALF_WG_W)
+        cache[l.y][l.x] = cache[l.y][HALF_WG_W + 
+                                       HALF_WG_W - l.x - 1];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
