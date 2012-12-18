@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <cassert>
+
 #include "BufferTrials/filterXKernel.h"
 
 
@@ -19,10 +21,10 @@ FilterX::FilterX(cl::Context& context,
     );
 
     std::ostringstream compilerOptions;
-    compilerOptions << "-D WG_W=" << 16 << " "
-                    << "-D WG_H=" << 16 << " "
+    compilerOptions << "-D WG_W=" << workgroupSize_ << " "
+                    << "-D WG_H=" << workgroupSize_ << " "
                     << "-D FILTER_LENGTH=" << filter.size() << " "
-                    << "-D PADDING=" << 8;
+                    << "-D PADDING=" << padding_;
 
     // Compile it...
     cl::Program program(context, source);
@@ -38,14 +40,27 @@ FilterX::FilterX(cl::Context& context,
     // ...and extract the useful part, viz the kernel
     kernel_ = cl::Kernel(program, "filterX");
 
+
     // Upload the filter coefficients
     filter_ = cl::Buffer(context,
                          CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                          filter.size() * sizeof(float),
                          &filter[0]);
+    filterLength_ = filter.size();
 
     // Set that filter for use
     kernel_.setArg(2, filter_);
+
+    // Make sure the filter is odd-length
+    assert((filterLength_ & 1) == 1);
+
+    // Make sure the filter is short enough that we can load
+    // all the necessary surrounding data with the kernel
+    assert((filterLength_-1) / 2 <= workgroupSize_ / 2);
+
+    // Make sure we have enough padding to load the adjacent
+    // values without going out of the image
+    assert(padding_ >= workgroupSize_ / 2);
 }
 
 
@@ -55,19 +70,28 @@ void FilterX::operator() (cl::CommandQueue& cq,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
-    // Process, multiplying the final result by the gain
-    const int wgSize = 16;
-
-    cl::NDRange workgroupSize = {wgSize, wgSize};
-
-    // padding
-    cl::NDRange offset = {8, 8};
+    // Padding etc.
+    cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
+    cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
         roundWGs(output.width, workgroupSize[0]), 
         roundWGs(output.height, workgroupSize[1])
     }; 
 
+    // Must have the padding the kernel expects
+    assert(input.padding == padding_);
+
+    // Must be big enough that any edge mirroring can be
+    // handled by the filter
+    assert(input.width >= ((filterLength_ - 1) / 2));
+
+    // Input and output formats need to be exactly the same
+    assert(input.width == output.width);
+    assert(input.height == output.height);
+    assert(input.stride == output.stride);
+    assert(input.padding == output.padding);
+    
 
     // Set all the arguments
     kernel_.setArg(0, sizeof(input.buffer), &input.buffer);

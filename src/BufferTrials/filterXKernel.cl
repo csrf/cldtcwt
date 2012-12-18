@@ -1,9 +1,12 @@
+// Working group width and height should be defined as WG_W and WG_H;
+// the length of the filter is FILTER_LENGTH.  PADDING is the amount
+// of padding above and to the left of the image.  The global ids 
+// should be offset by the amount of the padding.  Padding and all
+// other dimensions should be the same in both input and output images
 
 #define FILTER_OFFSET ((FILTER_LENGTH-1) >> 1)
 #define HALF_WG_W (WG_W >> 1)
 
-// Working group width and height should be defined as WG_W and WG_H;
-// the length of the filter is FILTER_LENGTH
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void filterX(__global const float* input,
@@ -44,6 +47,7 @@ void filterX(__global const float* input,
          v = mad(cache[l.y][l.x + n + HALF_WG_W - FILTER_OFFSET], 
                  filter[FILTER_LENGTH-n-1], v);        
 
+    // Write it to the output
     output[pos] = v;
 
 }

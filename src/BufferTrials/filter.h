@@ -11,7 +11,7 @@
 struct ImageBuffer {
     cl::Buffer buffer;
     size_t width;
-    size_t rowPadding;
+    size_t padding;
     size_t stride;
     size_t height;
 };
@@ -20,7 +20,8 @@ struct ImageBuffer {
 
 
 class FilterX {
-    // Straightforward convolution along the x axis
+    // Straightforward convolution along the x axis, with an odd-
+    // lengthed set of coefficients.  The images are padded.
 
 public:
 
@@ -41,6 +42,11 @@ private:
     cl::Context context_;
     cl::Kernel kernel_;
     cl::Buffer filter_;
+
+    size_t filterLength_;
+
+    static const size_t padding_ = 8,
+                        workgroupSize_ = 16;
 
 };
 
