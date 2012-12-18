@@ -27,7 +27,8 @@ public:
     FilterX() = default;
     FilterX(const FilterX&) = default;
     FilterX(cl::Context& context, 
-            const std::vector<cl::Device>& devices);
+            const std::vector<cl::Device>& devices,
+            std::vector<float> filter);
 
     void operator() (cl::CommandQueue& cq, ImageBuffer& input,
                                            ImageBuffer& output,
@@ -39,6 +40,7 @@ private:
 
     cl::Context context_;
     cl::Kernel kernel_;
+    cl::Buffer filter_;
 
 };
 

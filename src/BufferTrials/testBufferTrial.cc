@@ -24,7 +24,8 @@ int main()
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        FilterX filterX(context.context, context.devices);
+        std::vector<float> filter(13, 0.0);
+        FilterX filterX(context.context, context.devices, filter);
 
         //-----------------------------------------------------------------
         // Starting test code
@@ -34,6 +35,7 @@ int main()
         const size_t stride = width + 2*padding;
 
         std::vector<float> zeros(stride*(2*padding+height), 0);
+
 
         ImageBuffer input = {
             cl::Buffer(context.context,
