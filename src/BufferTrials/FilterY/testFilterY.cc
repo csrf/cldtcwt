@@ -11,16 +11,16 @@
 
 #include <sys/timeb.h>
 
-#include "BufferTrials/FilterX/filterX.h"
+#include "BufferTrials/FilterY/filterY.h"
 
 #include <Eigen/Dense>
 
 // Check that the FilterX kernel actually does what it should
 
-Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
+Eigen::ArrayXXf convolveCols(const Eigen::ArrayXXf& in, 
                              const std::vector<float>& filter);
 
-Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
+Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter);
 
 
@@ -35,8 +35,8 @@ int main()
     X.setRandom();
     
     // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = convolveRows(X, filter);
-    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter);
+    Eigen::ArrayXXf refResult = convolveCols(X, filter);
+    Eigen::ArrayXXf gpuResult = convolveColsGPU(X, filter);
    
     // Check the maximum error is within tolerances
     float biggestDiscrepancy = 
@@ -108,7 +108,16 @@ Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in,
 
 
 
-Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
+Eigen::ArrayXXf convolveCols(const Eigen::ArrayXXf& in, 
+                             const std::vector<float>& filter)
+{
+    return convolveRows(in.transpose(), filter).transpose();
+}
+
+
+
+
+Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter)
 {
     typedef
@@ -133,7 +142,7 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        FilterX filterX(context.context, context.devices, filter);
+        FilterY filterY(context.context, context.devices, filter);
 
   
         const size_t width = in.cols(), height = in.rows(),
@@ -157,7 +166,7 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
               &inValues[0]);
 
         // Try the filter
-        filterX(cq, input, output);
+        filterY(cq, input, output);
 
         // Download the data
         cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
