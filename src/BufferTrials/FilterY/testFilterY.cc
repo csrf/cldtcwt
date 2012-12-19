@@ -15,7 +15,7 @@
 
 #include <Eigen/Dense>
 
-// Check that the FilterX kernel actually does what it should
+// Check that the FilterY kernel actually does what it should
 
 Eigen::ArrayXXf convolveCols(const Eigen::ArrayXXf& in, 
                              const std::vector<float>& filter);
@@ -31,7 +31,7 @@ int main()
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(5,12);
+    Eigen::ArrayXXf X(18,5);
     X.setRandom();
     
     // Try with reference and GPU implementations

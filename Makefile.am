@@ -144,10 +144,10 @@ testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 check_PROGRAMS = testFilterY
-testFilterX_SOURCES = src/BufferTrials/FilterY/testFilterY.cc 
-testFilterX_LDADD   = libclutil.la libbufferfilter.la \
+testFilterY_SOURCES = src/BufferTrials/FilterY/testFilterY.cc 
+testFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
-testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
