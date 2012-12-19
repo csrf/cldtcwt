@@ -35,11 +35,25 @@ void filterX(__global const float* input,
         cache[l.y][l.x] = cache[l.y][WG_W - l.x - 1];
 
     const int upperEdge = width + PADDING - 1;
+
+    
+    // Check whether we need to mirror the upper half at the 
+    // upper end
     if ((g.x + HALF_WG_W) > upperEdge) {
-        const int overshoot = g.x + HALF_WG_W - upperEdge;
+
+        int overshoot = g.x + HALF_WG_W - upperEdge;
 
         cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W - 
                                       ((overshoot << 1) - 1)];
+
+        // Check whether the lower half needs the same
+        if ((g.x - HALF_WG_W) > upperEdge) {
+
+            overshoot -= WG_W;
+            cache[l.y][l.x] = cache[l.y][l.x - ((overshoot << 1) - 1)];
+
+        }
+
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
