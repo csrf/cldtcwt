@@ -8,15 +8,7 @@
 #include "CL/cl.hpp"
 
 
-struct ImageBuffer {
-    cl::Buffer buffer;
-    size_t width;
-    size_t padding;
-    size_t stride;
-    size_t height;
-};
-
-
+#include "imageBuffer.h"
 
 
 class FilterX {

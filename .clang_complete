@@ -3,3 +3,4 @@
 -I/usr/include/GL   
 -I/opt/AMDAPP/include
 -Isrc/
+-I/usr/include/eigen3

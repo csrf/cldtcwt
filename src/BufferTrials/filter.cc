@@ -75,30 +75,30 @@ void FilterX::operator() (cl::CommandQueue& cq,
     cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
-        roundWGs(output.width, workgroupSize[0]), 
-        roundWGs(output.height, workgroupSize[1])
+        roundWGs(output.width(), workgroupSize[0]), 
+        roundWGs(output.height(), workgroupSize[1])
     }; 
 
     // Must have the padding the kernel expects
-    assert(input.padding == padding_);
+    assert(input.padding() == padding_);
 
     // Must be big enough that any edge mirroring can be
     // handled by the filter
-    assert(input.width >= ((filterLength_ - 1) / 2));
+    assert(input.width() >= ((filterLength_ - 1) / 2));
 
     // Input and output formats need to be exactly the same
-    assert(input.width == output.width);
-    assert(input.height == output.height);
-    assert(input.stride == output.stride);
-    assert(input.padding == output.padding);
+    assert(input.width() == output.width());
+    assert(input.height() == output.height());
+    assert(input.stride() == output.stride());
+    assert(input.padding() == output.padding());
     
 
     // Set all the arguments
-    kernel_.setArg(0, sizeof(input.buffer), &input.buffer);
-    kernel_.setArg(1, sizeof(output.buffer), &output.buffer);
-    kernel_.setArg(3, int(input.width));
-    kernel_.setArg(4, int(input.stride));
-    kernel_.setArg(5, int(input.height));
+    kernel_.setArg(0, input.buffer());
+    kernel_.setArg(1, output.buffer());
+    kernel_.setArg(3, int(input.width()));
+    kernel_.setArg(4, int(input.stride()));
+    kernel_.setArg(5, int(input.height()));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,

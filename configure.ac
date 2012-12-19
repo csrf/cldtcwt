@@ -21,6 +21,7 @@ fi
 
 PKG_CHECK_MODULES([opencv], [opencv glew])
 PKG_CHECK_MODULES([V4L2], [libv4l2])
+PKG_CHECK_MODULES([Eigen3], [eigen3])
 
 
 AC_CONFIG_FILES([Makefile])
