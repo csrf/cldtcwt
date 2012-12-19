@@ -1,5 +1,5 @@
-#ifndef FILTER_H
-#define FILTER_H
+#ifndef FILTERX_H
+#define FILTERX_H
 
 
 #ifndef __CL_ENABLE_EXCEPTIONS
