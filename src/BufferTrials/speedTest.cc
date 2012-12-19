@@ -9,6 +9,7 @@
 #include <sys/timeb.h>
 
 #include "FilterX/filterX.h"
+#include "FilterY/filterY.h"
 
 
 
@@ -26,6 +27,7 @@ int main()
 
         std::vector<float> filter(13, 0.0);
         FilterX filterX(context.context, context.devices, filter);
+        FilterY filterY(context.context, context.devices, filter);
   
         const size_t width = 1280, height = 720, 
                      padding = 8, alignment = 8;
@@ -37,24 +39,46 @@ int main()
         ImageBuffer output(context.context, CL_MEM_READ_WRITE,
                            width, height, padding, alignment);
 
+        {
+            // Run, timing
+            timeb start, end;
+            const int numFrames = 1000;
+            ftime(&start);
 
-        // Run, timing
-        timeb start, end;
-        const int numFrames = 1000;
-        ftime(&start);
+            for (int n = 0; n < numFrames; ++n)
+                filterX(cq, input, output);
 
-        for (int n = 0; n < numFrames; ++n) {
-            filterX(cq, input, output);
+            cq.finish();
+            ftime(&end);
+
+            // Work out what the difference between these is
+            double t = end.time - start.time 
+                     + 0.001 * (end.millitm - start.millitm);
+
+            std::cout << "FilterX: " 
+                    << (t / numFrames * 1000) << " ms" << std::endl;
         }
 
-        cq.finish();
-        ftime(&end);
+        {
+            // Run, timing
+            timeb start, end;
+            const int numFrames = 1000;
+            ftime(&start);
 
-        // Work out what the difference between these is
-        double t = end.time - start.time 
-                 + 0.001 * (end.millitm - start.millitm);
+            for (int n = 0; n < numFrames; ++n)
+                filterY(cq, input, output);
 
-        std::cout << (t / numFrames * 1000) << " ms" << std::endl;
+            cq.finish();
+            ftime(&end);
+
+            // Work out what the difference between these is
+            double t = end.time - start.time 
+                     + 0.001 * (end.millitm - start.millitm);
+
+            std::cout << "FilterY: " 
+                    << (t / numFrames * 1000) << " ms" << std::endl;
+
+        }
 
     }
     catch (cl::Error err) {
