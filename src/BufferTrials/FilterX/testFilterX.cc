@@ -11,7 +11,7 @@
 
 #include <sys/timeb.h>
 
-#include "BufferTrials/filter.h"
+#include "BufferTrials/FilterX/filterX.h"
 
 #include <Eigen/Dense>
 

@@ -1,11 +1,11 @@
-#include "filter.h"
+#include "filterX.h"
 #include "util/clUtil.h"
 #include <sstream>
 #include <string>
 #include <iostream>
 #include <cassert>
 
-#include "BufferTrials/filterXKernel.h"
+#include "BufferTrials/FilterX/filterXKernel.h"
 
 
 FilterX::FilterX(cl::Context& context, 
@@ -16,8 +16,8 @@ FilterX::FilterX(cl::Context& context,
     cl::Program::Sources source;
     source.push_back(
         std::make_pair(reinterpret_cast<const char*>
-                          (src_BufferTrials_filterXKernel_h_src), 
-                       src_BufferTrials_filterXKernel_h_src_len)
+              (src_BufferTrials_FilterX_filterXKernel_h_src), 
+               src_BufferTrials_FilterX_filterXKernel_h_src_len)
     );
 
     std::ostringstream compilerOptions;

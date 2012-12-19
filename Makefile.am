@@ -120,24 +120,25 @@ verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 
 
 noinst_LTLIBRARIES += libbufferfilter.la
-BUILT_SOURCES += src/BufferTrials/filterXKernel.h
+BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h
 libbufferfilter_la_SOURCES = src/BufferTrials/imageBuffer.cc \
-							 src/BufferTrials/filter.cc
+							 src/BufferTrials/FilterX/filterX.cc
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
 
 noinst_PROGRAMS += speedTestBufferTrial
-speedTestBufferTrial_SOURCES = src/BufferTrials/speedTestBufferTrial.cc 
+speedTestBufferTrial_SOURCES = src/BufferTrials/speedTest.cc 
 speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
 
 
-TESTS += testBufferTrial
-check_PROGRAMS = testBufferTrial
-testBufferTrial_SOURCES = src/BufferTrials/testBufferTrial.cc 
-testBufferTrial_LDADD   = libclutil.la libbufferfilter.la \
-						  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
-testBufferTrial_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+TESTS += testFilterX
+
+check_PROGRAMS = testFilterX
+testFilterX_SOURCES = src/BufferTrials/FilterX/testFilterX.cc 
+testFilterX_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 

@@ -8,7 +8,7 @@
 #include "CL/cl.hpp"
 
 
-#include "imageBuffer.h"
+#include "BufferTrials/imageBuffer.h"
 
 
 class FilterX {
