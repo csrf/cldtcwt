@@ -98,7 +98,6 @@ void FilterX::operator() (cl::CommandQueue& cq,
     kernel_.setArg(1, output.buffer());
     kernel_.setArg(3, int(input.width()));
     kernel_.setArg(4, int(input.stride()));
-    kernel_.setArg(5, int(input.height()));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,

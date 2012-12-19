@@ -12,8 +12,7 @@ __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void filterX(__global const float* input,
              __global float* output,
              __constant float* filter,
-             unsigned int width, unsigned int stride,
-             unsigned int height)
+             unsigned int width, unsigned int stride)
 {
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
