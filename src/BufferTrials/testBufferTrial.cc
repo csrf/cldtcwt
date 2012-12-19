@@ -11,9 +11,40 @@
 
 #include <sys/timeb.h>
 
-#include "filter.h"
+#include "BufferTrials/filter.h"
 
 #include <Eigen/Dense>
+
+// Check that the FilterX kernel actually does what it should
+
+Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
+                             const std::vector<float>& filter);
+
+Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
+                                const std::vector<float>& filter);
+
+
+int main()
+{
+
+    std::vector<float> filter(13, 0.0);
+    for (int n = 0; n < filter.size(); ++n)
+        filter[n] = n + 1;
+
+    Eigen::ArrayXXf X(5,8);
+    X.setRandom();
+    
+    Eigen::ArrayXXf refResult = convolveRows(X, filter);
+    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter);
+   
+    std::cout << refResult << std::endl;
+    std::cout << std::endl;
+    std::cout << gpuResult << std::endl;
+    std::cout << std::endl;
+    std::cout << (refResult - gpuResult) << std::endl;
+    return 0;
+}
+
 
 
 unsigned int wrap(int n, int width)
@@ -22,7 +53,11 @@ unsigned int wrap(int n, int width)
     // forwards-backwards-forwards-backwards etc, with the end
     // values repeated.
     
-    unsigned int result = n % (2 * width);
+    int result = n % (2 * width);
+
+    // Make sure we get the positive result
+    if (result < 0)
+        result += 2*width;
 
     return std::min(result, 2*width - result - 1);
 }
@@ -39,7 +74,7 @@ Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in,
     // Pad the input
     Eigen::ArrayXXf padded(in.rows(), in.cols() + filter.size() - 1);
 
-    for (int n = 0; n < padded.cols(); ++n)
+    for (int n = 0; n < padded.cols(); ++n) 
         padded.col(n) = in.col(wrap(n - offset, in.cols()));
 
     // For each output pixel
@@ -63,6 +98,21 @@ Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in,
 Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter)
 {
+    typedef
+    Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        Array;
+        
+
+    // Copy into an array where we set up the backing, so should
+    // know the data format!
+    std::vector<float> inValues(in.rows() * in.cols());
+    Eigen::Map<Array> input(&inValues[0], in.rows(), in.cols());
+    input = in;
+
+
+    std::vector<float> outValues(in.rows() * in.cols());
+    Eigen::Map<Array> output(&outValues[0], in.rows(), in.cols());
+
     try {
 
         CLContext context;
@@ -73,7 +123,7 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         FilterX filterX(context.context, context.devices, filter);
 
   
-        const size_t width = 1280, height = 720, 
+        const size_t width = in.cols(), height = in.rows(),
                      padding = 8, alignment = 8;
 
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
@@ -82,23 +132,30 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         ImageBuffer output(context.context, CL_MEM_READ_WRITE,
                            width, height, padding, alignment); 
 
+        // Upload the data
+        cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * input.padding(),
+                              input.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({input.width() * sizeof(float),
+                              input.height(), 1}),
+              input.stride() * sizeof(float), 0,
+              0, 0,
+              &inValues[0]);
 
-        timeb start, end;
-        const int numFrames = 1000;
-        ftime(&start);
+        // Try the filter
+        filterX(cq, input, output);
 
-        for (int n = 0; n < numFrames; ++n) {
-            filterX(cq, input, output);
-        }
-
-        cq.finish();
-        ftime(&end);
-
-        // Work out what the difference between these is
-        double t = end.time - start.time 
-                 + 0.001 * (end.millitm - start.millitm);
-
-        std::cout << (t / numFrames * 1000) << " ms" << std::endl;
+        // Download the data
+        cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * output.padding(),
+                             output.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({output.width() * sizeof(float),
+                             output.height(), 1}),
+              output.stride() * sizeof(float), 0,
+              0, 0,
+              &outValues[0]);
 
     }
     catch (cl::Error err) {
@@ -107,20 +164,11 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         throw;
     }
 
+    Array out = output;
+
+    return out;
 }
 
 
-
-int main()
-{
-
-    std::vector<float> filter(13, 0.0);
-    Eigen::ArrayXXf X(20,10);
-    
-   
-
-                         
-    return 0;
-}
 
 
