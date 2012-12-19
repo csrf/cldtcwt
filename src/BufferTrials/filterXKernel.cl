@@ -34,10 +34,13 @@ void filterX(__global const float* input,
     if (g.x < (HALF_WG_W + PADDING))
         cache[l.y][l.x] = cache[l.y][WG_W - l.x - 1];
 
-    const int upperOffset = g.x - PADDING + HALF_WG_W - width;
-    if (upperOffset >= 0)
-        cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W
-                                           - upperOffset - 1];
+    const int upperEdge = width + PADDING - 1;
+    if ((g.x + HALF_WG_W) > upperEdge) {
+        const int overshoot = g.x + HALF_WG_W - upperEdge;
+
+        cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W - 
+                                      ((overshoot << 1) - 1)];
+    }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
