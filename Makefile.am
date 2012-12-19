@@ -132,7 +132,8 @@ speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
 
 
-noinst_PROGRAMS += testBufferTrial
+TESTS += testBufferTrial
+check_PROGRAMS = testBufferTrial
 testBufferTrial_SOURCES = src/BufferTrials/testBufferTrial.cc 
 testBufferTrial_LDADD   = libclutil.la libbufferfilter.la \
 						  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@

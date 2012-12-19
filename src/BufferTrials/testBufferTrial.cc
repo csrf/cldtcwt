@@ -31,18 +31,31 @@ int main()
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(5,8);
+    Eigen::ArrayXXf X(5,12);
     X.setRandom();
     
+    // Try with reference and GPU implementations
     Eigen::ArrayXXf refResult = convolveRows(X, filter);
     Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter);
    
-    std::cout << refResult << std::endl;
-    std::cout << std::endl;
-    std::cout << gpuResult << std::endl;
-    std::cout << std::endl;
-    std::cout << (refResult - gpuResult) << std::endl;
-    return 0;
+    // Check the maximum error is within tolerances
+    float biggestDiscrepancy = 
+        (refResult - gpuResult).abs().maxCoeff();
+
+    // No problem if within tolerances
+    if (biggestDiscrepancy < 1.e-5)
+        return 0;
+    else {
+
+        // Display diagnostics:
+        std::cerr << "Should have been:\n"
+                  << refResult << "\n\n"
+                  << "Was:\n"
+                  << gpuResult << std::endl;
+
+        return -1;
+    }
+
 }
 
 
