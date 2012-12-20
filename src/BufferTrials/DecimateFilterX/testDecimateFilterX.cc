@@ -17,26 +17,30 @@
 
 // Check that the FilterX kernel actually does what it should
 
-Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter);
+Eigen::ArrayXXf decimateConvolveRows(const Eigen::ArrayXXf& in, 
+                             const std::vector<float>& filter,
+                             bool extend,
+                             bool swapOutputs);
 
 Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
-                                const std::vector<float>& filter);
+                                const std::vector<float>& filter,
+                                bool swapOutputs);
 
 
 int main()
 {
 
-    std::vector<float> filter(13, 0.0);
+    std::vector<float> filter(14, 0.0);
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(5,12);
+    Eigen::ArrayXXf X(5,20);
     X.setRandom();
     
     // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = convolveRows(X, filter);
-    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter);
+    Eigen::ArrayXXf refResult = convolveRows(X, filter,
+                                             false, false);
+    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter, false);
    
     // Check the maximum error is within tolerances
     float biggestDiscrepancy = 
@@ -77,30 +81,45 @@ unsigned int wrap(int n, int width)
 
 
 
-Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter)
+Eigen::ArrayXXf decimateConvolveRows
+                            (const Eigen::ArrayXXf& in, 
+                             const std::vector<float>& filter,
+                             bool extend,
+                             bool swapOutputs)
 {
-    size_t offset = (filter.size() - 1) / 2;
+    // If extending, we want to create an extra output by
+    // taking an extra sample from each end.  Symmetric is
+    // whether the reversed filter output should come first in
+    // the pairs or second
 
-    Eigen::ArrayXXf output(in.rows(), in.cols());
+    size_t offset = filter.size() - 2 + (extend? 1 : 0);
+
+    Eigen::ArrayXXf output(in.rows(), 
+            (in.cols() + (extend? 2 : 0)) / 2);
 
     // Pad the input
-    Eigen::ArrayXXf padded(in.rows(), in.cols() + filter.size() - 1);
+    Eigen::ArrayXXf padded(in.rows(), in.cols() + 2 * offset);
 
     for (int n = 0; n < padded.cols(); ++n) 
         padded.col(n) = in.col(wrap(n - offset, in.cols()));
 
-    // For each output pixel
-    for (size_t r = 0; r < in.rows(); ++r)
-        for (size_t c = 0; c < in.cols(); ++c) {
+    // For each pair of output pixels
+    for (size_t r = 0; r < output.rows(); ++r)
+        for (size_t c = 0; c < output.cols(); c += 2) {
 
             // Perform the convolution
-            float v = 0.f;
-            for (size_t n = 0; n < filter.size(); ++n)
-                v += filter[filter.size()-n-1]
-                        * padded(r, c+n);
+            float v1 = 0.f, v2 = 0.f;
 
-            output(r,c) = v;
+            for (size_t n = 0; n < filter.size(); ++n) {
+                v1 += filter[filter.size()-n-1]
+                        * padded(r, 2*c+2*n);
+               
+                v2 += filter[n]
+                        * padded(r, 2*c+2*n+1);
+            }
+
+            output(r,c) = swapOutputs? v2 : v1;
+            output(r,c+1) = swapOutputs? v1 : v2;
         }
 
     return output;

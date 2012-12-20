@@ -9,7 +9,7 @@
 
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
-void filterX(__global const float* input,
+void decimateFilterX(__global const float* input,
              __global float* output,
              __constant float* filter,
              unsigned int width, unsigned int stride)
@@ -17,16 +17,21 @@ void filterX(__global const float* input,
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
 
-    const int pos = g.y*stride + g.x;
+    // Decimation means we also need to move along according to
+    // workgroup number (since we move along the input faster than
+    // along the output matrix).
+    const int pos = g.y*stride + g.x + get_group_id(0) * WG_W;
 
-    __local float cache[WG_H][2*WG_W];
+    __local float cache[WG_H][4*WG_W];
 
     // Load a rectangle two workgroups wide
-    cache[l.y][l.x] = input[pos - HALF_WG_W];
-    cache[l.y][l.x+WG_W] = input[pos + HALF_WG_W];
+    cache[l.y][l.x]        = input[pos - WG_W];
+    cache[l.y][l.x+WG_W]   = input[pos];
+    cache[l.y][l.x+2*WG_W] = input[pos + WG_W];
+    cache[l.y][l.x+3*WG_W] = input[pos + 2*WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
-
+#if 0
     // Wrap the ends, if needed.  Only one level of wrapping
     // is allowed, and the image must be at least HALF_WG_W
     // wide.
@@ -66,5 +71,6 @@ void filterX(__global const float* input,
     // Write it to the output
     output[pos] = v;
 
+#endif
 }
 
