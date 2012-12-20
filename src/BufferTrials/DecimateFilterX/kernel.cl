@@ -7,6 +7,20 @@
 #define FILTER_OFFSET (FILTER_LENGTH-2)
 #define HALF_WG_W (WG_W >> 1)
 
+
+int wrap(int n, int width)
+{
+    // Perform symmetric extension of an index, if needed.  The input n
+    // must not be negative.
+    if (n < width)
+        return n;
+    else {
+        int tmp = n % (2*width);
+        return min(tmp, 2*width - 1 - tmp);
+    }
+}
+
+
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterX(__global const float* input,
@@ -33,13 +47,15 @@ void decimateFilterX(__global const float* input,
     cache[l.y][l.x+3*WG_W] = input[pos + 2*WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
-#if 0
-    // Wrap the ends, if needed.  Only one level of wrapping
-    // is allowed, and the image must be at least HALF_WG_W
-    // wide.
-    if (g.x < (HALF_WG_W + PADDING))
-        cache[l.y][l.x] = cache[l.y][WG_W - l.x - 1];
 
+    // Wrap the bottom end, if needed.      
+    int offset = g.x - (WG_W + PADDING);
+    if (offset < 0) {
+        offset = -1 - offset;
+        cache[l.y][l.x] = cache[l.y][WG_W + wrap(offset, width)];
+    }
+
+#if 0
     const int upperEdge = width + PADDING - 1;
 
     
@@ -62,9 +78,9 @@ void decimateFilterX(__global const float* input,
 
     }
 
-    barrier(CLK_LOCAL_MEM_FENCE);
-
 #endif
+
+    barrier(CLK_LOCAL_MEM_FENCE);
 
     // Calculate the convolution
     float v = 0.f;
