@@ -136,6 +136,12 @@ speedTestBufferTrial_SOURCES = src/BufferTrials/speedTest.cc
 speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
 
+noinst_PROGRAMS += speedTestDecimateFilterX
+speedTestDecimateFilterX_SOURCES = \
+	   src/BufferTrials/DecimateFilterX/speedTestDecimateFilterX.cc 
+speedTestDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la \
+							   @CL_LIBS@ @opencv_LIBS@ 
+
 
 TESTS += testFilterX testFilterY
 
@@ -146,7 +152,7 @@ testFilterX_LDADD   = libclutil.la libbufferfilter.la \
 testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
-check_PROGRAMS = testFilterY
+check_PROGRAMS += testFilterY
 testFilterY_SOURCES = src/BufferTrials/FilterY/testFilterY.cc 
 testFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
@@ -157,11 +163,12 @@ testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 TESTS += testDecimateFilterX 
 
-check_PROGRAMS = testDecimateFilterX
-testFilterX_SOURCES = src/BufferTrials/DecimateFilterX/testDecimateFilterX.cc 
-testFilterX_LDADD   = libclutil.la libbufferfilter.la \
+check_PROGRAMS += testDecimateFilterX
+testDecimateFilterX_SOURCES = \
+	  src/BufferTrials/DecimateFilterX/testDecimateFilterX.cc 
+testDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
-testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+testDecimateFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
