@@ -16,9 +16,15 @@ ImageBuffer::ImageBuffer(cl::Context& context,
     if (overshoot != 0)
         stride_ += alignment - overshoot;
 
+    // Pad the height to meet the alignment as well, in case
+    // anyone ever tried to access that region of memory
+    size_t fullHeight = height_ + 2*padding_;
+    overshoot = fullHeight % alignment;
+    if (overshoot)
+        fullHeight += alignment - overshoot;
+
     buffer_ = cl::Buffer(context, flags,
-                         stride_ * (height_ + 2*padding_)
-                          * sizeof(float));
+                         stride_ * fullHeight * sizeof(float));
 }
 
 
