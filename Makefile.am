@@ -121,10 +121,13 @@ verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 
 noinst_LTLIBRARIES += libbufferfilter.la
 BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
-                 src/BufferTrials/FilterY/filterYKernel.h
-libbufferfilter_la_SOURCES = src/BufferTrials/imageBuffer.cc \
-							 src/BufferTrials/FilterX/filterX.cc \
-							 src/BufferTrials/FilterY/filterY.cc
+                 src/BufferTrials/FilterY/filterYKernel.h \
+                 src/BufferTrials/DecimateFilterX/kernel.h
+libbufferfilter_la_SOURCES = \
+		 src/BufferTrials/imageBuffer.cc \
+		 src/BufferTrials/FilterX/filterX.cc \
+		 src/BufferTrials/FilterY/filterY.cc \
+		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc 
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
 
@@ -148,6 +151,17 @@ testFilterY_SOURCES = src/BufferTrials/FilterY/testFilterY.cc
 testFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
+
+
+
+TESTS += testDecimateFilterX 
+
+check_PROGRAMS = testDecimateFilterX
+testFilterX_SOURCES = src/BufferTrials/DecimateFilterX/testDecimateFilterX.cc 
+testFilterX_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
