@@ -12,7 +12,9 @@ __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterX(__global const float* input,
              __global float* output,
              __constant float* filter,
-             unsigned int width, unsigned int stride)
+             unsigned int width, 
+             unsigned int stride,
+             unsigned int outStride)
 {
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
@@ -72,5 +74,8 @@ void decimateFilterX(__global const float* input,
     output[pos] = v;
 
 #endif
+
+    output[g.y*outStride + g.x] = cache[l.y][l.x];
+
 }
 
