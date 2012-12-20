@@ -4,7 +4,7 @@
 // should be offset by the amount of the padding.  Padding and all
 // other dimensions should be the same in both input and output images
 
-#define FILTER_OFFSET ((FILTER_LENGTH-1) >> 1)
+#define FILTER_OFFSET (FILTER_LENGTH-2)
 #define HALF_WG_W (WG_W >> 1)
 
 __kernel
@@ -64,18 +64,16 @@ void decimateFilterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    // Calculate the convolution
-    float v = 0.f;
-    for (int n = 0; n < FILTER_LENGTH; ++n) 
-         v = mad(cache[l.y][l.x + n + HALF_WG_W - FILTER_OFFSET], 
-                 filter[FILTER_LENGTH-n-1], v);        
-
-    // Write it to the output
-    output[pos] = v;
-
 #endif
 
-    output[g.y*outStride + g.x] = cache[l.y][l.x];
+    // Calculate the convolution
+    float v = 0.f;
+    for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
+         v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
+                 filter[n], v);        
+
+    // Write it to the output
+    output[g.y*outStride + g.x] = v;
 
 }
 
