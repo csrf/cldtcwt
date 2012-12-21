@@ -64,8 +64,9 @@ DecimateFilterX::DecimateFilterX(cl::Context& context,
     assert((filterLength_ & 1) == 0);
 
     // Make sure the filter is short enough that we can load
-    // all the necessary surrounding data with the kernel
-    assert(filterLength_-2 <= workgroupSize_);
+    // all the necessary surrounding data with the kernel (plus
+    // an extra if we need an extension)
+    assert(filterLength_-1 <= workgroupSize_);
 
     // Make sure we have enough padding to load the adjacent
     // values without going out of the image to the left/top
@@ -79,7 +80,6 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
-    // TODO
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
     cl::NDRange offset = {padding_, padding_};
@@ -91,10 +91,6 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
 
     // Must have the padding the kernel expects
     assert(input.padding() == padding_);
-
-    // Must be big enough that any edge mirroring can be
-    // handled by the filter
-    assert(input.width() >= ((filterLength_ - 1) / 2));
 
     // Input and output formats need to be exactly the same
     assert(input.width()+2 >= 2*output.width());
