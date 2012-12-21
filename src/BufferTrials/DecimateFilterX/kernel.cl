@@ -55,37 +55,49 @@ void decimateFilterX(__global const float* input,
         cache[l.y][l.x] = cache[l.y][WG_W + wrap(offset, width)];
     }
 
-#if 0
-    const int upperEdge = width + PADDING - 1;
+    // Position within the cache of the start of invalid data
+    const int threshold =  width - 2 * WG_W * get_group_id(0) + WG_W;
 
-    
-    // Check whether we need to mirror the upper half at the 
-    // upper end
-    if ((g.x + HALF_WG_W) > upperEdge) {
+    if ((l.x + 3*WG_W) >= threshold) {
+        
+        int readpos = wrap(g.x - PADDING + 3*WG_W, width);
 
-        int overshoot = g.x + HALF_WG_W - upperEdge;
+        int localReadpos = width-readpos+threshold;
 
-        cache[l.y][l.x+WG_W] = cache[l.y][l.x+WG_W - 
-                                      ((overshoot << 1) - 1)];
+        // Make sure we don't read an invalid location!
+        cache[l.y][l.x+3*WG_W] = cache[l.y][max(localReadpos, 0)];
 
-        // Check whether the lower half needs the same
-        if ((g.x - HALF_WG_W) > upperEdge) {
+        if ((l.x + 2*WG_W) >= threshold) {
 
-            overshoot -= WG_W;
-            cache[l.y][l.x] = cache[l.y][l.x - ((overshoot << 1) - 1)];
+            int readpos = wrap(g.x - PADDING + 2*WG_W, width);
 
+            int localReadpos = width-readpos+threshold;
+
+            // Make sure we don't read an invalid location!
+            cache[l.y][l.x+2*WG_W] = cache[l.y][max(localReadpos, 0)];
+
+
+            if ((l.x + WG_W) >= threshold) {
+
+                int readpos = wrap(g.x - PADDING + WG_W, width);
+
+                int localReadpos = width-readpos+threshold;
+
+                // Make sure we don't read an invalid location!
+                cache[l.y][l.x+WG_W] = cache[l.y][max(localReadpos, 0)];
+
+            }
         }
-
     }
-
-#endif
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // Calculate the convolution
     float v = 0.f;
-    for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-         v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
+    int diff = (l.x & 1) ? -2 : 2;
+    int start = WG_W - FILTER_OFFSET + (l.x & 1) ? (2*FILTER_LENGTH-1) : 0;
+    for (int n = 0; n < FILTER_LENGTH; ++n) 
+         v = mad(cache[l.y][start + n * diff], 
                  filter[n], v);        
 
     // Write it to the output
