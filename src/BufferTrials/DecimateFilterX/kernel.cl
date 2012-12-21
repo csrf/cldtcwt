@@ -94,10 +94,16 @@ void decimateFilterX(__global const float* input,
 
     // Calculate the convolution
     float v = 0.f;
-    for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-        v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
-                select(filter[n+1], filter[n], l.x & 1), v);      
-    
+    if (l.x & 1) 
+        // Backwards
+        for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
+            v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
+                    filter[n+1], v);      
+    else
+        // Forwards
+        for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
+            v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
+                    filter[n], v);      
 
     // Write it to the output
     output[g.y*outStride + g.x] = v;
