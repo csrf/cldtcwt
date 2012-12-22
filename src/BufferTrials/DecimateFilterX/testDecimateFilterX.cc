@@ -11,7 +11,7 @@
 
 #include <sys/timeb.h>
 
-#include "BufferTrials/FilterX/filterX.h"
+#include "BufferTrials/DecimateFilterX/decimateFilterX.h"
 
 #include <Eigen/Dense>
 
@@ -19,10 +19,9 @@
 
 Eigen::ArrayXXf decimateConvolveRows(const Eigen::ArrayXXf& in, 
                              const std::vector<float>& filter,
-                             bool extend,
                              bool swapOutputs);
 
-Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
+Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter,
                                 bool swapOutputs);
 
@@ -31,16 +30,16 @@ int main()
 {
 
     std::vector<float> filter(14, 0.0);
-    for (int n = 0; n < filter.size(); ++n)
-        filter[n] = n + 1;
+    filter[7] = 1.f;
+    //for (int n = 0; n < filter.size(); ++n)
+    //    filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(5,20);
+    Eigen::ArrayXXf X(5,16);
     X.setRandom();
     
     // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = convolveRows(X, filter,
-                                             false, false);
-    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter, false);
+    Eigen::ArrayXXf refResult = decimateConvolveRows(X, filter, false);
+    Eigen::ArrayXXf gpuResult = decimateConvolveRowsGPU(X, filter, false);
    
     // Check the maximum error is within tolerances
     float biggestDiscrepancy = 
@@ -52,7 +51,9 @@ int main()
     else {
 
         // Display diagnostics:
-        std::cerr << "Should have been:\n"
+        std::cerr << "Input:\n"
+                  << X << "\n\n"
+                  << "Should have been:\n"
                   << refResult << "\n\n"
                   << "Was:\n"
                   << gpuResult << std::endl;
@@ -84,13 +85,14 @@ unsigned int wrap(int n, int width)
 Eigen::ArrayXXf decimateConvolveRows
                             (const Eigen::ArrayXXf& in, 
                              const std::vector<float>& filter,
-                             bool extend,
                              bool swapOutputs)
 {
     // If extending, we want to create an extra output by
     // taking an extra sample from each end.  Symmetric is
     // whether the reversed filter output should come first in
     // the pairs or second
+
+    bool extend = (in.cols() % 4) != 0;
 
     size_t offset = filter.size() - 2 + (extend? 1 : 0);
 
@@ -127,8 +129,9 @@ Eigen::ArrayXXf decimateConvolveRows
 
 
 
-Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
-                                const std::vector<float>& filter)
+Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in, 
+                                const std::vector<float>& filter,
+                                bool swapOutputs)
 {
     typedef
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
@@ -142,8 +145,9 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
     input = in;
 
 
-    std::vector<float> outValues(in.rows() * in.cols());
-    Eigen::Map<Array> output(&outValues[0], in.rows(), in.cols());
+    const size_t outputWidth = (in.cols() + in.cols() % 4) / 2;
+    std::vector<float> outValues(in.rows() * outputWidth);
+    Eigen::Map<Array> output(&outValues[0], in.rows(), outputWidth);
 
     try {
 
@@ -152,17 +156,18 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        FilterX filterX(context.context, context.devices, filter);
+        DecimateFilterX decimateFilterX(context.context, context.devices, filter,
+                                        swapOutputs);
 
   
         const size_t width = in.cols(), height = in.rows(),
-                     padding = 8, alignment = 8;
+                     padding = 16, alignment = 32;
 
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
 
         ImageBuffer output(context.context, CL_MEM_READ_WRITE,
-                           width, height, padding, alignment); 
+                           outputWidth, height, padding, alignment); 
 
         // Upload the data
         cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
@@ -176,7 +181,7 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
               &inValues[0]);
 
         // Try the filter
-        filterX(cq, input, output);
+        decimateFilterX(cq, input, output);
 
         // Download the data
         cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
