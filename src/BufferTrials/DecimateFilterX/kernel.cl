@@ -94,16 +94,17 @@ void decimateFilterX(__global const float* input,
 
     // Calculate the convolution
     float v = 0.f;
-    if (l.x & 1) 
+    if (l.x & 1) {
+        const size_t start = (l.x << 1) - 1 + WG_W - FILTER_OFFSET;
         // Backwards
         for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-            v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
-                    filter[n+1], v);      
-    else
+            v = mad(cache[l.y][start + n], filter[n+1], v);      
+    } else {
+        const size_t start = (l.x << 1) + WG_W - FILTER_OFFSET;
         // Forwards
         for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-            v = mad(cache[l.y][l.x + n + WG_W - FILTER_OFFSET], 
-                    filter[n], v);      
+            v = mad(cache[l.y][start + n], filter[n], v);      
+    }
 
     // Write it to the output
     output[g.y*outStride + g.x] = v;
