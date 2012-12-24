@@ -40,71 +40,26 @@ void decimateFilterX(__global const float* input,
 
     __local float cache[WG_H][4*WG_W];
 
-    // Load a rectangle two workgroups wide
-    cache[l.y][l.x]        = input[pos - WG_W];
-    cache[l.y][l.x+WG_W]   = input[pos];
-    cache[l.y][l.x+2*WG_W] = input[pos + WG_W];
-    cache[l.y][l.x+3*WG_W] = input[pos + 2*WG_W];
+    // Load every fourth input into its block
+    const float offsets[4] = {0, 3*WG_W-1, WG_W, 4*WG_W-1};
+    const int d = (l.x & 1) ? -1 : 1;
+    const int p = offsets[l.x&3] + d * l.x;
+
+    cache[l.y][p                  ] = input[pos - WG_W];
+    cache[l.y][p + d*  (WG_W >> 2)] = input[pos];
+    cache[l.y][p + d*2*(WG_W >> 2)] = input[pos + WG_W];
+    cache[l.y][p + d*3*(WG_W >> 2)] = input[pos + 2*WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    // Wrap the bottom end, if needed.      
-    int offset = g.x - (WG_W + PADDING);
-    if (offset < 0) {
-        offset = -1 - offset;
-        cache[l.y][l.x] = cache[l.y][WG_W + wrap(offset, width)];
-    }
-
-    // Position within the cache of the start of invalid data
-    const int threshold =  width - 2 * WG_W * get_group_id(0) + WG_W;
-
-    if ((l.x + 3*WG_W) >= threshold) {
-        
-        int readpos = wrap(g.x - PADDING + 3*WG_W, width);
-
-        int localReadpos = width-readpos+threshold;
-
-        // Make sure we don't read an invalid location!
-        cache[l.y][l.x+3*WG_W] = cache[l.y][max(localReadpos, 0)];
-
-        if ((l.x + 2*WG_W) >= threshold) {
-
-            int readpos = wrap(g.x - PADDING + 2*WG_W, width);
-
-            int localReadpos = width-readpos+threshold;
-
-            // Make sure we don't read an invalid location!
-            cache[l.y][l.x+2*WG_W] = cache[l.y][max(localReadpos, 0)];
-
-
-            if ((l.x + WG_W) >= threshold) {
-
-                int readpos = wrap(g.x - PADDING + WG_W, width);
-
-                int localReadpos = width-readpos+threshold;
-
-                // Make sure we don't read an invalid location!
-                cache[l.y][l.x+WG_W] = cache[l.y][max(localReadpos, 0)];
-
-            }
-        }
-    }
-
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    // Calculate the convolution
+    const int offset1 = l.x + (l.x & 1) ? (3*WG_W - HALF_WG_W) : 0;
     float v = 0.f;
-    if (l.x & 1) {
-        const size_t start = (l.x << 1) - 1 + WG_W - FILTER_OFFSET;
-        // Backwards
-        for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-            v = mad(cache[l.y][start + n], filter[n+1], v);      
-    } else {
-        const size_t start = (l.x << 1) + WG_W - FILTER_OFFSET;
-        // Forwards
-        for (int n = 0; n < (2*FILTER_LENGTH); n += 2) 
-            v = mad(cache[l.y][start + n], filter[n], v);      
-    }
+    for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
+        v += filter[n] * cache[l.y][offset1+n];
+
+    const int offset2 = l.x + (l.x & 1) ? (2*WG_W - HALF_WG_W) : WG_W;
+    for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
+        v += filter[n] * cache[l.y][offset2+n];
 
     // Write it to the output
     output[g.y*outStride + g.x] = v;
