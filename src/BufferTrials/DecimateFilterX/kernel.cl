@@ -60,7 +60,7 @@ void decimateFilterX(__global const float* input,
 
     // Calculate positions to read coefficients from
     int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         + (l.x & 1) * (3*WG_W - 3);
+                         + (l.x & 1) * (3*WG_W - 1 - 2*l.x);
     const int offset1 = select(baseOffset, baseOffset ^ 1, l.x & 1);
 
     baseOffset += 1;
@@ -71,7 +71,7 @@ void decimateFilterX(__global const float* input,
     const int lx = l.x ^ 1;
 
     int baseOffsetSwap = lx + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         + (lx & 1) * (3*WG_W - 3);
+                         + (lx & 1) * (3*WG_W - 1 - 2*lx);
     const int offset1Swap = select(baseOffsetSwap, 
                                    baseOffsetSwap ^ 1, 
                                    lx & 1);

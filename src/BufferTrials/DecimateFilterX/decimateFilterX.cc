@@ -41,21 +41,18 @@ DecimateFilterX::DecimateFilterX(cl::Context& context,
     // ...and extract the useful part, viz the kernel
     kernel_ = cl::Kernel(program, "decimateFilterX");
 
-    // We want the forward and backward coefficients interleaved:
-    // going back first, then forward
-    std::vector<float> interleavedFilter(2*filter.size());
+    // We want the filter to be reversed 
+    std::vector<float> reversedFilter(filter.size());
 
     filterLength_ = filter.size();
-    for (int n = 0; n < filter.size(); ++n) {
-        interleavedFilter[2*n] = filter[filterLength_ - n - 1];
-        interleavedFilter[2*n+1] = filter[n];
-    }
+    for (int n = 0; n < filter.size(); ++n) 
+        reversedFilter[n] = filter[filterLength_ - n - 1];
 
     // Upload the filter coefficients
     filter_ = cl::Buffer(context,
                          CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                         interleavedFilter.size() * sizeof(float),
-                         &interleavedFilter[0]);
+                         reversedFilter.size() * sizeof(float),
+                         &reversedFilter[0]);
 
     // Set that filter for use
     kernel_.setArg(2, filter_);
