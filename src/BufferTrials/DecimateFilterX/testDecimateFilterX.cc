@@ -27,6 +27,14 @@ Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in,
                                 bool swapOutputs);
 
 
+// Runs both with the same parameters, and displays output if failure,
+// returning true.
+bool compareImplementations(const Eigen::ArrayXXf& in, 
+                            const std::vector<float>& filter,
+                            bool swapOutputs,
+                            float tolerance);
+
+
 int main()
 {
 
@@ -34,34 +42,46 @@ int main()
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(5,16);
-    X.setRandom();
     
-    // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = decimateConvolveRows(X, filter, false);
-    Eigen::ArrayXXf gpuResult = decimateConvolveRowsGPU(X, filter, false);
-   
-    // Check the maximum error is within tolerances
-    float biggestDiscrepancy = 
-        (refResult - gpuResult).abs().maxCoeff();
+    Eigen::ArrayXXf X1(5,16);
+    X1.setRandom();
 
-    // No problem if within tolerances
-    if (biggestDiscrepancy < 1.e-5)
-        return 0;
-    else {
+    float eps = 1.e-5;
 
-        // Display diagnostics:
-        std::cerr << "Input:\n"
-                  << X << "\n\n"
-                  << "Should have been:\n"
-                  << refResult << "\n\n"
-                  << "Was:\n"
-                  << gpuResult << std::endl;
-
+    if (compareImplementations(X1, filter, false, eps)) {
+        std::cerr << "Failed no extension, no swapped outputs" 
+                  << std::endl;
         return -1;
     }
 
+    if (compareImplementations(X1, filter, true, eps)) {
+        std::cerr << "Failed no extension, swapped output trees" 
+                  << std::endl;
+        return -1;
+    }
+    
+    Eigen::ArrayXXf X2(5,18);
+    X2.setRandom();
+
+    if (compareImplementations(X2, filter, false, eps)) {
+        std::cerr << "Failed extension, no swapped outputs" 
+                  << std::endl;
+        return -1;
+    }
+
+    if (compareImplementations(X2, filter, true, eps)) {
+        std::cerr << "Failed extension, swapped output trees" 
+                  << std::endl;
+        return -1;
+    }
+
+    // No failures if we reached here
+    return 0;
+ 
 }
+
+
+
 
 
 
@@ -78,6 +98,38 @@ unsigned int wrap(int n, int width)
         result += 2*width;
 
     return std::min(result, 2*width - result - 1);
+}
+
+
+
+bool compareImplementations(const Eigen::ArrayXXf& in, 
+                            const std::vector<float>& filter,
+                            bool swapOutputs,
+                            float tolerance)
+{
+    // Try with reference and GPU implementations
+    Eigen::ArrayXXf refResult = decimateConvolveRows(in, filter, swapOutputs);
+    Eigen::ArrayXXf gpuResult = decimateConvolveRowsGPU(in, filter, swapOutputs);
+   
+    // Check the maximum error is within tolerances
+    float biggestDiscrepancy = 
+        (refResult - gpuResult).abs().maxCoeff();
+
+    // No problem if within tolerances
+    if (biggestDiscrepancy < tolerance)
+        return false;
+    else {
+
+        // Display diagnostics:
+        std::cerr << "Input:\n"
+                  << in << "\n\n"
+                  << "Should have been:\n"
+                  << refResult << "\n\n"
+                  << "Was:\n"
+                  << gpuResult << std::endl;
+
+        return true;
+    }
 }
 
 
