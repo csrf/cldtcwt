@@ -40,18 +40,24 @@ void decimateFilterX(__global const float* input,
 
     __local float cache[WG_H][4*WG_W];
 
-    // Load every fourth input into its block
-    const float offsets[4] = {0, 3*WG_W-1, WG_W, 4*WG_W-1};
-    const int d = (l.x & 1) ? -1 : 1;
-    const int p = offsets[l.x&3] + d * l.x;
+    // Extract evens in order
+    const int evenAddr = l.x >> 1;
 
-    cache[l.y][p                  ] = input[pos - WG_W];
-    cache[l.y][p + d*  (WG_W >> 2)] = input[pos];
-    cache[l.y][p + d*2*(WG_W >> 2)] = input[pos + WG_W];
-    cache[l.y][p + d*3*(WG_W >> 2)] = input[pos + 2*WG_W];
+    // Extract odds backwards, and with pairs in reverse order
+    // (so as to avoid bank conflicts when reading later)
+    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
+
+    const int d = (l.x & 1) ? -1 : 1; // Direction to move the block in
+    const int p = (l.x & 1) ? oddAddr : evenAddr;
+
+    cache[l.y][p                 ] = input[pos - WG_W];
+    cache[l.y][p + d*  (WG_W / 2)] = input[pos];
+    cache[l.y][p + d*2*(WG_W / 2)] = input[pos + WG_W];
+    cache[l.y][p + d*3*(WG_W / 2)] = input[pos + 2*WG_W];
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
+#if 0
     const int offset1 = l.x + (l.x & 1) ? (3*WG_W - HALF_WG_W) : 0;
     float v = 0.f;
     for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
@@ -60,9 +66,10 @@ void decimateFilterX(__global const float* input,
     const int offset2 = l.x + (l.x & 1) ? (2*WG_W - HALF_WG_W) : WG_W;
     for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
         v += filter[n] * cache[l.y][offset2+n];
+#endif
 
     // Write it to the output
-    output[g.y*outStride + g.x] = v;
+    output[g.y*outStride + g.x] = 0.f;
 
 }
 
