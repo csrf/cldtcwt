@@ -9,6 +9,7 @@
 #include <sys/timeb.h>
 
 #include "PadX/padX.h"
+#include "PadY/padY.h"
 #include "FilterX/filterX.h"
 #include "FilterY/filterY.h"
 
@@ -27,6 +28,7 @@ int main()
         cl::CommandQueue cq(context.context, context.devices[0]);
 
         PadX padX(context.context, context.devices);
+        PadY padY(context.context, context.devices);
 
         std::vector<float> filter(13, 0.0);
         FilterX filterX(context.context, context.devices, filter);
@@ -70,8 +72,10 @@ int main()
             const int numFrames = 1000;
             ftime(&start);
 
-            for (int n = 0; n < numFrames; ++n)
+            for (int n = 0; n < numFrames; ++n) {
+                padY(cq, input);
                 filterY(cq, input, output);
+            }
 
             cq.finish();
             ftime(&end);
