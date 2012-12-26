@@ -122,12 +122,14 @@ verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
 noinst_LTLIBRARIES += libbufferfilter.la
 BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/FilterY/filterYKernel.h \
-                 src/BufferTrials/DecimateFilterX/kernel.h
+                 src/BufferTrials/DecimateFilterX/kernel.h \
+                 src/BufferTrials/PadX/kernel.h
 libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/imageBuffer.cc \
 		 src/BufferTrials/FilterX/filterX.cc \
 		 src/BufferTrials/FilterY/filterY.cc \
-		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc 
+		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc \
+		 src/BufferTrials/PadX/padX.cc 
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
 

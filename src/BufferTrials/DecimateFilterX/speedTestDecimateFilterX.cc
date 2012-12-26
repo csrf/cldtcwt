@@ -9,6 +9,7 @@
 #include <sys/timeb.h>
 
 #include "decimateFilterX.h"
+#include "../PadX/padX.h"
 
 
 
@@ -27,6 +28,7 @@ int main()
         std::vector<float> filter(14, 0.0);
         DecimateFilterX filterX(context.context, context.devices, filter,
                                 false);
+        PadX padX(context.context, context.devices);
   
         const size_t width = 1280, height = 720, 
                      padding = 16, alignment = 2*16;
@@ -44,8 +46,10 @@ int main()
             const int numFrames = 1000;
             ftime(&start);
 
-            for (int n = 0; n < numFrames; ++n)
+            for (int n = 0; n < numFrames; ++n) {
+                padX(cq, input);
                 filterX(cq, input, output);
+            }
 
             cq.finish();
             ftime(&end);
