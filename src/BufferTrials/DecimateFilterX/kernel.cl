@@ -44,12 +44,18 @@ void decimateFilterX(__global const float* input,
 
     __local float cache[WG_H][4*WG_W];
 
+    // Usually we want to swap the pairs of values in the second, reversed,
+    // tree so as to keep one tree accessing odds while the other accesses
+    // events.  However, if padding, the first tree starts accessing one 
+    // lower down.  This means we don't want to do the swapping then.
+    const bool twiddleTree2 = pad == 0;
+
     // Extract evens in order
     const int evenAddr = l.x >> 1;
 
     // Extract odds backwards, and with pairs in reverse order
     // (so as to avoid bank conflicts when reading later)
-    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
+    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ twiddleTree2;
 
     // We want to store into the reverse order if on an odd address;
     // but the trees are swapped over if we have to pad
@@ -68,35 +74,55 @@ void decimateFilterX(__global const float* input,
 
     // Calculate positions to read coefficients from
     int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         + (l.x & 1) * (3*WG_W - 1 - 2*l.x);
-    const int offset1 = select(baseOffset, baseOffset ^ 1, l.x & 1);
+                         - pad
+                         + (l.x & 1) * (3*WG_W - 1 - 2*l.x + pad);
+
+    // Even reversed filter coefficients 
+    const int offset1 = select(baseOffset, 
+                               baseOffset ^ twiddleTree2, 
+                               l.x & 1);
 
     baseOffset += 1;
-    const int offset2 = select(baseOffset, baseOffset ^ 1, l.x & 1);
+    // Odd reversed filter coefficients
+    const int offset2 = select(baseOffset, 
+                               baseOffset ^ twiddleTree2, 
+                               l.x & 1);
 
     // If we want to swap the trees over, the easiest way is to 
     // swap the LSB of l.x, and recalculate
     const int lx = l.x ^ 1;
 
     int baseOffsetSwap = lx + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         + (lx & 1) * (3*WG_W - 1 - 2*lx);
+                         - pad
+                         + (lx & 1) * (3*WG_W - 1 - 2*lx + pad);
     const int offset1Swap = select(baseOffsetSwap, 
-                                   baseOffsetSwap ^ 1, 
+                                   baseOffsetSwap ^ twiddleTree2, 
                                    lx & 1);
 
     baseOffsetSwap += 1;
     const int offset2Swap = select(baseOffsetSwap, 
-                                   baseOffsetSwap ^ 1, 
+                                   baseOffsetSwap ^ twiddleTree2, 
                                    lx & 1);
 
-
     float v = 0.f;
+
+#ifndef SWAP_TREE_OUTPUTS
 
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
         v += filter[n] * cache[l.y][offset1+n];
         
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
         v += filter[n+1] * cache[l.y][offset2+n];
+
+#else
+
+    for (int n = 0; n < FILTER_LENGTH; n += 2) 
+        v += filter[n] * cache[l.y][offset1Swap+n];
+        
+    for (int n = 0; n < FILTER_LENGTH; n += 2) 
+        v += filter[n+1] * cache[l.y][offset2Swap+n];
+
+#endif
 
     // Write it to the output
     output[g.y*outStride + g.x] = v;

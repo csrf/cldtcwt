@@ -89,8 +89,11 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
     // Must have the padding the kernel expects
     assert(input.padding() == padding_);
 
+    // Pad symmetrically if needed
+    bool symmetricPadding = output.width() * 2 > input.width();
+
     // Input and output formats need to be exactly the same
-    assert(input.width()+2 >= 2*output.width());
+    assert((input.width() + symmetricPadding * 2) == 2*output.width());
     assert(input.height() == output.height());
     assert(input.padding() == output.padding());
     
@@ -101,7 +104,7 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
     kernel_.setArg(3, int(input.width()));
     kernel_.setArg(4, int(input.stride()));
     kernel_.setArg(5, int(output.stride()));
-    kernel_.setArg(6, int(0));
+    kernel_.setArg(6, int(symmetricPadding));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,
