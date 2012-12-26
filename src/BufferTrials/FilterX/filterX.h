@@ -37,7 +37,7 @@ private:
 
     size_t filterLength_;
 
-    static const size_t padding_ = 8,
+    static const size_t padding_ = 16,
                         workgroupSize_ = 16;
 
 };

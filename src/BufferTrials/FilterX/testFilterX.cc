@@ -9,9 +9,9 @@
 
 #include "util/clUtil.h"
 
-#include <sys/timeb.h>
-
+#include "BufferTrials/PadX/padX.h"
 #include "BufferTrials/FilterX/filterX.h"
+
 
 #include <Eigen/Dense>
 
@@ -133,11 +133,13 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
+
+        PadX padX(context.context, context.devices);
         FilterX filterX(context.context, context.devices, filter);
 
   
         const size_t width = in.cols(), height = in.rows(),
-                     padding = 8, alignment = 8;
+                     padding = 16, alignment = 16;
 
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
@@ -157,6 +159,7 @@ Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in,
               &inValues[0]);
 
         // Try the filter
+        padX(cq, input);
         filterX(cq, input, output);
 
         // Download the data

@@ -8,6 +8,7 @@
 
 #include <sys/timeb.h>
 
+#include "PadX/padX.h"
 #include "FilterX/filterX.h"
 #include "FilterY/filterY.h"
 
@@ -25,12 +26,14 @@ int main()
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
+        PadX padX(context.context, context.devices);
+
         std::vector<float> filter(13, 0.0);
         FilterX filterX(context.context, context.devices, filter);
         FilterY filterY(context.context, context.devices, filter);
   
         const size_t width = 1280, height = 720, 
-                     padding = 8, alignment = 8;
+                     padding = 16, alignment = 16;
 
         // Create input and output buffers
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
@@ -45,8 +48,10 @@ int main()
             const int numFrames = 1000;
             ftime(&start);
 
-            for (int n = 0; n < numFrames; ++n)
+            for (int n = 0; n < numFrames; ++n) {
+                padX(cq, input);
                 filterX(cq, input, output);
+            }
 
             cq.finish();
             ftime(&end);
