@@ -45,7 +45,7 @@ void padY(__global float* image,
 
         // Read in the square that will contain everything we could want for
         // wrapping
-        cache[l.y][l.x] = image[(PADDING + width - PADDING + l.y) * stride + g.x];
+        cache[l.y][l.x] = image[(PADDING + height - PADDING + l.y) * stride + g.x];
 
         barrier(CLK_LOCAL_MEM_FENCE);
 
