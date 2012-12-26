@@ -11,6 +11,7 @@
 
 #include <sys/timeb.h>
 
+#include "BufferTrials/PadY/padY.h"
 #include "BufferTrials/FilterY/filterY.h"
 
 #include <Eigen/Dense>
@@ -142,11 +143,12 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
+        PadY padY(context.context, context.devices);
         FilterY filterY(context.context, context.devices, filter);
 
   
         const size_t width = in.cols(), height = in.rows(),
-                     padding = 8, alignment = 8;
+                     padding = 16, alignment = 16;
 
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
@@ -166,6 +168,7 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
               &inValues[0]);
 
         // Try the filter
+        padY(cq, input);
         filterY(cq, input, output);
 
         // Download the data
