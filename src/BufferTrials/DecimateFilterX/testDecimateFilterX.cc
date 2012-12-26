@@ -11,6 +11,7 @@
 
 #include <sys/timeb.h>
 
+#include "BufferTrials/PadX/padX.h"
 #include "BufferTrials/DecimateFilterX/decimateFilterX.h"
 
 #include <Eigen/Dense>
@@ -30,9 +31,8 @@ int main()
 {
 
     std::vector<float> filter(14, 0.0);
-    filter[7] = 1.f;
-    //for (int n = 0; n < filter.size(); ++n)
-    //    filter[n] = n + 1;
+    for (int n = 0; n < filter.size(); ++n)
+        filter[n] = n + 1;
 
     Eigen::ArrayXXf X(5,16);
     X.setRandom();
@@ -156,6 +156,7 @@ Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
+        PadX padX(context.context, context.devices);
         DecimateFilterX decimateFilterX(context.context, context.devices, filter,
                                         swapOutputs);
 
@@ -181,6 +182,7 @@ Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in,
               &inValues[0]);
 
         // Try the filter
+        padX(cq, input);
         decimateFilterX(cq, input, output);
 
         // Download the data
