@@ -58,14 +58,31 @@ void decimateFilterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    float v = 0.f;
-
+    // Calculate positions to read coefficients from
     int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
                          + (l.x & 1) * (3*WG_W - 3);
     const int offset1 = select(baseOffset, baseOffset ^ 1, l.x & 1);
 
     baseOffset += 1;
     const int offset2 = select(baseOffset, baseOffset ^ 1, l.x & 1);
+
+    // If we want to swap the trees over, the easiest way is to 
+    // swap the LSB of l.x, and recalculate
+    const int lx = l.x ^ 1;
+
+    int baseOffsetSwap = lx + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
+                         + (lx & 1) * (3*WG_W - 3);
+    const int offset1Swap = select(baseOffsetSwap, 
+                                   baseOffsetSwap ^ 1, 
+                                   lx & 1);
+
+    baseOffsetSwap += 1;
+    const int offset2Swap = select(baseOffsetSwap, 
+                                   baseOffsetSwap ^ 1, 
+                                   lx & 1);
+
+
+    float v = 0.f;
 
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
         v += filter[n] * cache[l.y][offset1+n];
