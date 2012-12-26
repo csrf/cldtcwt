@@ -82,10 +82,6 @@ void FilterY::operator() (cl::CommandQueue& cq,
     // Must have the padding the kernel expects
     assert(input.padding() == padding_);
 
-    // Must be big enough that any edge mirroring can be
-    // handled by the filter
-    assert(input.height() >= ((filterLength_ - 1) / 2));
-
     // Input and output formats need to be exactly the same
     assert(input.width() == output.width());
     assert(input.height() == output.height());

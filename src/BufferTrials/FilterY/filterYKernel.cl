@@ -27,36 +27,6 @@ void filterY(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    // Wrap the ends, if needed.  Only one level of wrapping
-    // is allowed, and the image must be at least HALF_WG_W
-    // wide.
-    if (g.y < (HALF_WG_H + PADDING))
-        cache[l.y][l.x] = cache[WG_H - l.y - 1][l.x];
-
-    const int upperEdge = height + PADDING - 1;
-
-    
-    // Check whether we need to mirror the upper half at the 
-    // upper end
-    if ((g.y + HALF_WG_H) > upperEdge) {
-
-        int overshoot = g.y + HALF_WG_H - upperEdge;
-
-        cache[l.y+WG_H][l.x] 
-            = cache[l.y+WG_H - ((overshoot << 1) - 1)][l.x];
-
-        // Check whether the lower half needs the same
-        if ((g.y - HALF_WG_H) > upperEdge) {
-
-            overshoot -= WG_H;
-            cache[l.y][l.x] = cache[l.y - ((overshoot << 1) - 1)][l.x];
-
-        }
-
-    }
-
-    barrier(CLK_LOCAL_MEM_FENCE);
-
     // Calculate the convolution
     float v = 0.f;
     for (int n = 0; n < FILTER_LENGTH; ++n) 
