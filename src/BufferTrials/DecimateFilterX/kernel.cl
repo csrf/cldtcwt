@@ -57,19 +57,24 @@ void decimateFilterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-#if 0
-    const int offset1 = l.x + (l.x & 1) ? (3*WG_W - HALF_WG_W) : 0;
     float v = 0.f;
-    for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
-        v += filter[n] * cache[l.y][offset1+n];
 
-    const int offset2 = l.x + (l.x & 1) ? (2*WG_W - HALF_WG_W) : WG_W;
-    for (int n = 0; n < (FILTER_LENGTH / 2); ++n) 
-        v += filter[n] * cache[l.y][offset2+n];
-#endif
+    int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
+                         + (l.x & 1) * (3*WG_W - 3);
+
+    const int offset1 = select(baseOffset ^ 1, baseOffset, l.x & 1);
+
+    baseOffset += 1;
+    const int offset2 = select(baseOffset ^ 1, baseOffset, l.x & 1);
+
+    for (int n = 0; n < FILTER_LENGTH; n += 2) 
+        v += filter[n] * cache[l.y][offset1+n];
+        
+    for (int n = 0; n < FILTER_LENGTH; n += 2) 
+        v += filter[n+1] * cache[l.y][offset2+n];
 
     // Write it to the output
-    output[g.y*outStride + g.x] = 0.f;
+    output[g.y*outStride + g.x] = v;
 
 }
 
