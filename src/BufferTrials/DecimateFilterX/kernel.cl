@@ -28,8 +28,12 @@ void decimateFilterX(__global const float* input,
              __constant float* filter,
              unsigned int width, 
              unsigned int stride,
-             unsigned int outStride)
+             unsigned int outStride,
+             int pad)
 {
+    // pad should be 0 or 1: 1 if the algorithm should pretend the 
+    // image extends one of width on both sides.
+
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
 
@@ -47,9 +51,13 @@ void decimateFilterX(__global const float* input,
     // (so as to avoid bank conflicts when reading later)
     const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
 
-    const int d = 1 - 2*(l.x & 1); // Direction to move the block in:
-                                   // -1 for odds, 1 for evens
-    const int p = select(evenAddr, oddAddr, l.x & 1);
+    // We want to store into the reverse order if on an odd address;
+    // but the trees are swapped over if we have to pad
+    bool storeBackwards = (l.x & 1) ^ pad;
+
+    const int d = 1 - 2*storeBackwards; 
+    // Direction to move the block in: -1 for odds, 1 for evens
+    const int p = select(evenAddr, oddAddr, storeBackwards);
 
     cache[l.y][p                 ] = input[pos - WG_W];
     cache[l.y][p + d*  (WG_W / 2)] = input[pos];

@@ -101,6 +101,7 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
     kernel_.setArg(3, int(input.width()));
     kernel_.setArg(4, int(input.stride()));
     kernel_.setArg(5, int(output.stride()));
+    kernel_.setArg(6, int(0));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,
