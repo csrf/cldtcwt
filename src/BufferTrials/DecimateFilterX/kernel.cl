@@ -47,8 +47,9 @@ void decimateFilterX(__global const float* input,
     // (so as to avoid bank conflicts when reading later)
     const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
 
-    const int d = (l.x & 1) ? -1 : 1; // Direction to move the block in
-    const int p = (l.x & 1) ? oddAddr : evenAddr;
+    const int d = 1 - 2*(l.x & 1); // Direction to move the block in:
+                                   // -1 for odds, 1 for evens
+    const int p = select(evenAddr, oddAddr, l.x & 1);
 
     cache[l.y][p                 ] = input[pos - WG_W];
     cache[l.y][p + d*  (WG_W / 2)] = input[pos];
@@ -61,11 +62,10 @@ void decimateFilterX(__global const float* input,
 
     int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
                          + (l.x & 1) * (3*WG_W - 3);
-
-    const int offset1 = select(baseOffset ^ 1, baseOffset, l.x & 1);
+    const int offset1 = select(baseOffset, baseOffset ^ 1, l.x & 1);
 
     baseOffset += 1;
-    const int offset2 = select(baseOffset ^ 1, baseOffset, l.x & 1);
+    const int offset2 = select(baseOffset, baseOffset ^ 1, l.x & 1);
 
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
         v += filter[n] * cache[l.y][offset1+n];
