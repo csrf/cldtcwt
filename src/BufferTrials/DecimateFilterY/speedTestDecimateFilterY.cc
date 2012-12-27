@@ -38,7 +38,7 @@ int main()
                           width, height, padding, alignment);
 
         ImageBuffer output(context.context, CL_MEM_READ_WRITE,
-                           width / 2, height, padding, alignment);
+                           width, height / 2, padding, alignment);
 
         {
             // Run, timing
