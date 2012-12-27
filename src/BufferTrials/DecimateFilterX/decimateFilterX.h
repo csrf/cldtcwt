@@ -14,7 +14,7 @@
 class DecimateFilterX {
     // Decimated convolution along the x axis, with an even-
     // lengthed set of coefficients.  The images must be padded,
-    // with alignment of four times the workgroup size.
+    // with alignment of twice the workgroup size.
 
 public:
 
