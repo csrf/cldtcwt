@@ -50,8 +50,8 @@ void PadY::operator() (cl::CommandQueue& cq,
     cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
-        2 * workgroupSize[0], 
-        roundWGs(image.height(), workgroupSize[1])
+        roundWGs(image.width(), workgroupSize[0]),
+        2 * workgroupSize[1] 
     }; 
 
     // Must have the padding the kernel expects
