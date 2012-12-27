@@ -4,8 +4,37 @@
 // should be offset by the amount of the padding.  Padding and all
 // other dimensions should be the same in both input and output images
 
-#define FILTER_OFFSET (FILTER_LENGTH-2)
-#define HALF_WG_W (WG_W >> 1)
+// Choosing to swap the outputs of the two trees is selected by defining
+// SWAP_TREE_1
+
+#ifndef SWAP_TREE_1 
+    #define TREE_1_OFFSET offset
+#else
+    #define TREE_1_OFFSET offsetSwapOutputs
+#endif
+
+
+inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
+{
+    // Padding is whether we are using symmetric extension (0 or 1)
+    // Twiddle Tree 2 is whether or not the second tree has had its pairs
+    // swapped (for an optimisation to avoid shared memory bank conflicts).
+    // x is the x position within the workgroup
+
+    // Each position along x should be calculating the output for that position.
+    // The two trees are stored in the left and right halves of a 4 WG_(dim)
+    // with the second tree (right) in reverse.  If padding, the odd coeffients 
+    // for Tree 2 need to be read one further to the left.
+
+    // Calculate positions to read coefficients from
+    int baseOffset = x + ((WG_W / 2) - (FILTER_LENGTH / 2) + 1)
+                         - pad
+                         + (x & 1) * (3*WG_W - 1 - 2*x + pad);
+
+    // Starting locations for first and second trees
+    return (int2) (select(baseOffset, baseOffset ^ twiddleTree2, x & 1),
+                   select(baseOffset + 1, (baseOffset + 1) ^ twiddleTree2, x & 1));
+}
 
 
 
@@ -60,57 +89,24 @@ void decimateFilterX(__global const float* input,
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    // Calculate positions to read coefficients from
-    int baseOffset = l.x + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         - pad
-                         + (l.x & 1) * (3*WG_W - 1 - 2*l.x + pad);
-
-    // Even reversed filter coefficients 
-    const int offset1 = select(baseOffset, 
-                               baseOffset ^ twiddleTree2, 
-                               l.x & 1);
-
-    baseOffset += 1;
-    // Odd reversed filter coefficients
-    const int offset2 = select(baseOffset, 
-                               baseOffset ^ twiddleTree2, 
-                               l.x & 1);
+    // Work out where we need to start the convolution from
+    int2 offset = filteringStartPositions(l.x, pad, twiddleTree2);
 
     // If we want to swap the trees over, the easiest way is to 
     // swap the LSB of l.x, and recalculate
-    const int lx = l.x ^ 1;
+    int2 offsetSwapOutputs = filteringStartPositions(l.x ^ 1, pad, twiddleTree2);
 
-    int baseOffsetSwap = lx + (HALF_WG_W  - (FILTER_LENGTH >> 1) + 1)
-                         - pad
-                         + (lx & 1) * (3*WG_W - 1 - 2*lx + pad);
-    const int offset1Swap = select(baseOffsetSwap, 
-                                   baseOffsetSwap ^ twiddleTree2, 
-                                   lx & 1);
-
-    baseOffsetSwap += 1;
-    const int offset2Swap = select(baseOffsetSwap, 
-                                   baseOffsetSwap ^ twiddleTree2, 
-                                   lx & 1);
+    // Convolve 
 
     float v = 0.f;
 
-#ifndef SWAP_TREE_OUTPUTS
-
+    // Even filter locations first...
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n] * cache[l.y][offset1+n];
+        v += filter[n] * cache[l.y][TREE_1_OFFSET.s0+n];
         
+    // ...then odd
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n+1] * cache[l.y][offset2+n];
-
-#else
-
-    for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n] * cache[l.y][offset1Swap+n];
-        
-    for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n+1] * cache[l.y][offset2Swap+n];
-
-#endif
+        v += filter[n+1] * cache[l.y][TREE_1_OFFSET.s1+n];
 
     // Write it to the output
     output[g.y*outStride + g.x] = v;

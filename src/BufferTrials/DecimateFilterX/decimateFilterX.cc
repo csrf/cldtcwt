@@ -28,7 +28,7 @@ DecimateFilterX::DecimateFilterX(cl::Context& context,
                     << "-D PADDING=" << padding_ << " ";
 
     if (swapOutputPair)
-        compilerOptions << "-D SWAP_TREE_OUTPUTS ";
+        compilerOptions << "-D SWAP_TREE_1 ";
 
     // Compile it...
     cl::Program program(context, source);
