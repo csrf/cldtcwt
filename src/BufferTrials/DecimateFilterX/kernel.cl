@@ -15,12 +15,12 @@
 
 
 
-void loadFourBlocks(int pos,  __global float* input,
+void loadFourBlocks(__global float* readPos,
                     __local float cache[WG_H][4*WG_W],
                     int2 l, int pad, bool twiddleTree2)
 {
     // Load four blocks of WG_H x WG_H into cache, with this work item
-    // working around pos.
+    // working around readPos.
 
     // l contains the x and y coordinates of this workitem within the group
     // cache is the region to load into.  Even x coordinates are loaded into
@@ -47,10 +47,10 @@ void loadFourBlocks(int pos,  __global float* input,
     // Direction to move the block in: -1 for odds, 1 for evens
     const int p = select(evenAddr, oddAddr, storeBackwards);
 
-    cache[l.y][p                 ] = input[pos - WG_W];
-    cache[l.y][p + d*  (WG_W / 2)] = input[pos];
-    cache[l.y][p + d*2*(WG_W / 2)] = input[pos + WG_W];
-    cache[l.y][p + d*3*(WG_W / 2)] = input[pos + 2*WG_W];
+    cache[l.y][p                 ] = *(readPos-WG_W);
+    cache[l.y][p + d*  (WG_W / 2)] = *(readPos);
+    cache[l.y][p + d*2*(WG_W / 2)] = *(readPos+WG_W);
+    cache[l.y][p + d*3*(WG_W / 2)] = *(readPos+2*WG_W);
 }
 
 
@@ -107,7 +107,8 @@ void decimateFilterX(__global const float* input,
 
     __local float cache[WG_H][4*WG_W];
 
-    loadFourBlocks(pos, input, cache, l, pad, twiddleTree2);
+    // Read into local memory
+    loadFourBlocks(&input[pos], cache, l, pad, twiddleTree2);
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
