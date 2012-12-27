@@ -124,6 +124,7 @@ BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/FilterY/filterYKernel.h \
                  src/BufferTrials/DecimateFilterX/kernel.h \
                  src/BufferTrials/DecimateFilterY/kernel.h \
+                 src/BufferTrials/DecimateTripleFilterX/kernel.h \
                  src/BufferTrials/PadX/kernel.h \
                  src/BufferTrials/PadY/kernel.h
 libbufferfilter_la_SOURCES = \
@@ -132,6 +133,7 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/FilterY/filterY.cc \
 		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc \
 		 src/BufferTrials/DecimateFilterY/decimateFilterY.cc \
+		 src/BufferTrials/DecimateTripleFilterX/decimateTripleFilterX.cc \
 		 src/BufferTrials/PadX/padX.cc \
 		 src/BufferTrials/PadY/padY.cc 
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
@@ -153,6 +155,13 @@ speedTestDecimateFilterY_SOURCES = \
 	   src/BufferTrials/DecimateFilterY/speedTestDecimateFilterY.cc 
 speedTestDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
+
+noinst_PROGRAMS += speedTestDecimateTripleFilterX
+speedTestDecimateTripleFilterX_SOURCES = \
+	   src/BufferTrials/DecimateTripleFilterX/speedTest.cc 
+speedTestDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
+							   @CL_LIBS@ @opencv_LIBS@ 
+
 
 
 
@@ -189,6 +198,16 @@ testDecimateFilterY_SOURCES = \
 testDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
+
+TESTS += testDecimateTripleFilterX 
+
+check_PROGRAMS += testDecimateTripleFilterX
+testDecimateTripleFilterX_SOURCES = \
+	  src/BufferTrials/DecimateTripleFilterX/test.cc 
+testDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
