@@ -125,6 +125,7 @@ BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/DecimateFilterX/kernel.h \
                  src/BufferTrials/DecimateFilterY/kernel.h \
                  src/BufferTrials/DecimateTripleFilterX/kernel.h \
+                 src/BufferTrials/QuadToComplex/kernel.h \
                  src/BufferTrials/PadX/kernel.h \
                  src/BufferTrials/PadY/kernel.h
 libbufferfilter_la_SOURCES = \
@@ -134,6 +135,7 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc \
 		 src/BufferTrials/DecimateFilterY/decimateFilterY.cc \
 		 src/BufferTrials/DecimateTripleFilterX/decimateTripleFilterX.cc \
+		 src/BufferTrials/QuadToComplex/quadToComplex.cc \
 		 src/BufferTrials/PadX/padX.cc \
 		 src/BufferTrials/PadY/padY.cc 
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
