@@ -1,5 +1,5 @@
-#ifndef FILTERX_H
-#define FILTERX_H
+#ifndef DECIMATE_FILTERX_H
+#define DECIMATE_FILTERX_H
 
 
 #ifndef __CL_ENABLE_EXCEPTIONS
