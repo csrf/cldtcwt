@@ -8,18 +8,6 @@
 #define HALF_WG_W (WG_W >> 1)
 
 
-int wrap(int n, int width)
-{
-    // Perform symmetric extension of an index, if needed.  The input n
-    // must not be negative.
-    if (n < width)
-        return n;
-    else {
-        int tmp = n % (2*width);
-        return min(tmp, 2*width - 1 - tmp);
-    }
-}
-
 
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
