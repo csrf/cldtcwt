@@ -123,6 +123,7 @@ noinst_LTLIBRARIES += libbufferfilter.la
 BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/FilterY/filterYKernel.h \
                  src/BufferTrials/DecimateFilterX/kernel.h \
+                 src/BufferTrials/DecimateFilterY/kernel.h \
                  src/BufferTrials/PadX/kernel.h \
                  src/BufferTrials/PadY/kernel.h
 libbufferfilter_la_SOURCES = \
@@ -130,6 +131,7 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/FilterX/filterX.cc \
 		 src/BufferTrials/FilterY/filterY.cc \
 		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc \
+		 src/BufferTrials/DecimateFilterY/decimateFilterY.cc \
 		 src/BufferTrials/PadX/padX.cc \
 		 src/BufferTrials/PadY/padY.cc 
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
@@ -145,6 +147,13 @@ speedTestDecimateFilterX_SOURCES = \
 	   src/BufferTrials/DecimateFilterX/speedTestDecimateFilterX.cc 
 speedTestDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
+
+noinst_PROGRAMS += speedTestDecimateFilterY
+speedTestDecimateFilterY_SOURCES = \
+	   src/BufferTrials/DecimateFilterY/speedTestDecimateFilterY.cc 
+speedTestDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
+							   @CL_LIBS@ @opencv_LIBS@ 
+
 
 
 TESTS += testFilterX testFilterY
@@ -165,7 +174,7 @@ testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
-TESTS += testDecimateFilterX 
+TESTS += testDecimateFilterX testDecimateFilterY
 
 check_PROGRAMS += testDecimateFilterX
 testDecimateFilterX_SOURCES = \
@@ -173,6 +182,13 @@ testDecimateFilterX_SOURCES = \
 testDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testDecimateFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
+check_PROGRAMS += testDecimateFilterY
+testDecimateFilterY_SOURCES = \
+	  src/BufferTrials/DecimateFilterY/testDecimateFilterY.cc 
+testDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
