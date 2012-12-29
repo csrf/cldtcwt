@@ -24,6 +24,8 @@ Eigen::ArrayXXf decimateConvolveRows(const Eigen::ArrayXXf& in,
                              const std::vector<float>& filter,
                              bool swapOutputs);
 
+std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
+    quadToComplex(const Eigen::ArrayXXf& in);
 
 #endif
 

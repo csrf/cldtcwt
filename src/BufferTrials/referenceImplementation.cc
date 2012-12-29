@@ -117,3 +117,31 @@ Eigen::ArrayXXf decimateConvolveCols
 
 
 
+std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
+    quadToComplex(const Eigen::ArrayXXf& in)
+{
+    // Convert an interleaved set of four trees into two
+    // complex subbands.
+
+    Eigen::ArrayXXcf sb0, sb1;
+
+    for (int r = 0; r < in.rows(); r += 2)
+        for (int c = 0; c < in.cols(); c += 2) {
+
+            float ul = in(r,c);
+            float ur = in(r,c+1);
+            float ll = in(r+1,c);
+            float lr = in(r+1,c+1);
+
+            sb0(r/2,c/2) = std::complex<float>(ul - lr, ur + ll);
+            sb1(r/2,c/2) = std::complex<float>(ur + lr, ur - ll);
+
+        }
+
+    return std::make_tuple(sb0, sb1);
+}
+
+
+
+
+
