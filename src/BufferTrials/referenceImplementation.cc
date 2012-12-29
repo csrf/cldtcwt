@@ -1,5 +1,6 @@
 #include "referenceImplementation.h"
 
+#include <cmath>
 
 
 static unsigned int wrap(int n, int width)
@@ -123,7 +124,8 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
     // Convert an interleaved set of four trees into two
     // complex subbands.
 
-    Eigen::ArrayXXcf sb0, sb1;
+    Eigen::ArrayXXcf sb0(in.rows() / 2, in.cols() / 2), 
+                     sb1(in.rows() / 2, in.cols() / 2);
 
     for (int r = 0; r < in.rows(); r += 2)
         for (int c = 0; c < in.cols(); c += 2) {
@@ -133,8 +135,8 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
             float ll = in(r+1,c);
             float lr = in(r+1,c+1);
 
-            sb0(r/2,c/2) = std::complex<float>(ul - lr, ur + ll);
-            sb1(r/2,c/2) = std::complex<float>(ur + lr, ur - ll);
+            sb0(r/2,c/2) = std::complex<float>(ul - lr, ur + ll) / sqrtf(2.f);
+            sb1(r/2,c/2) = std::complex<float>(ul + lr, ur - ll) / sqrtf(2.f);
 
         }
 

@@ -217,4 +217,14 @@ testDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
 testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
+TESTS += testQuadToComplex 
+
+check_PROGRAMS += testQuadToComplex 
+testQuadToComplex_SOURCES = \
+	  src/BufferTrials/QuadToComplex/test.cc \
+	  src/BufferTrials/referenceImplementation.cc
+testQuadToComplex_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testQuadToComplex_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
 

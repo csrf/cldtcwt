@@ -34,7 +34,11 @@ QuadToComplex::QuadToComplex(cl::Context& context,
 		    << std::endl;
 	    throw;
     } 
+
+    // ...and extract the useful part, viz the kernel
+    kernel_ = cl::Kernel(program, "quadToComplex");
 }
+
 
 
 

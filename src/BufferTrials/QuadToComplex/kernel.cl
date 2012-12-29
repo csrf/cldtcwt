@@ -1,7 +1,7 @@
 // PADDING should have been defined externally, as should WG_W
 // and WG_H (width and height of the workgroup respectively)
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
-__kernel void quadToComplex(__constant __global float* input,
+__kernel void quadToComplex(__global const float* input,
                             unsigned int stride,
                             __write_only image2d_t output0,
                             __write_only image2d_t output1)
@@ -21,7 +21,7 @@ __kernel void quadToComplex(__constant __global float* input,
 
     // Output only using the top right of each square of four pixels,
     // and only within the confines of the image
-    if (outPos < get_image_dim(output0) && !(g.x & 1) && !(g.y & 1)) {
+    if (all(outPos < get_image_dim(output0)) && !(g.x & 1) && !(g.y & 1)) {
 
         // Sample upper left, upper right, etc
         float ul = cache[l.y][l.x];
