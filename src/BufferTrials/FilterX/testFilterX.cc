@@ -12,13 +12,11 @@
 #include "BufferTrials/PadX/padX.h"
 #include "BufferTrials/FilterX/filterX.h"
 
+#include "../referenceImplementation.h"
 
-#include <Eigen/Dense>
+
 
 // Check that the FilterX kernel actually does what it should
-
-Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter);
 
 Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter);
@@ -58,53 +56,6 @@ int main()
 
 }
 
-
-
-unsigned int wrap(int n, int width)
-{
-    // Wrap so that the pattern goes
-    // forwards-backwards-forwards-backwards etc, with the end
-    // values repeated.
-    
-    int result = n % (2 * width);
-
-    // Make sure we get the positive result
-    if (result < 0)
-        result += 2*width;
-
-    return std::min(result, 2*width - result - 1);
-}
-
-
-
-Eigen::ArrayXXf convolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter)
-{
-    size_t offset = (filter.size() - 1) / 2;
-
-    Eigen::ArrayXXf output(in.rows(), in.cols());
-
-    // Pad the input
-    Eigen::ArrayXXf padded(in.rows(), in.cols() + filter.size() - 1);
-
-    for (int n = 0; n < padded.cols(); ++n) 
-        padded.col(n) = in.col(wrap(n - offset, in.cols()));
-
-    // For each output pixel
-    for (size_t r = 0; r < in.rows(); ++r)
-        for (size_t c = 0; c < in.cols(); ++c) {
-
-            // Perform the convolution
-            float v = 0.f;
-            for (size_t n = 0; n < filter.size(); ++n)
-                v += filter[filter.size()-n-1]
-                        * padded(r, c+n);
-
-            output(r,c) = v;
-        }
-
-    return output;
-}
 
 
 

@@ -170,14 +170,16 @@ speedTestDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
 TESTS += testFilterX testFilterY
 
 check_PROGRAMS = testFilterX
-testFilterX_SOURCES = src/BufferTrials/FilterX/testFilterX.cc 
+testFilterX_SOURCES = src/BufferTrials/FilterX/testFilterX.cc \
+					  src/BufferTrials/referenceImplementation.cc
 testFilterX_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
 check_PROGRAMS += testFilterY
-testFilterY_SOURCES = src/BufferTrials/FilterY/testFilterY.cc 
+testFilterY_SOURCES = src/BufferTrials/FilterY/testFilterY.cc \
+					  src/BufferTrials/referenceImplementation.cc
 testFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
@@ -189,14 +191,16 @@ TESTS += testDecimateFilterX testDecimateFilterY
 
 check_PROGRAMS += testDecimateFilterX
 testDecimateFilterX_SOURCES = \
-	  src/BufferTrials/DecimateFilterX/testDecimateFilterX.cc 
+	  src/BufferTrials/DecimateFilterX/testDecimateFilterX.cc \
+	  src/BufferTrials/referenceImplementation.cc
 testDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testDecimateFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 check_PROGRAMS += testDecimateFilterY
 testDecimateFilterY_SOURCES = \
-	  src/BufferTrials/DecimateFilterY/testDecimateFilterY.cc 
+	  src/BufferTrials/DecimateFilterY/testDecimateFilterY.cc \
+	  src/BufferTrials/referenceImplementation.cc
 testDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
@@ -206,7 +210,8 @@ TESTS += testDecimateTripleFilterX
 
 check_PROGRAMS += testDecimateTripleFilterX
 testDecimateTripleFilterX_SOURCES = \
-	  src/BufferTrials/DecimateTripleFilterX/test.cc 
+	  src/BufferTrials/DecimateTripleFilterX/test.cc \
+	  src/BufferTrials/referenceImplementation.cc
 testDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)

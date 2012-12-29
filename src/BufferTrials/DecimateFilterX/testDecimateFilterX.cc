@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
@@ -9,18 +8,13 @@
 
 #include "util/clUtil.h"
 
-#include <sys/timeb.h>
 
 #include "BufferTrials/PadX/padX.h"
 #include "BufferTrials/DecimateFilterX/decimateFilterX.h"
 
-#include <Eigen/Dense>
+#include "../referenceImplementation.h"
 
 // Check that the FilterX kernel actually does what it should
-
-Eigen::ArrayXXf decimateConvolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs);
 
 Eigen::ArrayXXf decimateConvolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter,
@@ -82,26 +76,6 @@ int main()
 
 
 
-
-
-
-unsigned int wrap(int n, int width)
-{
-    // Wrap so that the pattern goes
-    // forwards-backwards-forwards-backwards etc, with the end
-    // values repeated.
-    
-    int result = n % (2 * width);
-
-    // Make sure we get the positive result
-    if (result < 0)
-        result += 2*width;
-
-    return std::min(result, 2*width - result - 1);
-}
-
-
-
 bool compareImplementations(const Eigen::ArrayXXf& in, 
                             const std::vector<float>& filter,
                             bool swapOutputs,
@@ -132,52 +106,6 @@ bool compareImplementations(const Eigen::ArrayXXf& in,
     }
 }
 
-
-
-Eigen::ArrayXXf decimateConvolveRows
-                            (const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs)
-{
-    // If extending, we want to create an extra output by
-    // taking an extra sample from each end.  Symmetric is
-    // whether the reversed filter output should come first in
-    // the pairs or second
-
-    bool extend = (in.cols() % 4) != 0;
-
-    size_t offset = filter.size() - 2 + (extend? 1 : 0);
-
-    Eigen::ArrayXXf output(in.rows(), 
-            (in.cols() + (extend? 2 : 0)) / 2);
-
-    // Pad the input
-    Eigen::ArrayXXf padded(in.rows(), in.cols() + 2 * offset);
-
-    for (int n = 0; n < padded.cols(); ++n) 
-        padded.col(n) = in.col(wrap(n - offset, in.cols()));
-
-    // For each pair of output pixels
-    for (size_t r = 0; r < output.rows(); ++r)
-        for (size_t c = 0; c < output.cols(); c += 2) {
-
-            // Perform the convolution
-            float v1 = 0.f, v2 = 0.f;
-
-            for (size_t n = 0; n < filter.size(); ++n) {
-                v1 += filter[filter.size()-n-1]
-                        * padded(r, 2*c+2*n);
-               
-                v2 += filter[n]
-                        * padded(r, 2*c+2*n+1);
-            }
-
-            output(r,c) = swapOutputs? v2 : v1;
-            output(r,c+1) = swapOutputs? v1 : v2;
-        }
-
-    return output;
-}
 
 
 
