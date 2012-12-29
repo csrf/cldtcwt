@@ -8,7 +8,7 @@
 
 #include <sys/timeb.h>
 
-#include "decimateFilterY.h"
+#include "q2cDecimateFilterY.h"
 #include "../PadY/padY.h"
 
 
@@ -26,7 +26,8 @@ int main()
         cl::CommandQueue cq(context.context, context.devices[0]);
 
         std::vector<float> filter(14, 0.0);
-        DecimateFilterY filterY(context.context, context.devices, filter,
+        QuadToComplexDecimateFilterY 
+            filterY(context.context, context.devices, filter,
                                 false);
         PadY padY(context.context, context.devices);
   
@@ -36,6 +37,16 @@ int main()
         // Create input and output buffers
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment);
+
+        cl::Image2D sb0(context.context,
+                       CL_MEM_READ_WRITE,
+                       cl::ImageFormat(CL_RG, CL_FLOAT),
+                       width / 2, height / 4),
+                    sb1(context.context,
+                       CL_MEM_READ_WRITE,
+                       cl::ImageFormat(CL_RG, CL_FLOAT),
+                       width / 2, height / 4);
+
 
         ImageBuffer output(context.context, CL_MEM_READ_WRITE,
                            width, height / 2, padding, alignment);
@@ -48,7 +59,7 @@ int main()
 
             for (int n = 0; n < numFrames; ++n) {
                 padY(cq, input);
-                filterY(cq, input, output);
+                filterY(cq, input, sb0, sb1);
             }
 
             cq.finish();

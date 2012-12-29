@@ -166,6 +166,12 @@ speedTestDecimateTripleFilterX_SOURCES = \
 speedTestDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
 
+noinst_PROGRAMS += speedTestQuadToComplexDecimateFilterY
+speedTestQuadToComplexDecimateFilterY_SOURCES = \
+	   src/BufferTrials/QuadToComplexDecimateFilterY/speedTest.cc 
+speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
+							   @CL_LIBS@ @opencv_LIBS@ 
+
 
 
 
