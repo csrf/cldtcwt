@@ -124,6 +124,7 @@ BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/FilterY/filterYKernel.h \
                  src/BufferTrials/DecimateFilterX/kernel.h \
                  src/BufferTrials/DecimateFilterY/kernel.h \
+                 src/BufferTrials/QuadToComplexDecimateFilterY/kernel.h \
                  src/BufferTrials/DecimateTripleFilterX/kernel.h \
                  src/BufferTrials/QuadToComplex/kernel.h \
                  src/BufferTrials/PadX/kernel.h \
@@ -134,6 +135,7 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/FilterY/filterY.cc \
 		 src/BufferTrials/DecimateFilterX/decimateFilterX.cc \
 		 src/BufferTrials/DecimateFilterY/decimateFilterY.cc \
+		 src/BufferTrials/QuadToComplexDecimateFilterY/q2cDecimateFilterY.cc \
 		 src/BufferTrials/DecimateTripleFilterX/decimateTripleFilterX.cc \
 		 src/BufferTrials/QuadToComplex/quadToComplex.cc \
 		 src/BufferTrials/PadX/padX.cc \
@@ -217,7 +219,7 @@ testDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la \
 testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
-TESTS += testQuadToComplex 
+TESTS += testQuadToComplex testQuadToComplexDecimateFilterY
 
 check_PROGRAMS += testQuadToComplex 
 testQuadToComplex_SOURCES = \
@@ -226,5 +228,13 @@ testQuadToComplex_SOURCES = \
 testQuadToComplex_LDADD   = libclutil.la libbufferfilter.la \
 		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
 testQuadToComplex_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
+check_PROGRAMS += testQuadToComplexDecimateFilterY
+testQuadToComplexDecimateFilterY_SOURCES = \
+	  src/BufferTrials/QuadToComplexDecimateFilterY/test.cc \
+	  src/BufferTrials/referenceImplementation.cc
+testQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
+		     		  @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 

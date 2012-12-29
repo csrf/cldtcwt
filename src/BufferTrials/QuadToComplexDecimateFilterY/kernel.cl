@@ -15,7 +15,7 @@
 
 
 
-void loadFourBlocks(__global float* readPos, size_t stride,
+void loadFourBlocks(__global const float* readPos, size_t stride,
                     __local float cache[4*WG_H][WG_W],
                     int2 l, int pad, bool twiddleTree2)
 {
@@ -86,7 +86,6 @@ void decimateFilterY(__global const float* input,
                      __constant float* filter,
                      unsigned int height, 
                      unsigned int stride,
-                     unsigned int outStride,
                      int pad)
 {
     // pad should be 0 or 1: 1 if the algorithm should pretend the 
@@ -143,7 +142,7 @@ void decimateFilterY(__global const float* input,
 
     // Output only using the top right of each square of four pixels,
     // and only within the confines of the image
-    if (outPos < get_image_dim(output0) && !(g.x & 1) && !(g.y & 1)) {
+    if (all(outPos < get_image_dim(output0)) && !(g.x & 1) && !(g.y & 1)) {
 
         // Sample upper left, upper right, etc
         float ul = cache[l.y][l.x];

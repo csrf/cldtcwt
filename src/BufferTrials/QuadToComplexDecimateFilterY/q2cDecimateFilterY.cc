@@ -1,14 +1,14 @@
-#include "decimateFilterY.h"
+#include "q2cDecimateFilterY.h"
 #include "util/clUtil.h"
 #include <sstream>
 #include <string>
 #include <iostream>
 #include <cassert>
 
-#include "BufferTrials/DecimateFilterY/kernel.h"
+#include "BufferTrials/QuadToComplexDecimateFilterY/kernel.h"
 
 
-DecimateFilterY::DecimateFilterY(cl::Context& context, 
+QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context, 
                  const std::vector<cl::Device>& devices,
                  std::vector<float> filter,
                  bool swapOutputPair)
@@ -17,8 +17,8 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
     cl::Program::Sources source;
     source.push_back(
         std::make_pair(reinterpret_cast<const char*>
-              (src_BufferTrials_DecimateFilterY_kernel_h_src), 
-               src_BufferTrials_DecimateFilterY_kernel_h_src_len)
+              (src_BufferTrials_QuadToComplexDecimateFilterY_kernel_h_src), 
+               src_BufferTrials_QuadToComplexDecimateFilterY_kernel_h_src_len)
     );
 
     std::ostringstream compilerOptions;
@@ -58,7 +58,7 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(2, filter_);
+    kernel_.setArg(3, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -75,8 +75,10 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
 
 
 
-void DecimateFilterY::operator() (cl::CommandQueue& cq, 
-                 ImageBuffer& input, ImageBuffer& output,
+void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq, 
+                 ImageBuffer& input, 
+                 cl::Image2D& output0,
+                 cl::Image2D& output1,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -84,29 +86,31 @@ void DecimateFilterY::operator() (cl::CommandQueue& cq,
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
     cl::NDRange offset = {padding_, padding_};
 
-    cl::NDRange globalSize = {
-        roundWGs(output.width(), workgroupSize[0]), 
-        roundWGs(output.height(), workgroupSize[1])
-    }; 
-
     // Must have the padding the kernel expects
     assert(input.padding() == padding_);
 
     // Pad symmetrically if needed
-    bool symmetricPadding = output.height() * 2 > input.height();
+    bool symmetricPadding = (input.height() % 4) == 2;
 
-    // Input and output formats need to be exactly the same
-    assert((input.height() + symmetricPadding * 2) == 2*output.height());
-    assert(input.width() == output.width());
-    assert(input.padding() == output.padding());
-    
+    // Input and output formats need to be compatible
+    const size_t quadHeight = (input.height() + symmetricPadding * 2) / 2;
+    assert(input.width() == 2*output0.getImageInfo<CL_IMAGE_WIDTH>());
+    assert(quadHeight == 2*output0.getImageInfo<CL_IMAGE_HEIGHT>());
+    assert(input.width() == 2*output1.getImageInfo<CL_IMAGE_WIDTH>());
+    assert(quadHeight == 2*output1.getImageInfo<CL_IMAGE_HEIGHT>());
+
+    cl::NDRange globalSize = {
+        roundWGs(input.width(), workgroupSize[0]), 
+        roundWGs(quadHeight, workgroupSize[1])
+    }; 
+
 
     // Set all the arguments
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output.buffer());
-    kernel_.setArg(3, int(input.height()));
-    kernel_.setArg(4, int(input.stride()));
-    kernel_.setArg(5, int(output.stride()));
+    kernel_.setArg(1, output0);
+    kernel_.setArg(2, output1);
+    kernel_.setArg(4, int(input.height()));
+    kernel_.setArg(5, int(input.stride()));
     kernel_.setArg(6, int(symmetricPadding));
 
     // Execute

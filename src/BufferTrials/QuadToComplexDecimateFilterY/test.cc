@@ -1,34 +1,26 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
+#include <tuple>
 
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
 #include "util/clUtil.h"
 
-#include <sys/timeb.h>
+#include "q2cDecimateFilterY.h"
+#include "../PadY/padY.h"
 
-#include "BufferTrials/PadY/padY.h"
-#include "BufferTrials/DecimateFilterY/decimateFilterY.h"
+#include "../referenceImplementation.h"
 
-#include <Eigen/Dense>
+// Check that the QuadToComplex/DecimateFilterY combined kernel actually 
+// does what it should
 
-// Check that the DecimateFilterY kernel actually does what it should
-
-Eigen::ArrayXXf decimateConvolveCols(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs);
-
-Eigen::ArrayXXf decimateConvolveRows(const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs);
-
-Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in, 
-                                const std::vector<float>& filter,
-                                bool swapOutputs);
+std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
+    quadToComplexDecimateFilterYGPU(const Eigen::ArrayXXf& in,
+                                    const std::vector<float>& filter,
+                                    bool swapOutputs);
 
 
 // Runs both with the same parameters, and displays output if failure,
@@ -46,62 +38,47 @@ int main()
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    
-    Eigen::ArrayXXf X1(16, 5);
+
+    Eigen::ArrayXXf X1(8,16);
     X1.setRandom();
 
-    float eps = 1.e-5;
+    float eps = 1.e-3;
 
     if (compareImplementations(X1, filter, false, eps)) {
-        std::cerr << "Failed no extension, no swapped outputs" 
+        std::cerr << "Failed decimation and quad-complex"
                   << std::endl;
         return -1;
     }
 
     if (compareImplementations(X1, filter, true, eps)) {
-        std::cerr << "Failed no extension, swapped output trees" 
+        std::cerr << "Failed decimation and quad-complex, swapped "
+                     "trees at output"
                   << std::endl;
         return -1;
     }
-    
-    Eigen::ArrayXXf X2(18, 5);
+
+    Eigen::ArrayXXf X2(8,18);
     X2.setRandom();
 
     if (compareImplementations(X2, filter, false, eps)) {
-        std::cerr << "Failed extension, no swapped outputs" 
+        std::cerr << "Failed decimation and quad-complex "
+                     "with symmetric extension"
                   << std::endl;
         return -1;
     }
 
     if (compareImplementations(X2, filter, true, eps)) {
-        std::cerr << "Failed extension, swapped output trees" 
+        std::cerr << "Failed decimation and quad-complex "
+                     "with symmetric extension and trees swapped "
+                     "at output"
                   << std::endl;
         return -1;
     }
 
+
     // No failures if we reached here
     return 0;
  
-}
-
-
-
-
-
-
-unsigned int wrap(int n, int width)
-{
-    // Wrap so that the pattern goes
-    // forwards-backwards-forwards-backwards etc, with the end
-    // values repeated.
-    
-    int result = n % (2 * width);
-
-    // Make sure we get the positive result
-    if (result < 0)
-        result += 2*width;
-
-    return std::min(result, 2*width - result - 1);
 }
 
 
@@ -111,13 +88,21 @@ bool compareImplementations(const Eigen::ArrayXXf& in,
                             bool swapOutputs,
                             float tolerance)
 {
+    Eigen::ArrayXXcf refSB0, refSB1,
+                     gpuSB0, gpuSB1;
+
     // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = decimateConvolveCols(in, filter, swapOutputs);
-    Eigen::ArrayXXf gpuResult = decimateConvolveColsGPU(in, filter, swapOutputs);
+    Eigen::ArrayXXf filtered 
+        = decimateConvolveCols(in, filter, swapOutputs);
+    std::tie(refSB0, refSB1) = quadToComplex(filtered);
+
+    std::tie(gpuSB0, gpuSB1)
+        = quadToComplexDecimateFilterYGPU(in, filter, swapOutputs);
    
     // Check the maximum error is within tolerances
     float biggestDiscrepancy = 
-        (refResult - gpuResult).abs().maxCoeff();
+        std::max((refSB0 - gpuSB0).abs().maxCoeff(),
+                 (refSB1 - gpuSB1).abs().maxCoeff());
 
     // No problem if within tolerances
     if (biggestDiscrepancy < tolerance)
@@ -128,9 +113,12 @@ bool compareImplementations(const Eigen::ArrayXXf& in,
         std::cerr << "Input:\n"
                   << in << "\n\n"
                   << "Should have been:\n"
-                  << refResult << "\n\n"
+                  << refSB0 << "\n\n"
+                  << refSB1 << "\n\n"
                   << "Was:\n"
-                  << gpuResult << std::endl;
+                  << gpuSB0 << "\n\n"
+                  << gpuSB1 << "\n\n"
+                  << std::endl;
 
         return true;
     }
@@ -138,69 +126,10 @@ bool compareImplementations(const Eigen::ArrayXXf& in,
 
 
 
-
-Eigen::ArrayXXf decimateConvolveCols
-                            (const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs)
-{
-    return decimateConvolveRows(in.transpose(), filter, swapOutputs)
-                .transpose();   
-}
-
-
-
-
-Eigen::ArrayXXf decimateConvolveRows
-                            (const Eigen::ArrayXXf& in, 
-                             const std::vector<float>& filter,
-                             bool swapOutputs)
-{
-    // If extending, we want to create an extra output by
-    // taking an extra sample from each end.  Symmetric is
-    // whether the reversed filter output should come first in
-    // the pairs or second
-
-    bool extend = (in.cols() % 4) != 0;
-
-    size_t offset = filter.size() - 2 + (extend? 1 : 0);
-
-    Eigen::ArrayXXf output(in.rows(), 
-            (in.cols() + (extend? 2 : 0)) / 2);
-
-    // Pad the input
-    Eigen::ArrayXXf padded(in.rows(), in.cols() + 2 * offset);
-
-    for (int n = 0; n < padded.cols(); ++n) 
-        padded.col(n) = in.col(wrap(n - offset, in.cols()));
-
-    // For each pair of output pixels
-    for (size_t r = 0; r < output.rows(); ++r)
-        for (size_t c = 0; c < output.cols(); c += 2) {
-
-            // Perform the convolution
-            float v1 = 0.f, v2 = 0.f;
-
-            for (size_t n = 0; n < filter.size(); ++n) {
-                v1 += filter[filter.size()-n-1]
-                        * padded(r, 2*c+2*n);
-               
-                v2 += filter[n]
-                        * padded(r, 2*c+2*n+1);
-            }
-
-            output(r,c) = swapOutputs? v2 : v1;
-            output(r,c+1) = swapOutputs? v1 : v2;
-        }
-
-    return output;
-}
-
-
-
-Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in, 
-                                const std::vector<float>& filter,
-                                bool swapOutputs)
+std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
+    quadToComplexDecimateFilterYGPU(const Eigen::ArrayXXf& in,
+                                    const std::vector<float>& filter,
+                                    bool swapOutputs)
 {
     typedef
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
@@ -213,10 +142,18 @@ Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in,
     Eigen::Map<Array> input(&inValues[0], in.rows(), in.cols());
     input = in;
 
+    const size_t outWidth = in.cols() / 2,
+                 outHeight = ((in.rows() % 4) == 2)?
+                                (in.rows() + 2) / 4
+                              : in.rows() / 4;
 
-    const size_t outputHeight = (in.rows() + in.rows() % 4) / 2;
-    std::vector<float> outValues(outputHeight * in.cols());
-    Eigen::Map<Array> output(&outValues[0], outputHeight, in.cols());
+    Eigen::ArrayXXcf sb0(outHeight, outWidth), 
+                     sb1(outHeight, outWidth);
+
+
+    // We need to read out the images (both real and imaginary)
+    // then copy it over to sb0 or sb1.
+    std::vector<float> outValues(outWidth * outHeight * 2);
 
     try {
 
@@ -226,8 +163,9 @@ Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in,
         cl::CommandQueue cq(context.context, context.devices[0]);
 
         PadY padY(context.context, context.devices);
-        DecimateFilterY decimateFilterY(context.context, context.devices, filter,
-                                        swapOutputs);
+        QuadToComplexDecimateFilterY 
+            qtcDecFilterY(context.context, context.devices,
+                          filter, swapOutputs);
 
   
         const size_t width = in.cols(), height = in.rows(),
@@ -236,8 +174,15 @@ Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in,
         ImageBuffer input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
 
-        ImageBuffer output(context.context, CL_MEM_READ_WRITE,
-                           width, outputHeight, padding, alignment); 
+
+        cl::Image2D sb0Image(context.context,
+                             CL_MEM_READ_WRITE,
+                             cl::ImageFormat(CL_RG, CL_FLOAT),
+                             sb0.cols(), sb0.rows()),
+                    sb1Image(context.context,
+                             CL_MEM_READ_WRITE,
+                             cl::ImageFormat(CL_RG, CL_FLOAT),
+                             sb1.cols(), sb1.rows());
 
         // Upload the data
         cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
@@ -252,18 +197,30 @@ Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in,
 
         // Try the filter
         padY(cq, input);
-        decimateFilterY(cq, input, output);
+        qtcDecFilterY(cq, input, sb0Image, sb1Image);
 
         // Download the data
-        cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * output.padding(),
-                             output.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({output.width() * sizeof(float),
-                             output.height(), 1}),
-              output.stride() * sizeof(float), 0,
-              0, 0,
-              &outValues[0]);
+        cq.enqueueReadImage(sb0Image, CL_TRUE, 
+                            makeCLSizeT<3>({0, 0, 0}),
+                            makeCLSizeT<3>({outWidth, outHeight, 1}),
+                            0, 0, &outValues[0]);
+
+        for (size_t r = 0; r < sb0.rows(); ++r)
+            for (size_t c = 0; c < sb0.cols(); ++c) 
+                sb0(r,c) = std::complex<float>
+                    (outValues[2 * ((r*sb0.cols()) + c)],
+                     outValues[2 * ((r*sb0.cols()) + c) + 1]);
+
+        cq.enqueueReadImage(sb1Image, CL_TRUE, 
+                            makeCLSizeT<3>({0, 0, 0}),
+                            makeCLSizeT<3>({outWidth, outHeight, 1}),
+                            0, 0, &outValues[0]);
+
+        for (size_t r = 0; r < sb1.rows(); ++r)
+            for (size_t c = 0; c < sb1.cols(); ++c) 
+                sb1(r,c) = std::complex<float>
+                    (outValues[2 * ((r*sb1.cols()) + c)],
+                     outValues[2 * ((r*sb1.cols()) + c) + 1]);
 
     }
     catch (cl::Error err) {
@@ -272,9 +229,7 @@ Eigen::ArrayXXf decimateConvolveColsGPU(const Eigen::ArrayXXf& in,
         throw;
     }
 
-    Array out = output;
-
-    return out;
+    return std::make_tuple(sb0, sb1);
 }
 
 
