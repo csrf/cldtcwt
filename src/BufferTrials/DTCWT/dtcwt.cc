@@ -3,15 +3,6 @@
 
 #include "util/clUtil.h"
 
-// Specify to build everything for debug
-static const char clBuildOptions[] = "";
-
-Filters createLevel1Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue,
-                            float scaleFactor = 1.f);
-Filters createLevel2Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue,
-                            float scaleFactor = 1.f);
 
 // First level coefficients
 std::vector<float> h0oCoefs(float scaleFactor);
@@ -37,14 +28,49 @@ static size_t decimateDim(size_t inSize)
 
 
 
+
+Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
+             float scaleFactor) : 
+
+    context_ {context},
+
+    // Non-decimating
+    h0ox {context, devices, h0oCoefs(scaleFactor)},
+    h1ox {context, devices, h1oCoefs(scaleFactor)},
+    h2ox {context, devices, h2oCoefs(scaleFactor)},
+
+    h0oy {context, devices, h0oCoefs(scaleFactor)},
+    h1oy {context, devices, h1oCoefs(scaleFactor)},
+    h2oy {context, devices, h2oCoefs(scaleFactor)},
+
+    quadToComplex {context, devices},
+
+    // Decimating
+    h0bx {context, devices, h0bCoefs(scaleFactor), false},
+    h0by {context, devices, h0bCoefs(scaleFactor), false},
+
+    // 3-way decimating filter
+    h012bx {context, devices, h0bCoefs(scaleFactor), false,
+                              h1bCoefs(scaleFactor), true,
+                              h2bCoefs(scaleFactor), true},
+
+    // Filtering, decimation, complex conversion
+    q2ch0by {context, devices, h0bCoefs(scaleFactor), false},
+    q2ch1by {context, devices, h1bCoefs(scaleFactor), true},
+    q2ch2by {context, devices, h2bCoefs(scaleFactor), true}
+{}
+
+
+
+
 DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 {
     for (int l = env.startLevel; l < env.numLevels; ++l) {
 
-        const cl::Image2D& baseImage = env.levelTemps[l].lolo;
+        const ImageBuffer& baseImage = env.levelTemps[l].lolo;
 
-        const size_t width = baseImage.getImageInfo<CL_IMAGE_WIDTH>() / 2,
-                    height = baseImage.getImageInfo<CL_IMAGE_HEIGHT>() / 2;
+        const size_t width = baseImage.width() / 2,
+                    height = baseImage.height() / 2;
 
         LevelOutput sbs;
 
@@ -58,39 +84,6 @@ DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 
     }
 }
-
-
-
-
-
-Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
-             cl::CommandQueue commandQueue, float scaleFactor) : 
-    context_ { context },
-    level1_ (createLevel1Filters(context_, commandQueue, scaleFactor)),
-    leveln_ (createLevel2Filters(context_, commandQueue, scaleFactor)),
-
-    
-    h0ox {context, devices, h0oCoefs(scaleFactor)},
-    h1ox {context, devices, h1oCoefs(scaleFactor)},
-    h2ox {context, devices, h2oCoefs(scaleFactor)},
-
-    h0oy {context, devices, h0oCoefs(scaleFactor)},
-    h1oy {context, devices, h1oCoefs(scaleFactor)},
-    h2oy {context, devices, h2oCoefs(scaleFactor)},
-
-    quadToComplex {context, devices},
-
-    h0bx {context, devices, h0bCoefs(scaleFactor), false},
-    h0by {context, devices, h0bCoefs(scaleFactor), false},
-
-    h012bx {context, devices, h0bCoefs(scaleFactor), false,
-                              h1bCoefs(scaleFactor), true,
-                              h2bCoefs(scaleFactor), true},
-
-    q2ch0by {context, devices, h0bCoefs(scaleFactor), false},
-    q2ch1by {context, devices, h1bCoefs(scaleFactor), false},
-    q2ch2by {context, devices, h2bCoefs(scaleFactor), false}
-{}
 
 
 
@@ -133,24 +126,47 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
         c.levelTemps.push_back(LevelTemps());
 
         // Temps that will be needed whether there's an output or not
-        c.levelTemps.back().lo
-            = createImage2D(context_, width, newHeight);
-        c.levelTemps.back().lolo
-            = createImage2D(context_, newWidth, newHeight);
+        c.levelTemps.back().lo = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                                             newWidth, height, 
+                                             padding_, alignment_);
 
+        c.levelTemps.back().lolo = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                                               newWidth, newHeight, 
+                                               padding_, alignment_);
+       
         // Temps only needed when producing subband outputs
         if  (l >= startLevel) {
-            c.levelTemps.back().hi
-                = createImage2D(context_, width, newHeight);
-            c.levelTemps.back().bp
-                = createImage2D(context_, width, newHeight);
 
-            c.levelTemps.back().lohi
-                = createImage2D(context_, newWidth, newHeight);
-            c.levelTemps.back().hilo
-                = createImage2D(context_, newWidth, newHeight);
-            c.levelTemps.back().bpbp
-                = createImage2D(context_, newWidth, newHeight);
+            c.levelTemps.back().hi
+                = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                              newWidth, height, 
+                              padding_, alignment_);
+
+            c.levelTemps.back().bp
+                = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                              newWidth, height, 
+                              padding_, alignment_);
+
+            // We need more intermediate images if producing outputs
+            // at Level 1
+            if (l == 0) {
+
+                c.levelTemps.back().lohi
+                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                                  newWidth, newHeight, 
+                                  padding_, alignment_);
+
+                c.levelTemps.back().hilo
+                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                                  newWidth, newHeight, 
+                                  padding_, alignment_);
+
+                c.levelTemps.back().bpbp
+                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                                  newWidth, newHeight, 
+                                  padding_, alignment_);
+
+            }
         }
 
         width = newWidth;
@@ -163,7 +179,7 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
-                        cl::Image& image, 
+                        ImageBuffer& image, 
                         DtcwtTemps& env,
                         DtcwtOutput& subbandOutputs,
                         const std::vector<cl::Event>& waitEvents)
@@ -198,36 +214,36 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 
 
 void Dtcwt::filter(cl::CommandQueue& commandQueue,
-                   cl::Image& xx, 
+                   ImageBuffer& xx, 
                    const std::vector<cl::Event>& xxEvents,
                    LevelTemps& levelTemps, LevelOutput* subbands)
 {
     // Apply the non-decimating, special low pass filters that must be needed
-    h0y(commandQueue, xx, levelTemps.lo, 
-        xxEvents, &levelTemps.loDone);
+    h0ox(commandQueue, xx, levelTemps.lo, 
+         xxEvents, &levelTemps.loDone);
 
-    h0x(commandQueue, levelTemps.lo, levelTemps.lolo,
-        {levelTemps.loDone}, &levelTemps.loloDone);
+    h0oy(commandQueue, levelTemps.lo, levelTemps.lolo,
+         {levelTemps.loDone}, &levelTemps.loloDone);
 
     // If we've been given subbands to output to, we need to do more work:
     if (subbands) {
 
         // Produce both the other vertically-filtered versions
-        h1y(commandQueue, xx, levelTemps.hi,
-            xxEvents, &levelTemps.hiDone);
+        h1ox(commandQueue, xx, levelTemps.hi,
+             xxEvents, &levelTemps.hiDone);
 
-        hbpy(commandQueue, xx, levelTemps.bp,
-            xxEvents, &levelTemps.bpDone);
+        h2ox(commandQueue, xx, levelTemps.bp,
+             xxEvents, &levelTemps.bpDone);
 
         // High pass the images that had been low-passed the other way
-        h0x(commandQueue, levelTemps.hi, levelTemps.lohi,
-            {levelTemps.hiDone}, &levelTemps.lohiDone);
+        h0oy(commandQueue, levelTemps.hi, levelTemps.lohi,
+             {levelTemps.hiDone}, &levelTemps.lohiDone);
 
-        h1x(commandQueue, levelTemps.lo, levelTemps.hilo,
-            {levelTemps.loDone}, &levelTemps.hiloDone);
+        h1oy(commandQueue, levelTemps.lo, levelTemps.hilo,
+             {levelTemps.loDone}, &levelTemps.hiloDone);
 
-        hbpx(commandQueue, levelTemps.bp, levelTemps.bpbp,
-            {levelTemps.bpDone}, &levelTemps.bpbpDone);
+        h2oy(commandQueue, levelTemps.bp, levelTemps.bpbp,
+             {levelTemps.bpDone}, &levelTemps.bpbpDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
@@ -251,54 +267,50 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
 
 void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
-                           cl::Image2D& xx, 
+                           ImageBuffer& xx, 
                            const std::vector<cl::Event>& xxEvents,
                            LevelTemps& levelTemps, LevelOutput* subbands)
 {
-    // Apply the non-decimating, special low pass filters that must be needed
-    g0y(commandQueue, xx, levelTemps.lo, 
-        xxEvents, &levelTemps.loDone);
+    if (subbands == nullptr) {
 
-    g0x(commandQueue, levelTemps.lo, levelTemps.lolo,
-        {levelTemps.loDone}, &levelTemps.loloDone);
+        // Apply the non-decimating, low-pass filters both ways
+        h0bx(commandQueue, xx, levelTemps.lo, 
+             xxEvents, &levelTemps.loDone);
+
+        h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
+             {levelTemps.loDone}, &levelTemps.loloDone);
 
 
-    // If we've been given subbands to output to, we need to do more work:
-    if (subbands) {
+    } else {
+        // If we've been given subbands to output to, we need to do more work:
 
-        // Produce both the other vertically-filtered versions
-        g1y(commandQueue, xx, levelTemps.hi,
-            xxEvents, &levelTemps.hiDone);
+        // Produce all the vertically-filtered versions
+        h012bx(commandQueue, xx, 
+               levelTemps.lo,
+               levelTemps.hi,
+               levelTemps.bp,
+               xxEvents, &levelTemps.loDone);
 
-        gbpy(commandQueue, xx, levelTemps.bp,
-            xxEvents, &levelTemps.bpDone);
-
-        // High pass the images that had been low-passed the other way
-        g0x(commandQueue, levelTemps.hi, levelTemps.lohi,
-            {levelTemps.hiDone}, &levelTemps.lohiDone);
-
-        g1x(commandQueue, levelTemps.lo, levelTemps.hilo,
-            {levelTemps.loDone}, &levelTemps.hiloDone);
-
-        gbpx(commandQueue, levelTemps.bp, levelTemps.bpbp,
-            {levelTemps.bpDone}, &levelTemps.bpbpDone);
+        // Prepare low-low output
+        h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
+             {levelTemps.loDone}, &levelTemps.loloDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
         subbands->done = std::vector<cl::Event>(3);
 
-        // ...and generate subband outputs.
-        quadToComplex(commandQueue, levelTemps.lohi, 
-                      subbands->sb[0], subbands->sb[5],
-                      {levelTemps.lohiDone}, &subbands->done[0]); 
+        // ...and filter in the y direction, generating subband outputs.
+        q2ch1by(commandQueue, levelTemps.lo, 
+                subbands->sb[0], subbands->sb[5],
+                {levelTemps.loDone}, &subbands->done[0]); 
 
-        quadToComplex(commandQueue, levelTemps.hilo, 
-                      subbands->sb[2], subbands->sb[3],
-                      {levelTemps.hiloDone}, &subbands->done[1]); 
+        q2ch0by(commandQueue, levelTemps.hi, 
+                subbands->sb[2], subbands->sb[3],
+                {levelTemps.loDone}, &subbands->done[1]); 
 
-        quadToComplex(commandQueue, levelTemps.bpbp, 
-                      subbands->sb[1], subbands->sb[4],
-                      {levelTemps.bpbpDone}, &subbands->done[2]); 
+        q2ch2by(commandQueue, levelTemps.bp, 
+                subbands->sb[1], subbands->sb[4],
+                {levelTemps.loDone}, &subbands->done[2]); 
     }
 }
 
@@ -392,7 +404,6 @@ std::vector<float> h2oCoefs(float scaleFactor)
           -7.81782479825949e-05,
           -6.22253585579744e-04,
           -3.68250025673202e-04
-
     };
 
 
@@ -407,7 +418,7 @@ std::vector<float> h2oCoefs(float scaleFactor)
 
 
 // Decimation coefficinets
-std::vector<float> h0bCoefs(float scaleFactor);
+std::vector<float> h0bCoefs(float scaleFactor)
 {
     std::vector<float> h = { 
           -0.00455689562847549,
@@ -436,7 +447,7 @@ std::vector<float> h0bCoefs(float scaleFactor);
 }
 
 
-std::vector<float> h1bCoefs(float scaleFactor);
+std::vector<float> h1bCoefs(float scaleFactor)
 {
     std::vector<float> h = { 
           -0.00325314276365318,
@@ -465,7 +476,7 @@ std::vector<float> h1bCoefs(float scaleFactor);
 }
 
 
-std::vector<float> h2bCoefs(float scaleFactor);
+std::vector<float> h2bCoefs(float scaleFactor)
 {
     std::vector<float> h = { 
           -2.77165349347537e-03,
@@ -492,94 +503,6 @@ std::vector<float> h2bCoefs(float scaleFactor);
 
     return h;
 }
-
-
-
-
-
-
-
-
-
-
-Filters createLevel2Filters(cl::Context& context, 
-                            cl::CommandQueue& commandQueue,
-                            float scaleFactor)
-{
-    // Scale factor is the scaling factor that should be applied between
-    // levels
-    
-    Filters level2;
-
-    std::vector<float> h0 = {
-          -0.00455689562847549,
-          -0.00543947593727412,
-           0.01702522388155399,
-           0.02382538479492030,
-          -0.10671180468666540,
-           0.01186609203379700,
-           0.56881042071212273,
-           0.75614564389252248,
-           0.27529538466888204,
-          -0.11720388769911527,
-          -0.03887280126882779,
-           0.03466034684485349,
-          -0.00388321199915849,
-           0.00325314276365318
-    };
-
-    // Scale so that when applied in both directions gives the correct
-    // overall scale factor
-    for (float& val: h0)
-        val *= sqrt(scaleFactor);
-
-    level2.h0 = createBuffer(context, commandQueue, h0);
-
-    level2.h1 = createBuffer(context, commandQueue, {
-          -0.00325314276365318,
-          -0.00388321199915849,
-          -0.03466034684485349,
-          -0.03887280126882779,
-           0.11720388769911527,
-           0.27529538466888204,
-          -0.75614564389252248,
-           0.56881042071212273,
-          -0.01186609203379700,
-          -0.10671180468666540,
-          -0.02382538479492030,
-           0.01702522388155399,
-           0.00543947593727412,
-          -0.00455689562847549
-    } );
-
-    level2.hbp = createBuffer(context, commandQueue, {
-          -2.77165349347537e-03,
-          -4.32919303381105e-04,
-           2.10100577283097e-02,
-           6.14446533755929e-02,
-           1.73241472867428e-01,
-          -4.47647940175083e-02,
-          -8.38137840090472e-01,
-           4.36787385780317e-01,
-           2.62691880616686e-01,
-          -7.62474758151248e-03,
-          -2.63685613793659e-02,
-          -2.54554351814246e-02,
-          -9.59514305416110e-03,
-          -2.43562670333119e-05
-    } );
-
-    return level2;
-}
-
-
-
-
-
-
-
-
-
 
 
 

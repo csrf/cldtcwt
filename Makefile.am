@@ -139,7 +139,8 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/DecimateTripleFilterX/decimateTripleFilterX.cc \
 		 src/BufferTrials/QuadToComplex/quadToComplex.cc \
 		 src/BufferTrials/PadX/padX.cc \
-		 src/BufferTrials/PadY/padY.cc 
+		 src/BufferTrials/PadY/padY.cc \
+		 src/BufferTrials/DTCWT/dtcwt.cc
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
 

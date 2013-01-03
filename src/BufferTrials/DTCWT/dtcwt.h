@@ -8,7 +8,17 @@
 
 #include "../imageBuffer.h"
 
-#include "filterer.h"
+#include "../PadX/padX.h"
+#include "../PadY/padY.h"
+
+#include "../FilterX/filterX.h"
+#include "../FilterY/filterY.h"
+#include "../QuadToComplex/quadToComplex.h"
+
+#include "../DecimateFilterX/decimateFilterX.h"
+#include "../DecimateTripleFilterX/decimateTripleFilterX.h"
+#include "../DecimateFilterY/decimateFilterY.h"
+#include "../QuadToComplexDecimateFilterY/q2cDecimateFilterY.h"
 
 #include <vector>
 #include <tuple>
@@ -24,6 +34,10 @@ struct LevelTemps {
     // Columns & rows filtered for next stage
     ImageBuffer lolo;
 
+    // These only get used if producing outputs at Level 1
+    ImageBuffer lohi, hilo, bpbp;
+    cl::Event lohiDone, hiloDone, bpbpDone;
+    
     // Done events for each of these
     cl::Event loDone, hiDone, bpDone, 
               loloDone; 
@@ -84,14 +98,17 @@ private:
 
     QuadToComplexDecimateFilterY q2ch0by, q2ch1by, q2ch2by;
 
+    const size_t padding_ = 16;
+    const size_t alignment_ = 32;
+
 // Debug:
 public:
     void filter(cl::CommandQueue& commandQueue,
-                cl::Image& xx, const std::vector<cl::Event>& xxEvents,
+                ImageBuffer& xx, const std::vector<cl::Event>& xxEvents,
                 LevelTemps& levelTemps, LevelOutput* subbands);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
-                        cl::Image2D& xx, 
+                        ImageBuffer& xx, 
                         const std::vector<cl::Event>& xxEvents,
                         LevelTemps& levelTemps, LevelOutput* subbands);
 public:
@@ -106,7 +123,7 @@ public:
     // the coarser scales have much greater magnitudes.
 
     void operator() (cl::CommandQueue& commandQueue,
-                     cl::Image& image, 
+                     ImageBuffer& image, 
                      DtcwtTemps& env,
                      DtcwtOutput& subbandOutputs,
                      const std::vector<cl::Event>& waitEvents
