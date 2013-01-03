@@ -4,9 +4,8 @@
 #include <vector>
 #include <CL/cl.hpp>
 
-#include "DTCWT/dtcwt.h"
+#include "BufferTrials/DTCWT/dtcwt.h"
 #include "MiscKernels/abs.h"
-#include "DTCWT/energyMapEigen.h"
 #include "KeypointDetector/peakDetector.h"
 #include "KeypointDetector/EnergyMaps/interpMap.h"
 #include "KeypointDetector/EnergyMaps/interpPhaseMap.h"
@@ -60,7 +59,7 @@ public:
                int width, int height,
                int maxNumKeypoints = 1000);
 
-    void operator() (cl::Image& input, 
+    void operator() (ImageBuffer& input, 
                      const std::vector<cl::Event>& waitEvents = {});
 
     std::vector<::LevelOutput*> levelOutputs(void);

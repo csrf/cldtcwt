@@ -90,7 +90,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
                           0, 0, data,
                           nullptr, &imageGreyscaleDone_);
 
-    calculator_(imageGreyscale_, {imageGreyscaleDone_});
+    //calculator_(imageGreyscale_, {imageGreyscaleDone_});
 
     // Go over to using the OpenGL objects.  glFinish should already have
     // been called

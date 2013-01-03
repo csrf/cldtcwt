@@ -7,7 +7,7 @@ Calculator::Calculator(cl::Context& context,
                        int width, int height,
                        int maxNumKeypoints)
  :  commandQueue(context, device),
-    dtcwt(context, {device}, commandQueue, 0.5f),
+    dtcwt(context, {device}, 0.5f),
     abs(context, {device}),
     energyMap(context, {device}),
     peakDetector(context, {device}),
@@ -63,7 +63,7 @@ Calculator::Calculator(cl::Context& context,
 
 #include <iostream>
 
-void Calculator::operator() (cl::Image& input,
+void Calculator::operator() (ImageBuffer& input,
                              const std::vector<cl::Event>& waitEvents)
 {
     // Transform

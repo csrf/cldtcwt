@@ -87,7 +87,7 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/viewer.cc \
 					   src/DisplayOutput/VideoReader.cc \
 					   src/DTCWT/energyMapEigen.cc
-displayDTCWT_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
+displayDTCWT_LDADD = libbufferfilter.la libclutil.la -lsfml-window -lsfml-system \
 				   @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread
 
 
@@ -124,7 +124,8 @@ BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
                  src/BufferTrials/DecimateTripleFilterX/kernel.h \
                  src/BufferTrials/QuadToComplex/kernel.h \
                  src/BufferTrials/PadX/kernel.h \
-                 src/BufferTrials/PadY/kernel.h
+                 src/BufferTrials/PadY/kernel.h \
+                 src/BufferTrials/ImageToImageBuffer/kernel.h
 libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/imageBuffer.cc \
 		 src/BufferTrials/FilterX/filterX.cc \
@@ -136,6 +137,7 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/QuadToComplex/quadToComplex.cc \
 		 src/BufferTrials/PadX/padX.cc \
 		 src/BufferTrials/PadY/padY.cc \
+		 src/BufferTrials/ImageToImageBuffer/imageToImageBuffer.cc \
 		 src/BufferTrials/DTCWT/dtcwt.cc
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
