@@ -351,8 +351,8 @@ std::vector<float> h0oCoefs(float scaleFactor)
 std::vector<float> h1oCoefs(float scaleFactor)
 {
     std::vector<float> h = { 
-          -0.000070626395089,
-           0.000000000000000,
+//          -0.000070626395089,
+ //          0.000000000000000,
            0.001341901506696,
           -0.001883370535714,
           -0.007156808035714,
@@ -368,8 +368,8 @@ std::vector<float> h1oCoefs(float scaleFactor)
           -0.007156808035714,
           -0.001883370535714,
            0.001341901506696,
-           0.000000000000000,
-          -0.000070626395089
+  //         0.000000000000000,
+   //       -0.000070626395089
    };
 
     // Scale so that when applied in both directions gives the correct
@@ -385,8 +385,8 @@ std::vector<float> h1oCoefs(float scaleFactor)
 std::vector<float> h2oCoefs(float scaleFactor)
 {
     std::vector<float> h = { 
-          -3.68250025673202e-04,
-          -6.22253585579744e-04,
+ //         -3.68250025673202e-04,
+  //        -6.22253585579744e-04,
           -7.81782479825950e-05,
            4.18582084706810e-03,
            8.19178717888364e-03,
@@ -402,8 +402,8 @@ std::vector<float> h2oCoefs(float scaleFactor)
            8.19178717888364e-03,
            4.18582084706810e-03,
           -7.81782479825949e-05,
-          -6.22253585579744e-04,
-          -3.68250025673202e-04
+   //       -6.22253585579744e-04,
+    //      -3.68250025673202e-04
     };
 
 

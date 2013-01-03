@@ -6,13 +6,12 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
-#include "DTCWT/filterer.h"
 #include "util/clUtil.h"
-#include "DTCWT/dtcwt.h"
 #include <iomanip>
 
 #include <ctime>
 
+#include "../BufferTrials/DTCWT/dtcwt.h"
 
 #include <highgui.h>
 
@@ -35,30 +34,40 @@ int main()
   
         // Read in image
         cv::Mat bmp = cv::imread("test.bmp", 0);
-        cl::Image2D inImage = createImage2D(context.context, bmp);
+
+        ImageBuffer inImage { 
+            context.context, CL_MEM_READ_WRITE,
+            bmp.cols, bmp.rows, 16, 32
+        };
+
+        // Upload the data
+        cq.enqueueWriteBufferRect(inImage.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * inImage.padding(),
+                              inImage.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({inImage.width() * sizeof(float),
+                              inImage.height(), 1}),
+              inImage.stride() * sizeof(float), 0,
+              0, 0,
+              bmp.ptr());
 
         std::cout << bmp.rows << " " << bmp.cols << std::endl;
         std::cout << "Creating Dtcwt" << std::endl;
 
 
-        Dtcwt dtcwt(context.context, context.devices, cq);
+        Dtcwt dtcwt(context.context, context.devices);
 
         DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
                                            numLevels, startLevel);
 
         DtcwtOutput sbOutputs = {env};
 
-        EnergyMap energyMap(context.context, context.devices);
-
-        cl::Image2D emOut = createImage2D(context.context, bmp.cols / 2,
-                                                   bmp.rows / 2);
 
         std::cout << "Running DTCWT" << std::endl;
 
         
         dtcwt(cq, inImage, env, sbOutputs);
 
-        energyMap(cq, sbOutputs.subbands[0], emOut);
 
         cq.finish();
 
@@ -70,8 +79,6 @@ int main()
         saveComplexImage("sb3.dat", cq, sbOutputs.subbands[0].sb[3]);
         saveComplexImage("sb4.dat", cq, sbOutputs.subbands[0].sb[4]);
         saveComplexImage("sb5.dat", cq, sbOutputs.subbands[0].sb[5]);
-
-        saveRealImage("em.dat", cq, emOut);
 
     }
     catch (cl::Error err) {

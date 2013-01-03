@@ -6,9 +6,10 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
-#include "DTCWT/filterer.h"
+#include "../BufferTrials/DTCWT/dtcwt.h"
+
+
 #include "util/clUtil.h"
-#include "DTCWT/dtcwt.h"
 #include <iomanip>
 
 #include <ctime>
@@ -47,13 +48,30 @@ int main(int argc, char** argv)
         bmp.convertTo(floatBmp, CV_32F);
         floatBmp /= 255.f;
 
-        cl::Image2D inImage = createImage2D(context.context, floatBmp);
+
+        ImageBuffer inImage { 
+            context.context, CL_MEM_READ_WRITE,
+            floatBmp.cols, floatBmp.rows, 16, 32
+        };
+
+
+        // Upload the data
+        cq.enqueueWriteBufferRect(inImage.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * inImage.padding(),
+                              inImage.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({inImage.width() * sizeof(float),
+                              inImage.height(), 1}),
+              inImage.stride() * sizeof(float), 0,
+              0, 0,
+              floatBmp.ptr());
+
 
         // Create the DTCWT itself
-        Dtcwt dtcwt(context.context, context.devices, cq);
+        Dtcwt dtcwt(context.context, context.devices);
 
         // Create the intermediate storage for the DTCWT
-        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
+        DtcwtTemps env = dtcwt.createContext(floatBmp.cols, floatBmp.rows,
                                              numLevels, startLevel);
 
         // Create the outputs storage for the DTCWT
@@ -78,8 +96,8 @@ int main(int argc, char** argv)
             }
         }
 
-        saveRealImage("in.dat", cq, inImage);
-        saveRealImage("lo.dat", cq, env.levelTemps[0].lo);
+        //saveRealImage("in.dat", cq, inImage);
+        //saveRealImage("lo.dat", cq, env.levelTemps[0].lo);
     }
     catch (cl::Error err) {
         std::cerr << "Error: " << err.what() << "(" << err.err() << ")"

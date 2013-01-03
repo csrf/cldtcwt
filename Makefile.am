@@ -42,11 +42,7 @@ noinst_LTLIBRARIES += libclutil.la
 libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
-noinst_PROGRAMS = testDTCWT
-testDTCWT_SOURCES = src/test/test.cc 
-testDTCWT_LDADD = libdtcwt.la @opencv_LIBS@
-
-noinst_PROGRAMS += testDescriptor
+noinst_PROGRAMS = testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
 testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
 
@@ -111,11 +107,11 @@ testRescale_LDADD = libdtcwt.la @opencv_LIBS@
 
 noinst_PROGRAMS += verify
 verify_SOURCES = src/test/verify.cc 
-verify_LDADD = libdtcwt.la @opencv_LIBS@
+verify_LDADD = libbufferfilter.la @opencv_LIBS@
 
 noinst_PROGRAMS += verifyBasic
 verifyBasic_SOURCES = src/test/verifyBasic.cc 
-verifyBasic_LDADD = libdtcwt.la @opencv_LIBS@
+verifyBasic_LDADD = libbufferfilter.la @opencv_LIBS@
 
 
 
@@ -172,6 +168,10 @@ speedTestQuadToComplexDecimateFilterY_SOURCES = \
 	   src/BufferTrials/QuadToComplexDecimateFilterY/speedTest.cc 
 speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la \
 							   @CL_LIBS@ @opencv_LIBS@ 
+
+noinst_PROGRAMS += testDTCWT
+testDTCWT_SOURCES = src/test/test.cc 
+testDTCWT_LDADD = libbufferfilter.la libclutil.la @opencv_LIBS@
 
 
 
