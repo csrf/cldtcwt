@@ -36,7 +36,7 @@ for l = 1:3
         disp(sprintf('%d %d %f', l, sb, max(difference(:))));
 
         % Check it's all close enough to right
-        if any(difference(:) > 1e-4)
+        if any(difference(:) > 5e-3)
             disp('DTCWT failed to meet tolerances!!!');
 
             % Flag an error

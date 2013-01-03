@@ -34,6 +34,10 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
 
     context_ {context},
 
+    // Pad by symmetric extension
+    padX {context, devices},
+    padY {context, devices}, 
+
     // Non-decimating
     h0ox {context, devices, h0oCoefs(scaleFactor)},
     h1ox {context, devices, h1oCoefs(scaleFactor)},
@@ -218,32 +222,43 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
                    const std::vector<cl::Event>& xxEvents,
                    LevelTemps& levelTemps, LevelOutput* subbands)
 {
+    // Definitely need to do this padding, whether outputs or not
+    cl::Event xxPadded;
+    padX(commandQueue, xx, xxEvents, &xxPadded);
+
     // Apply the non-decimating, special low pass filters that must be needed
     h0ox(commandQueue, xx, levelTemps.lo, 
-         xxEvents, &levelTemps.loDone);
+         {xxPadded}, &levelTemps.loDone);
+
+    cl::Event loPadded;
+    padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
 
     h0oy(commandQueue, levelTemps.lo, levelTemps.lolo,
-         {levelTemps.loDone}, &levelTemps.loloDone);
+         {loPadded}, &levelTemps.loloDone);
 
     // If we've been given subbands to output to, we need to do more work:
     if (subbands) {
 
         // Produce both the other vertically-filtered versions
         h1ox(commandQueue, xx, levelTemps.hi,
-             xxEvents, &levelTemps.hiDone);
+             {xxPadded}, &levelTemps.hiDone);
 
         h2ox(commandQueue, xx, levelTemps.bp,
-             xxEvents, &levelTemps.bpDone);
+             {xxPadded}, &levelTemps.bpDone);
+
+        cl::Event hiPadded, bpPadded;
+        padY(commandQueue, levelTemps.hi, {levelTemps.hiDone}, &hiPadded);
+        padY(commandQueue, levelTemps.bp, {levelTemps.bpDone}, &bpPadded);
 
         // High pass the images that had been low-passed the other way
         h0oy(commandQueue, levelTemps.hi, levelTemps.lohi,
-             {levelTemps.hiDone}, &levelTemps.lohiDone);
+             {hiPadded}, &levelTemps.lohiDone);
 
         h1oy(commandQueue, levelTemps.lo, levelTemps.hilo,
-             {levelTemps.loDone}, &levelTemps.hiloDone);
+             {loPadded}, &levelTemps.hiloDone);
 
         h2oy(commandQueue, levelTemps.bp, levelTemps.bpbp,
-             {levelTemps.bpDone}, &levelTemps.bpbpDone);
+             {bpPadded}, &levelTemps.bpbpDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
@@ -251,11 +266,11 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
         // ...and generate subband outputs.
         quadToComplex(commandQueue, levelTemps.lohi, 
-                      subbands->sb[0], subbands->sb[5],
+                      subbands->sb[2], subbands->sb[3],
                       {levelTemps.lohiDone}, &subbands->done[0]); 
 
         quadToComplex(commandQueue, levelTemps.hilo, 
-                      subbands->sb[2], subbands->sb[3],
+                      subbands->sb[0], subbands->sb[5],
                       {levelTemps.hiloDone}, &subbands->done[1]); 
 
         quadToComplex(commandQueue, levelTemps.bpbp, 
@@ -271,14 +286,20 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            const std::vector<cl::Event>& xxEvents,
                            LevelTemps& levelTemps, LevelOutput* subbands)
 {
+    // Definitely need to do this padding, whether outputs or not
+    cl::Event xxPadded;
+    padX(commandQueue, xx, xxEvents, &xxPadded);
+
     if (subbands == nullptr) {
 
         // Apply the non-decimating, low-pass filters both ways
         h0bx(commandQueue, xx, levelTemps.lo, 
-             xxEvents, &levelTemps.loDone);
+             {xxPadded}, &levelTemps.loDone);
 
+        cl::Event loPadded;
+        padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
         h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
-             {levelTemps.loDone}, &levelTemps.loloDone);
+             {loPadded}, &levelTemps.loloDone);
 
 
     } else {
@@ -289,7 +310,7 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                levelTemps.lo,
                levelTemps.hi,
                levelTemps.bp,
-               xxEvents, &levelTemps.loDone);
+               {xxPadded}, &levelTemps.loDone);
 
         // Prepare low-low output
         h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
@@ -299,18 +320,23 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
         // is complete
         subbands->done = std::vector<cl::Event>(3);
 
+        cl::Event loPadded, hiPadded, bpPadded;
+        padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
+        padY(commandQueue, levelTemps.hi, {levelTemps.loDone}, &hiPadded);
+        padY(commandQueue, levelTemps.bp, {levelTemps.loDone}, &bpPadded);
+
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 
                 subbands->sb[0], subbands->sb[5],
-                {levelTemps.loDone}, &subbands->done[0]); 
+                {loPadded}, &subbands->done[0]); 
 
         q2ch0by(commandQueue, levelTemps.hi, 
                 subbands->sb[2], subbands->sb[3],
-                {levelTemps.loDone}, &subbands->done[1]); 
+                {hiPadded}, &subbands->done[1]); 
 
         q2ch2by(commandQueue, levelTemps.bp, 
                 subbands->sb[1], subbands->sb[4],
-                {levelTemps.loDone}, &subbands->done[2]); 
+                {bpPadded}, &subbands->done[2]); 
     }
 }
 
