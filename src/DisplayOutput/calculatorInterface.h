@@ -10,6 +10,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <array>
 
+#include "BufferTrials/imageBuffer.h"
+#include "BufferTrials/ImageToImageBuffer/imageToImageBuffer.h"
+
 #if defined(CL_VERSION_1_2)
     typedef cl::ImageGL GLImage;
 #else
@@ -56,6 +59,13 @@ private:
     // The input needs to be put into greyscale before display
     cl::Image2D imageGreyscale_;
     cl::Event imageGreyscaleDone_;
+
+    // To convert above into below:
+    ImageToImageBuffer imageToImageBuffer_;
+
+    // And also copied into a buffer for the DTCWT input
+    ImageBuffer bufferGreyscale_;
+    cl::Event bufferGreyscaleDone_;
 
     // For subband displays for levels 2 and 3
     std::array<GLTexture, numSubbands> subbandTextures2_;

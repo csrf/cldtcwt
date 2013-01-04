@@ -13,7 +13,7 @@ __kernel void imageToImageBuffer(__read_only image2d_t input,
     // Copy to the image buffer
     output[(PADDING + g.y) * stride
            + PADDING + g.x]
-        = read_imagef(input, sampler, g);
+        = read_imagef(input, sampler, g).s0;
 
 }
 

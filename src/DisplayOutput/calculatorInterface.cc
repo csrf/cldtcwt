@@ -24,6 +24,9 @@ CalculatorInterface::CalculatorInterface(cl::Context& context,
    imageGreyscale_(context, CL_MEM_READ_WRITE, 
                    cl::ImageFormat(CL_LUMINANCE, CL_UNORM_INT8),
                    width, height),
+   bufferGreyscale_(context, CL_MEM_READ_WRITE,
+                    width, height, 16, 32),
+   imageToImageBuffer_(context, {device}),
    pboBuffer_(1),
    keypointLocationsBuffer_(1)
 {
@@ -90,7 +93,10 @@ void CalculatorInterface::processImage(const void* data, size_t length)
                           0, 0, data,
                           nullptr, &imageGreyscaleDone_);
 
-    //calculator_(imageGreyscale_, {imageGreyscaleDone_});
+    imageToImageBuffer_(cq_, imageGreyscale_, bufferGreyscale_,
+                        {imageGreyscaleDone_}, &bufferGreyscaleDone_);
+
+    calculator_(bufferGreyscale_, {bufferGreyscaleDone_});
 
     // Go over to using the OpenGL objects.  glFinish should already have
     // been called

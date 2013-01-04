@@ -20,23 +20,31 @@ TEST_EXTENSIONS=.sh
 
 
 noinst_LTLIBRARIES = libdtcwt.la 
+libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
+					  src/DTCWT/filterer.cc \
+					  src/DTCWT/fourTree.cc 
+libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
+
+
+
+noinst_LTLIBRARIES += libkeypoints.la
 BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
 				src/KeypointDetector/concatKernel.h \
 				src/KeypointDetector/EnergyMaps/interpMapKernel.h \
 			src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.h \
 				src/KeypointDescriptor/extractDescriptorsKernel.h \
 				src/MiscKernels/accumulateKernel.h 
-libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
-					  src/DTCWT/filterer.cc \
-					  src/DTCWT/fourTree.cc \
+libkeypoints_la_SOURCES = \
 					  src/KeypointDescriptor/extractDescriptors.cc \
 					  src/KeypointDetector/findMax.cc \
 					  src/KeypointDetector/concat.cc \
 					  src/KeypointDetector/EnergyMaps/interpMap.cc \
-				  src/KeypointDetector/EnergyMaps/interpPhaseMap.cc \
+					  src/KeypointDetector/EnergyMaps/interpPhaseMap.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
-libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
+libkeypoints_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
+
+
 
 noinst_LTLIBRARIES += libclutil.la
 libclutil_la_SOURCES = src/util/clUtil.cc
@@ -44,29 +52,29 @@ libclutil_la_LIBADD = @CL_LIBS@ @opencv_LIBS@
 
 noinst_PROGRAMS = testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
-testDescriptor_LDADD = libdtcwt.la @opencv_LIBS@
+testDescriptor_LDADD = libdtcwt.la libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testFindMax
 testFindMax_SOURCES = src/test/testFindMax.cc
-testFindMax_LDADD = libdtcwt.la @opencv_LIBS@
+testFindMax_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testConcat
 testConcat_SOURCES = src/test/testConcat.cc
-testConcat_LDADD = libdtcwt.la @opencv_LIBS@
+testConcat_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testAccumulate
 testAccumulate_SOURCES = src/test/testAccumulate.cc 
-testAccumulate_LDADD = libdtcwt.la @opencv_LIBS@
+testAccumulate_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testPeakDetector
 testPeakDetector_SOURCES = src/test/testPeakDetector.cc 
-testPeakDetector_LDADD = libdtcwt.la @opencv_LIBS@
+testPeakDetector_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testPyramidSum
 BUILT_SOURCES += src/MiscKernels/pyramidSumKernel.h 
 testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
 						 src/test/testPyramidSum.cc 
-testPyramidSum_LDADD = libdtcwt.la @opencv_LIBS@
+testPyramidSum_LDADD = libkeypoints.la @opencv_LIBS@
 
 #testOutput_SOURCES = src/test/testOutput.cc \
 #					 src/MiscKernels/abs.cc
@@ -88,7 +96,8 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/VideoReader.cc \
 					   src/DTCWT/energyMapEigen.cc
 displayDTCWT_LDADD = libbufferfilter.la libclutil.la -lsfml-window -lsfml-system \
-				   @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread
+				   @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread \
+				   libkeypoints.la
 
 
 #testOutputEigenDetector_SOURCES = src/test/testOutputEigenDetector.cc \
