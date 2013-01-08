@@ -30,7 +30,7 @@
 
 
 
-void loadFourBlocks(__global float* readPos,
+void loadFourBlocks(__global const float* readPos,
                     __local float cache[WG_H][4*WG_W],
                     int2 l, int pad, bool twiddleTree2)
 {
@@ -55,7 +55,7 @@ void loadFourBlocks(__global float* readPos,
 
     // We want to store into the reverse order if on an odd address;
     // but the trees are swapped over if we have to pad
-    bool storeBackwards = (l.x & 1) ^ pad;
+    int storeBackwards = (l.x & 1) ^ pad;
 
     const int d = 1 - 2*storeBackwards; 
 
