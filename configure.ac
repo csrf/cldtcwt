@@ -1,13 +1,13 @@
-AC_PREREQ([2.59])
+AC_PREREQ([2.69])
 
-AC_INIT([test], [1.0], [timothy.gale@cantab.net])
+AC_INIT([test],[1.0],[timothy.gale@cantab.net])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl We want to make sure objects can be in appropriate directories to avoid 
 AM_INIT_AUTOMAKE([1.9 foreign subdir-objects])
 
-AC_PROG_LIBTOOL
+LT_INIT
 
 AC_PROG_CXX
 
