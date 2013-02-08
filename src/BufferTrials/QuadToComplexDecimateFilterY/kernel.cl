@@ -81,8 +81,10 @@ inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterY(__global const float* input,
-                     __write_only image2d_t output0,
-                     __write_only image2d_t output1,
+                     __global float* output0,
+                     __global float* output1,
+                     unsigned int outputWidth,
+                     unsigned int outputHeight,
                      __constant float* filter,
                      unsigned int height, 
                      unsigned int stride,
@@ -142,21 +144,37 @@ void decimateFilterY(__global const float* input,
 
     // Output only using the top right of each square of four pixels,
     // and only within the confines of the image
-    if (all(outPos < get_image_dim(output0)) && !(g.x & 1) && !(g.y & 1)) {
+    if ((outPos.x < outputWidth) & (outPos.y < outputHeight)) {
 
         // Sample upper left, upper right, etc
-        float ul = cache[l.y][l.x];
+        /*float ul = cache[l.y][l.x];
         float ur = cache[l.y][l.x+1];
         float ll = cache[l.y+1][l.x];
         float lr = cache[l.y+1][l.x+1];
 
-        const float factor = 1.0f / sqrt(2.0f);
-
         // Combine into complex pairs
-        write_imagef(output0, outPos,
-                     factor * (float4) (ul - lr, ur + ll, 0.0, 1.0));
-        write_imagef(output1, outPos,
-                     factor * (float4) (ul + lr, ur - ll, 0.0, 1.0));
+        output0[outPos.x * 2 + outPos.y * outputWidth * 2]
+            = factor * (ul - lr);
+        output0[outPos.x * 2 + outPos.y * outputWidth * 2 + 1]
+            = factor * (ur + ll);
+            
+        output1[outPos.x * 2 + outPos.y * outputWidth * 2]
+            = factor * (ul + lr);
+        output1[outPos.x * 2 + outPos.y * outputWidth * 2 + 1]
+            = factor * (ur - ll);*/
+
+        int x = l.x & ~1;
+
+        float a = cache[l.y][x];
+        float b = cache[l.y ^ 1][x ^ 1];
+        float sign = ((l.x & 1) ^ (l.y & 1))? 1.f : -1.f;
+
+        const float factor = 1.0f;// / sqrt(2.0f);
+
+        __global float* output = (l.x & 1)? output1 : output0;
+        
+        output[outPos.x * 2 + (l.y & 1) + outPos.y * outputWidth * 2]
+            = a + sign * b;
 
     }
 

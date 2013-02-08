@@ -41,6 +41,11 @@ struct LevelTemps {
     // Done events for each of these
     cl::Event loDone, hiDone, bpDone, 
               loloDone; 
+
+    // Subband matrices
+    std::array<ImageBuffer<cl_float>, 6> sb;
+    std::vector<cl::Event> sbDone;
+
 };
 
 

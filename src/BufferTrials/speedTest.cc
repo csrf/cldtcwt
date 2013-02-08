@@ -41,7 +41,13 @@ int main()
         ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment);
 
+        ImageBuffer<cl_float> input2(context.context, CL_MEM_READ_WRITE,
+                          width, height, padding, alignment);
+
         ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
+                           width, height, padding, alignment);
+
+        ImageBuffer<cl_float> output2(context.context, CL_MEM_READ_WRITE,
                            width, height, padding, alignment);
 
         {
@@ -88,6 +94,33 @@ int main()
                     << (t / numFrames * 1000) << " ms" << std::endl;
 
         }
+
+
+        {
+            // Run, timing
+            timeb start, end;
+            const int numFrames = 1000;
+            ftime(&start);
+
+            for (int n = 0; n < numFrames; ++n) {
+                padX(cq, input);
+                filterX(cq, input, output);
+                padY(cq, input2);
+                filterY(cq, input2, output2);
+            }
+
+            cq.finish();
+            ftime(&end);
+
+            // Work out what the difference between these is
+            double t = end.time - start.time 
+                     + 0.001 * (end.millitm - start.millitm);
+
+            std::cout << "Both: " 
+                    << (t / numFrames * 1000) << " ms" << std::endl;
+
+        }
+
 
     }
     catch (cl::Error err) {

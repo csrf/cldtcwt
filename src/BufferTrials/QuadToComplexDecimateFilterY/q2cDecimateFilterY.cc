@@ -58,7 +58,7 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(3, filter_);
+    kernel_.setArg(5, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -77,8 +77,8 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
 
 void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq, 
                  ImageBuffer<cl_float>& input, 
-                 cl::Image2D& output0,
-                 cl::Image2D& output1,
+                 ImageBuffer<cl_float>& output0,
+                 ImageBuffer<cl_float>& output1,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -94,10 +94,10 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
 
     // Input and output formats need to be compatible
     const size_t quadHeight = (input.height() + symmetricPadding * 2) / 2;
-    assert(input.width() == 2*output0.getImageInfo<CL_IMAGE_WIDTH>());
-    assert(quadHeight == 2*output0.getImageInfo<CL_IMAGE_HEIGHT>());
-    assert(input.width() == 2*output1.getImageInfo<CL_IMAGE_WIDTH>());
-    assert(quadHeight == 2*output1.getImageInfo<CL_IMAGE_HEIGHT>());
+    assert(input.width() == output0.width());
+    assert(quadHeight == 2*output0.height());
+    assert(input.width() == output1.width());
+    assert(quadHeight == 2*output1.height());
 
     cl::NDRange globalSize = {
         roundWGs(input.width(), workgroupSize[0]), 
@@ -107,11 +107,13 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
 
     // Set all the arguments
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output0);
-    kernel_.setArg(2, output1);
-    kernel_.setArg(4, int(input.height()));
-    kernel_.setArg(5, int(input.stride()));
-    kernel_.setArg(6, int(symmetricPadding));
+    kernel_.setArg(1, output0.buffer());
+    kernel_.setArg(2, output1.buffer());
+    kernel_.setArg(3, int(output0.width() / 2));
+    kernel_.setArg(4, int(output0.height()));
+    kernel_.setArg(6, int(input.height()));
+    kernel_.setArg(7, int(input.stride()));
+    kernel_.setArg(8, int(symmetricPadding));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,

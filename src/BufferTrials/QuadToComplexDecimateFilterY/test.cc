@@ -175,14 +175,13 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                                     width, height, padding, alignment); 
 
 
-        cl::Image2D sb0Image(context.context,
-                             CL_MEM_READ_WRITE,
-                             cl::ImageFormat(CL_RG, CL_FLOAT),
-                             sb0.cols(), sb0.rows()),
-                    sb1Image(context.context,
-                             CL_MEM_READ_WRITE,
-                             cl::ImageFormat(CL_RG, CL_FLOAT),
-                             sb1.cols(), sb1.rows());
+        ImageBuffer<cl_float> sb0Image(context.context, CL_MEM_READ_WRITE,
+                                       2*sb0.cols(), sb0.rows(),
+                                       padding, alignment);
+
+        ImageBuffer<cl_float> sb1Image(context.context, CL_MEM_READ_WRITE,
+                                       2*sb1.cols(), sb1.rows(),
+                                       padding, alignment);
 
         // Upload the data
         input.write(cq, &inValues[0]);
@@ -192,10 +191,7 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
         qtcDecFilterY(cq, input, sb0Image, sb1Image);
 
         // Download the data
-        cq.enqueueReadImage(sb0Image, CL_TRUE, 
-                            makeCLSizeT<3>({0, 0, 0}),
-                            makeCLSizeT<3>({outWidth, outHeight, 1}),
-                            0, 0, &outValues[0]);
+        sb0Image.read(cq, &outValues[0]);
 
         for (size_t r = 0; r < sb0.rows(); ++r)
             for (size_t c = 0; c < sb0.cols(); ++c) 
@@ -203,10 +199,7 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                     (outValues[2 * ((r*sb0.cols()) + c)],
                      outValues[2 * ((r*sb0.cols()) + c) + 1]);
 
-        cq.enqueueReadImage(sb1Image, CL_TRUE, 
-                            makeCLSizeT<3>({0, 0, 0}),
-                            makeCLSizeT<3>({outWidth, outHeight, 1}),
-                            0, 0, &outValues[0]);
+        sb1Image.read(cq, &outValues[0]);
 
         for (size_t r = 0; r < sb1.rows(); ++r)
             for (size_t c = 0; c < sb1.cols(); ++c) 

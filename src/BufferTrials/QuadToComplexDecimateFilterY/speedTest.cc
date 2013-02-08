@@ -31,21 +31,19 @@ int main()
                                 false);
         PadY padY(context.context, context.devices);
   
-        const size_t width = 1280, height = 720, 
+        const size_t width = /*1280 / 4*/ 16, height = /*720 / 4*/ 16 , 
                      padding = 16, alignment = 2*16;
 
         // Create input and output buffers
         ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                                     width, height, padding, alignment);
 
-        cl::Image2D sb0(context.context,
+        ImageBuffer<cl_float> sb0(context.context,
                        CL_MEM_READ_WRITE,
-                       cl::ImageFormat(CL_RG, CL_FLOAT),
-                       width / 2, height / 4),
+                       2 * width / 2, height / 4, 0, 0),
                     sb1(context.context,
                        CL_MEM_READ_WRITE,
-                       cl::ImageFormat(CL_RG, CL_FLOAT),
-                       width / 2, height / 4);
+                       2 * width / 2, height / 4, 0, 0);
 
 
         ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,

@@ -149,11 +149,21 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
                               newWidth, height, 
                               padding_, alignment_);
 
+            
             c.levelTemps.back().bp
                 = ImageBuffer<cl_float>
                              (context_, CL_MEM_READ_WRITE,
                               newWidth, height, 
                               padding_, alignment_);
+
+            // Create the complex outputs.  The width is multiplied by 2 
+            // due to the complex numbers.
+            for (int n = 0; n < 6; ++n)
+                c.levelTemps.back().sb[n]
+                    = ImageBuffer<cl_float>(context_, CL_MEM_READ_WRITE,
+                                  2*newWidth / 2, newHeight / 2, 
+                                  0, 0);
+
 
             // We need more intermediate images if producing outputs
             // at Level 1
@@ -334,15 +344,15 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 
-                subbands->sb[0], subbands->sb[5],
+                levelTemps.sb[0], levelTemps.sb[5],
                 {loPadded}, &subbands->done[0]); 
 
         q2ch0by(commandQueue, levelTemps.hi, 
-                subbands->sb[2], subbands->sb[3],
+                levelTemps.sb[2], levelTemps.sb[3],
                 {hiPadded}, &subbands->done[1]); 
 
         q2ch2by(commandQueue, levelTemps.bp, 
-                subbands->sb[1], subbands->sb[4],
+                levelTemps.sb[1], levelTemps.sb[4],
                 {bpPadded}, &subbands->done[2]); 
     }
 }
