@@ -1,6 +1,7 @@
 #ifndef IMAGE_BUFFER_H
 #define IMAGE_BUFFER_H
 
+#include <algorithm>
 
 #ifndef __CL_ENABLE_EXCEPTIONS
 #define __CL_ENABLE_EXCEPTIONS
@@ -45,6 +46,17 @@ public:
     size_t padding() const;
     size_t stride() const;
 
+
+    void write(cl::CommandQueue& cq,
+        const MemType* input,
+        const std::vector<cl::Event> events = {},
+        cl::Event* done = nullptr) const;
+
+
+    void read(cl::CommandQueue& cq,
+        MemType* output,
+        const std::vector<cl::Event> events = {}) const;
+
 private:
     cl::Buffer buffer_;
     size_t width_;
@@ -81,6 +93,86 @@ ImageBuffer<MemType>::ImageBuffer(cl::Context& context,
 
     buffer_ = cl::Buffer(context, flags,
              stride_ * fullHeight * ImageElementTraits<MemType>::size);
+}
+
+#include <iostream>
+
+template <typename MemType>
+void ImageBuffer<MemType>::write(cl::CommandQueue& cq,
+                const MemType* input,
+                const std::vector<cl::Event> events,
+                cl::Event* done) const
+{
+    const size_t numElements = buffer_.getInfo<CL_MEM_SIZE>() 
+                            / ImageElementTraits<MemType>::size;
+
+    std::vector<MemType> bufferContents(numElements);
+
+    // Copy into the output buffer row by row
+    auto writePos = bufferContents.begin() + padding_ * stride_
+                    + padding_;
+    for (int n = 0; n < height_; ++n, writePos += stride_,
+                                 input += width_) 
+        std::copy(input, input + width_, writePos);
+
+    // Read the internal contents of the buffer
+    cq.enqueueWriteBuffer(buffer_, CL_TRUE, 
+                         0, buffer_.getInfo<CL_MEM_SIZE>(),
+                         &bufferContents[0],
+                         &events, nullptr);
+#if 0
+    cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * input.padding(),
+                              input.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({input.width() * sizeof(float),
+                              input.height(), 1}),
+              input.stride() * sizeof(float), 0,
+              0, 0,
+              &inValues[0]);
+#endif
+
+}
+
+
+template <typename MemType>
+void ImageBuffer<MemType>::read(cl::CommandQueue& cq,
+        MemType* output,
+        const std::vector<cl::Event> events) const
+{
+    const size_t numElements = buffer_.getInfo<CL_MEM_SIZE>() 
+                            / ImageElementTraits<MemType>::size;
+
+    std::vector<MemType> bufferContents(numElements);
+    
+    // Read the internal contents of the buffer
+    cq.enqueueReadBuffer(buffer_, CL_TRUE, 
+                         0, buffer_.getInfo<CL_MEM_SIZE>(),
+                         &bufferContents[0],
+                         &events, nullptr);
+
+    // Copy into the results row by row
+    auto readPos = bufferContents.begin() + padding_ * stride_
+                    + padding_;
+    for (int n = 0; n < height_; ++n, readPos += stride_,
+                                 output += width_) 
+        std::copy(readPos, readPos + width_, output);
+
+#if 0
+    // This should work, but doesn't at the moment due to an AMD
+    // bug
+    cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
+              makeCLSizeT<3>({sizeof(float) * output.padding(),
+                             output.padding(), 0}),
+              makeCLSizeT<3>({0,0,0}),
+              makeCLSizeT<3>({output.width() * sizeof(float),
+                             output.height(), 1}),
+              output.stride() * sizeof(float), 0,
+              0, 0,
+              &outValues[0]);
+#endif
+
+
 }
 
 
