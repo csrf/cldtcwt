@@ -216,51 +216,16 @@ std::tuple<Eigen::ArrayXXf, Eigen::ArrayXXf, Eigen::ArrayXXf>
                            outputWidth, height, padding, alignment); 
 
         // Upload the data
-        cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * input.padding(),
-                              input.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({input.width() * sizeof(float),
-                              input.height(), 1}),
-              input.stride() * sizeof(float), 0,
-              0, 0,
-              &inValues[0]);
+        input.write(cq, &inValues[0]);
 
         // Try the filter
         padX(cq, input);
         decimateFilterX(cq, input, outputImage0, outputImage1, outputImage2);
 
         // Download the data
-        cq.enqueueReadBufferRect(outputImage0.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * outputImage0.padding(),
-                             outputImage0.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({outputImage0.width() * sizeof(float),
-                             outputImage0.height(), 1}),
-              outputImage0.stride() * sizeof(float), 0,
-              0, 0,
-              &outValues0[0]);
-
-        cq.enqueueReadBufferRect(outputImage1.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * outputImage1.padding(),
-                             outputImage1.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({outputImage1.width() * sizeof(float),
-                             outputImage1.height(), 1}),
-              outputImage1.stride() * sizeof(float), 0,
-              0, 0,
-              &outValues1[0]);
-
-        cq.enqueueReadBufferRect(outputImage2.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * outputImage2.padding(),
-                             outputImage2.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({outputImage2.width() * sizeof(float),
-                             outputImage2.height(), 1}),
-              outputImage2.stride() * sizeof(float), 0,
-              0, 0,
-              &outValues2[0]);
-
+        outputImage0.read(cq, &outValues0[0]);
+        outputImage1.read(cq, &outValues1[0]);
+        outputImage2.read(cq, &outValues2[0]);
 
     }
     catch (cl::Error err) {

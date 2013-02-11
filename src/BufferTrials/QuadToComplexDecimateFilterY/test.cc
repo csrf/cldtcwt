@@ -185,15 +185,7 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                              sb1.cols(), sb1.rows());
 
         // Upload the data
-        cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * input.padding(),
-                              input.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({input.width() * sizeof(float),
-                              input.height(), 1}),
-              input.stride() * sizeof(float), 0,
-              0, 0,
-              &inValues[0]);
+        input.write(cq, &inValues[0]);
 
         // Try the filter
         padY(cq, input);

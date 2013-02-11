@@ -99,30 +99,14 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
                                      width, height, padding, alignment); 
 
         // Upload the data
-        cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * input.padding(),
-                              input.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({input.width() * sizeof(float),
-                              input.height(), 1}),
-              input.stride() * sizeof(float), 0,
-              0, 0,
-              &inValues[0]);
+        input.write(cq, &inValues[0]);
 
         // Try the filter
         padY(cq, input);
         filterY(cq, input, output);
 
         // Download the data
-        cq.enqueueReadBufferRect(output.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * output.padding(),
-                             output.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({output.width() * sizeof(float),
-                             output.height(), 1}),
-              output.stride() * sizeof(float), 0,
-              0, 0,
-              &outValues[0]);
+        output.read(cq, &outValues[0]);
 
     }
     catch (cl::Error err) {
