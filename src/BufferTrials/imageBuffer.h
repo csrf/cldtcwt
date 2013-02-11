@@ -80,7 +80,7 @@ ImageBuffer<MemType>::ImageBuffer(cl::Context& context,
         fullHeight += alignment - overshoot;
 
     buffer_ = cl::Buffer(context, flags,
-                 stride_ * fullHeight * sizeof(float)/*ImageElementTraits<MemType>::size*/);
+             stride_ * fullHeight * ImageElementTraits<MemType>::size);
 }
 
 
