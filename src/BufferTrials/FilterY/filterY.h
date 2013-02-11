@@ -23,8 +23,8 @@ public:
             const std::vector<cl::Device>& devices,
             std::vector<float> filter);
 
-    void operator() (cl::CommandQueue& cq, ImageBuffer& input,
-                                           ImageBuffer& output,
+    void operator() (cl::CommandQueue& cq, ImageBuffer<cl_float>& input,
+                                           ImageBuffer<cl_float>& output,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);

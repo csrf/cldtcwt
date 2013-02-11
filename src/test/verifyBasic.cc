@@ -49,7 +49,7 @@ int main(int argc, char** argv)
         floatBmp /= 255.f;
 
 
-        ImageBuffer inImage { 
+        ImageBuffer<cl_float> inImage { 
             context.context, CL_MEM_READ_WRITE,
             floatBmp.cols, floatBmp.rows, 16, 32
         };

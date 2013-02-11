@@ -64,7 +64,7 @@ private:
     ImageToImageBuffer imageToImageBuffer_;
 
     // And also copied into a buffer for the DTCWT input
-    ImageBuffer bufferGreyscale_;
+    ImageBuffer<cl_float> bufferGreyscale_;
     cl::Event bufferGreyscaleDone_;
 
     // For subband displays for levels 2 and 3

@@ -59,7 +59,7 @@ public:
                int width, int height,
                int maxNumKeypoints = 1000);
 
-    void operator() (ImageBuffer& input, 
+    void operator() (ImageBuffer<cl_float>& input, 
                      const std::vector<cl::Event>& waitEvents = {});
 
     std::vector<::LevelOutput*> levelOutputs(void);

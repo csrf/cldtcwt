@@ -66,7 +66,8 @@ FilterY::FilterY(cl::Context& context,
 
 
 void FilterY::operator() (cl::CommandQueue& cq, 
-                 ImageBuffer& input, ImageBuffer& output,
+                 ImageBuffer<cl_float>& input, 
+                 ImageBuffer<cl_float>& output,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {

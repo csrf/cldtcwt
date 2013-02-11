@@ -22,7 +22,8 @@ public:
     PadY(cl::Context& context, 
          const std::vector<cl::Device>& devices);
 
-    void operator() (cl::CommandQueue& cq, ImageBuffer& image,
+    void operator() (cl::CommandQueue& cq, 
+                     ImageBuffer<cl_float>& image,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);

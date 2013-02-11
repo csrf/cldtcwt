@@ -203,16 +203,16 @@ std::tuple<Eigen::ArrayXXf, Eigen::ArrayXXf, Eigen::ArrayXXf>
         const size_t width = in.cols(), height = in.rows(),
                      padding = 16, alignment = 32;
 
-        ImageBuffer input(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
 
-        ImageBuffer outputImage0(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> outputImage0(context.context, CL_MEM_READ_WRITE,
                            outputWidth, height, padding, alignment); 
 
-        ImageBuffer outputImage1(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> outputImage1(context.context, CL_MEM_READ_WRITE,
                            outputWidth, height, padding, alignment); 
 
-        ImageBuffer outputImage2(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> outputImage2(context.context, CL_MEM_READ_WRITE,
                            outputWidth, height, padding, alignment); 
 
         // Upload the data

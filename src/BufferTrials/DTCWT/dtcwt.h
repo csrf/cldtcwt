@@ -29,13 +29,13 @@
 struct LevelTemps {
 
     // Rows filtered
-    ImageBuffer lo, hi, bp;
+    ImageBuffer<cl_float> lo, hi, bp;
 
     // Columns & rows filtered for next stage
-    ImageBuffer lolo;
+    ImageBuffer<cl_float> lolo;
 
     // These only get used if producing outputs at Level 1
-    ImageBuffer lohi, hilo, bpbp;
+    ImageBuffer<cl_float> lohi, hilo, bpbp;
     cl::Event lohiDone, hiloDone, bpbpDone;
     
     // Done events for each of these
@@ -104,11 +104,12 @@ private:
 // Debug:
 public:
     void filter(cl::CommandQueue& commandQueue,
-                ImageBuffer& xx, const std::vector<cl::Event>& xxEvents,
+                ImageBuffer<cl_float>& xx, 
+                const std::vector<cl::Event>& xxEvents,
                 LevelTemps& levelTemps, LevelOutput* subbands);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
-                        ImageBuffer& xx, 
+                        ImageBuffer<cl_float>& xx, 
                         const std::vector<cl::Event>& xxEvents,
                         LevelTemps& levelTemps, LevelOutput* subbands);
 public:
@@ -123,7 +124,7 @@ public:
     // the coarser scales have much greater magnitudes.
 
     void operator() (cl::CommandQueue& commandQueue,
-                     ImageBuffer& image, 
+                     ImageBuffer<cl_float>& image, 
                      DtcwtTemps& env,
                      DtcwtOutput& subbandOutputs,
                      const std::vector<cl::Event>& waitEvents

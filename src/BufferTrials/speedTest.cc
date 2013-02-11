@@ -38,10 +38,10 @@ int main()
                      padding = 16, alignment = 16;
 
         // Create input and output buffers
-        ImageBuffer input(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment);
 
-        ImageBuffer output(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
                            width, height, padding, alignment);
 
         {

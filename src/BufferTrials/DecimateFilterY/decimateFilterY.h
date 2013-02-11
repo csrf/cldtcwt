@@ -29,8 +29,8 @@ public:
     // these trees are interleaved in the output is reversed if
     // swapPairOrder is true.  filter must be even length.
 
-    void operator() (cl::CommandQueue& cq, ImageBuffer& input,
-                                           ImageBuffer& output,
+    void operator() (cl::CommandQueue& cq, ImageBuffer<cl_float>& input,
+                                           ImageBuffer<cl_float>& output,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);

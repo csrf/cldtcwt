@@ -63,7 +63,7 @@ Calculator::Calculator(cl::Context& context,
 
 #include <iostream>
 
-void Calculator::operator() (ImageBuffer& input,
+void Calculator::operator() (ImageBuffer<cl_float>& input,
                              const std::vector<cl::Event>& waitEvents)
 {
     // Transform

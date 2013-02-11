@@ -35,7 +35,7 @@ int main()
         // Read in image
         cv::Mat bmp = cv::imread("test.bmp", 0);
 
-        ImageBuffer inImage { 
+        ImageBuffer<cl_float> inImage { 
             context.context, CL_MEM_READ_WRITE,
             bmp.cols, bmp.rows, 16, 32
         };

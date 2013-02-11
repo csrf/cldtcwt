@@ -43,7 +43,7 @@ QuadToComplex::QuadToComplex(cl::Context& context,
 
 
 void QuadToComplex::operator() (cl::CommandQueue& cq, 
-                 ImageBuffer& input, 
+                 ImageBuffer<cl_float>& input, 
                  cl::Image2D& output0, cl::Image2D& output1,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)

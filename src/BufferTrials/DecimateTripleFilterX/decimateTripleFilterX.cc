@@ -108,10 +108,10 @@ DecimateTripleFilterX::DecimateTripleFilterX(cl::Context& context,
 
 
 void DecimateTripleFilterX::operator() (cl::CommandQueue& cq, 
-                 ImageBuffer& input, 
-                 ImageBuffer& output0,
-                 ImageBuffer& output1,
-                 ImageBuffer& output2,
+                 ImageBuffer<cl_float>& input, 
+                 ImageBuffer<cl_float>& output0,
+                 ImageBuffer<cl_float>& output1,
+                 ImageBuffer<cl_float>& output2,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {

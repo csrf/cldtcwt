@@ -37,7 +37,7 @@ int main()
   
         // Read in image
         cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
-        ImageBuffer inImage { 
+        ImageBuffer<cl_float> inImage { 
             context.context, CL_MEM_READ_WRITE,
             /*bmp.cols*/1280, /*bmp.rows*/720, 16, 32
         };

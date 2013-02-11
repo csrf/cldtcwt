@@ -92,11 +92,11 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
         const size_t width = in.cols(), height = in.rows(),
                      padding = 16, alignment = 16;
 
-        ImageBuffer input(context.context, CL_MEM_READ_WRITE,
-                          width, height, padding, alignment); 
+        ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
+                                    width, height, padding, alignment); 
 
-        ImageBuffer output(context.context, CL_MEM_READ_WRITE,
-                           width, height, padding, alignment); 
+        ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
+                                     width, height, padding, alignment); 
 
         // Upload the data
         cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,

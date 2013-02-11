@@ -171,8 +171,8 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
         const size_t width = in.cols(), height = in.rows(),
                      padding = 16, alignment = 32;
 
-        ImageBuffer input(context.context, CL_MEM_READ_WRITE,
-                          width, height, padding, alignment); 
+        ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
+                                    width, height, padding, alignment); 
 
 
         cl::Image2D sb0Image(context.context,

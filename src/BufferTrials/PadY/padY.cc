@@ -41,7 +41,7 @@ PadY::PadY(cl::Context& context,
 
 
 void PadY::operator() (cl::CommandQueue& cq, 
-                       ImageBuffer& image, 
+                       ImageBuffer<cl_float>& image, 
                        const std::vector<cl::Event>& waitEvents,
                        cl::Event* doneEvent)
 {

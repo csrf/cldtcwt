@@ -44,7 +44,7 @@ ImageToImageBuffer::ImageToImageBuffer(cl::Context& context,
 
 void ImageToImageBuffer::operator() (cl::CommandQueue& cq, 
                  cl::Image2D& input,
-                 ImageBuffer& output,
+                 ImageBuffer<cl_float>& output,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {

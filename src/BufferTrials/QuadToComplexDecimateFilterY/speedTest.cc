@@ -35,8 +35,8 @@ int main()
                      padding = 16, alignment = 2*16;
 
         // Create input and output buffers
-        ImageBuffer input(context.context, CL_MEM_READ_WRITE,
-                          width, height, padding, alignment);
+        ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
+                                    width, height, padding, alignment);
 
         cl::Image2D sb0(context.context,
                        CL_MEM_READ_WRITE,
@@ -48,8 +48,8 @@ int main()
                        width / 2, height / 4);
 
 
-        ImageBuffer output(context.context, CL_MEM_READ_WRITE,
-                           width, height / 2, padding, alignment);
+        ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
+                                     width, height / 2, padding, alignment);
 
         {
             // Run, timing

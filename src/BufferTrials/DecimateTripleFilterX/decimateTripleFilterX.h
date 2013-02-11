@@ -36,10 +36,11 @@ public:
     // order can be swaped by setting the corresponding flag true.
     // Three outputs are produced by the same kernel.
 
-    void operator() (cl::CommandQueue& cq, ImageBuffer& input,
-                     ImageBuffer& output0,
-                     ImageBuffer& output1,
-                     ImageBuffer& output2,
+    void operator() (cl::CommandQueue& cq, 
+                     ImageBuffer<cl_float>& input,
+                     ImageBuffer<cl_float>& output0,
+                     ImageBuffer<cl_float>& output1,
+                     ImageBuffer<cl_float>& output2,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);

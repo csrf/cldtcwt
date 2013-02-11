@@ -41,7 +41,7 @@ PadX::PadX(cl::Context& context,
 
 
 void PadX::operator() (cl::CommandQueue& cq, 
-                       ImageBuffer& image, 
+                       ImageBuffer<cl_float>& image, 
                        const std::vector<cl::Event>& waitEvents,
                        cl::Event* doneEvent)
 {

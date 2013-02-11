@@ -71,7 +71,7 @@ DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 {
     for (int l = env.startLevel; l < env.numLevels; ++l) {
 
-        const ImageBuffer& baseImage = env.levelTemps[l].lolo;
+        const ImageBuffer<cl_float>& baseImage = env.levelTemps[l].lolo;
 
         const size_t width = baseImage.width() / 2,
                     height = baseImage.height() / 2;
@@ -130,11 +130,13 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
         c.levelTemps.push_back(LevelTemps());
 
         // Temps that will be needed whether there's an output or not
-        c.levelTemps.back().lo = ImageBuffer(context_, CL_MEM_READ_WRITE,
+        c.levelTemps.back().lo = ImageBuffer<cl_float>
+                                            (context_, CL_MEM_READ_WRITE,
                                              newWidth, height, 
                                              padding_, alignment_);
 
-        c.levelTemps.back().lolo = ImageBuffer(context_, CL_MEM_READ_WRITE,
+        c.levelTemps.back().lolo = ImageBuffer<cl_float>
+                                              (context_, CL_MEM_READ_WRITE,
                                                newWidth, newHeight, 
                                                padding_, alignment_);
        
@@ -142,12 +144,14 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
         if  (l >= startLevel) {
 
             c.levelTemps.back().hi
-                = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                = ImageBuffer<cl_float>
+                             (context_, CL_MEM_READ_WRITE,
                               newWidth, height, 
                               padding_, alignment_);
 
             c.levelTemps.back().bp
-                = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                = ImageBuffer<cl_float>
+                             (context_, CL_MEM_READ_WRITE,
                               newWidth, height, 
                               padding_, alignment_);
 
@@ -156,17 +160,20 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
             if (l == 0) {
 
                 c.levelTemps.back().lohi
-                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                    = ImageBuffer<cl_float>
+                                 (context_, CL_MEM_READ_WRITE,
                                   newWidth, newHeight, 
                                   padding_, alignment_);
 
                 c.levelTemps.back().hilo
-                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                    = ImageBuffer<cl_float>
+                                 (context_, CL_MEM_READ_WRITE,
                                   newWidth, newHeight, 
                                   padding_, alignment_);
 
                 c.levelTemps.back().bpbp
-                    = ImageBuffer(context_, CL_MEM_READ_WRITE,
+                    = ImageBuffer<cl_float>
+                                 (context_, CL_MEM_READ_WRITE,
                                   newWidth, newHeight, 
                                   padding_, alignment_);
 
@@ -183,7 +190,7 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
 
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
-                        ImageBuffer& image, 
+                        ImageBuffer<cl_float>& image, 
                         DtcwtTemps& env,
                         DtcwtOutput& subbandOutputs,
                         const std::vector<cl::Event>& waitEvents)
@@ -218,7 +225,7 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 
 
 void Dtcwt::filter(cl::CommandQueue& commandQueue,
-                   ImageBuffer& xx, 
+                   ImageBuffer<cl_float>& xx, 
                    const std::vector<cl::Event>& xxEvents,
                    LevelTemps& levelTemps, LevelOutput* subbands)
 {
@@ -282,7 +289,7 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
 
 void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
-                           ImageBuffer& xx, 
+                           ImageBuffer<cl_float>& xx, 
                            const std::vector<cl::Event>& xxEvents,
                            LevelTemps& levelTemps, LevelOutput* subbands)
 {
