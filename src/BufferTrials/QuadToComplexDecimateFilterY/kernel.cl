@@ -147,6 +147,7 @@ void decimateFilterY(__global const float* input,
     if ((outPos.x < (2*outputWidth)) & (outPos.y < outputHeight)) {
 
         // Sample upper left, upper right, etc
+        // More comprehensible version:
         /*float ul = cache[l.y][l.x];
         float ur = cache[l.y][l.x+1];
         float ll = cache[l.y+1][l.x];
@@ -163,17 +164,20 @@ void decimateFilterY(__global const float* input,
         output1[outPos.x * 2 + outPos.y * outputWidth * 2 + 1]
             = factor * (ur - ll);*/
 
-        int x = l.x & ~1;
+        // Version which avoids branches:
+        int y = l.y & ~1;
 
-        float a = cache[l.y][x];
-        float b = cache[l.y ^ 1][x ^ 1];
+        // Load upper value (u?) into a, lower (l?) into b
+        float a = cache[y][l.x];
+        float b = cache[y ^ 1][l.x ^ 1];
         float sign = ((l.x & 1) ^ (l.y & 1))? 1.f : -1.f;
 
         const float factor = 1.0f / sqrt(2.0f);
 
-        __global float* output = (l.x & 1)? output1 : output0;
+        __global float* output = (l.y & 1)? output1 : output0;
         
-        output[outPos.x * 2 + (l.y & 1) + outPos.y * outputWidth * 2]
+        // Add or subtract, and place in appropriate output
+        output[outPos.x * 2 + (l.x & 1) + outPos.y * outputWidth * 2]
             = factor * (a + sign * b);
 
     }
