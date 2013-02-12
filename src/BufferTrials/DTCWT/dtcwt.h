@@ -43,7 +43,7 @@ struct LevelTemps {
               loloDone; 
 
     // Subband matrices
-    std::array<ImageBuffer<cl_float>, 6> sb;
+    std::array<ImageBuffer<Complex<cl_float>>, 6> sb;
     std::vector<cl::Event> sbDone;
 
 };

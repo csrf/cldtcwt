@@ -153,7 +153,7 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
 
     // We need to read out the images (both real and imaginary)
     // then copy it over to sb0 or sb1.
-    std::vector<float> outValues(outWidth * outHeight * 2);
+    std::vector<Complex<cl_float>> outValues(outWidth * outHeight);
 
     try {
 
@@ -175,13 +175,13 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                                     width, height, padding, alignment); 
 
 
-        ImageBuffer<cl_float> sb0Image(context.context, CL_MEM_READ_WRITE,
-                                       2*sb0.cols(), sb0.rows(),
-                                       padding, alignment);
+        ImageBuffer<Complex<cl_float>> sb0Image(context.context, CL_MEM_READ_WRITE,
+                                       sb0.cols(), sb0.rows(),
+                                       0, 1);
 
-        ImageBuffer<cl_float> sb1Image(context.context, CL_MEM_READ_WRITE,
-                                       2*sb1.cols(), sb1.rows(),
-                                       padding, alignment);
+        ImageBuffer<Complex<cl_float>> sb1Image(context.context, CL_MEM_READ_WRITE,
+                                       sb1.cols(), sb1.rows(),
+                                       0, 1);
 
         // Upload the data
         input.write(cq, &inValues[0]);
@@ -196,16 +196,16 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
         for (size_t r = 0; r < sb0.rows(); ++r)
             for (size_t c = 0; c < sb0.cols(); ++c) 
                 sb0(r,c) = std::complex<float>
-                    (outValues[2 * ((r*sb0.cols()) + c)],
-                     outValues[2 * ((r*sb0.cols()) + c) + 1]);
+                    (outValues[r*sb0.cols() + c].real,
+                     outValues[r*sb0.cols() + c].imag);
 
         sb1Image.read(cq, &outValues[0]);
 
         for (size_t r = 0; r < sb1.rows(); ++r)
             for (size_t c = 0; c < sb1.cols(); ++c) 
                 sb1(r,c) = std::complex<float>
-                    (outValues[2 * ((r*sb1.cols()) + c)],
-                     outValues[2 * ((r*sb1.cols()) + c) + 1]);
+                    (outValues[r*sb1.cols() + c].real,
+                     outValues[r*sb1.cols() + c].imag);
 
     }
     catch (cl::Error err) {

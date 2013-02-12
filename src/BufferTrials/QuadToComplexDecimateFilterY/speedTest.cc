@@ -38,7 +38,7 @@ int main()
         ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                                     width, height, padding, alignment);
 
-        ImageBuffer<cl_float> sb0(context.context,
+        ImageBuffer<Complex<cl_float>> sb0(context.context,
                        CL_MEM_READ_WRITE,
                        2 * width / 2, height / 4, 0, 0),
                     sb1(context.context,

@@ -214,6 +214,15 @@ size_t ImageBuffer<MemType>::stride() const
 }
 
 
+// Complex pair is a type which we could use a good deal
+template <typename Type>
+struct __attribute__((packed)) Complex {
+    Type real;
+    Type imag;
+};
+
+
+
 
 #endif
 

@@ -160,7 +160,8 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
             // due to the complex numbers.
             for (int n = 0; n < 6; ++n)
                 c.levelTemps.back().sb[n]
-                    = ImageBuffer<cl_float>(context_, CL_MEM_READ_WRITE,
+                    = ImageBuffer<Complex<cl_float>>
+                            (context_, CL_MEM_READ_WRITE,
                                   2*newWidth / 2, newHeight / 2, 
                                   0, 0);
 

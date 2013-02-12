@@ -77,8 +77,8 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
 
 void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq, 
                  ImageBuffer<cl_float>& input, 
-                 ImageBuffer<cl_float>& output0,
-                 ImageBuffer<cl_float>& output1,
+                 ImageBuffer<Complex<cl_float>>& output0,
+                 ImageBuffer<Complex<cl_float>>& output1,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -94,9 +94,9 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
 
     // Input and output formats need to be compatible
     const size_t quadHeight = (input.height() + symmetricPadding * 2) / 2;
-    assert(input.width() == output0.width());
+    assert(input.width() == 2 * output0.width());
     assert(quadHeight == 2*output0.height());
-    assert(input.width() == output1.width());
+    assert(input.width() == 2 * output1.width());
     assert(quadHeight == 2*output1.height());
 
     cl::NDRange globalSize = {
@@ -109,7 +109,7 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
     kernel_.setArg(0, input.buffer());
     kernel_.setArg(1, output0.buffer());
     kernel_.setArg(2, output1.buffer());
-    kernel_.setArg(3, int(output0.width() / 2));
+    kernel_.setArg(3, int(output0.width()));
     kernel_.setArg(4, int(output0.height()));
     kernel_.setArg(6, int(input.height()));
     kernel_.setArg(7, int(input.stride()));

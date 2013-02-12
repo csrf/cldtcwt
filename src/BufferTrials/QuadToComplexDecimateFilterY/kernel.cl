@@ -144,7 +144,7 @@ void decimateFilterY(__global const float* input,
 
     // Output only using the top right of each square of four pixels,
     // and only within the confines of the image
-    if ((outPos.x < outputWidth) & (outPos.y < outputHeight)) {
+    if ((outPos.x < (2*outputWidth)) & (outPos.y < outputHeight)) {
 
         // Sample upper left, upper right, etc
         /*float ul = cache[l.y][l.x];
@@ -169,12 +169,12 @@ void decimateFilterY(__global const float* input,
         float b = cache[l.y ^ 1][x ^ 1];
         float sign = ((l.x & 1) ^ (l.y & 1))? 1.f : -1.f;
 
-        const float factor = 1.0f;// / sqrt(2.0f);
+        const float factor = 1.0f / sqrt(2.0f);
 
         __global float* output = (l.x & 1)? output1 : output0;
         
         output[outPos.x * 2 + (l.y & 1) + outPos.y * outputWidth * 2]
-            = a + sign * b;
+            = factor * (a + sign * b);
 
     }
 
