@@ -162,8 +162,8 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
                 c.levelTemps.back().sb[n]
                     = ImageBuffer<Complex<cl_float>>
                             (context_, CL_MEM_READ_WRITE,
-                                  2*newWidth / 2, newHeight / 2, 
-                                  0, 0);
+                                  newWidth / 2, newHeight / 2, 
+                                  0, 1);
 
 
             // We need more intermediate images if producing outputs
