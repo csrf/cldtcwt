@@ -22,6 +22,7 @@ fi
 PKG_CHECK_MODULES([opencv], [opencv glew])
 PKG_CHECK_MODULES([V4L2], [libv4l2])
 PKG_CHECK_MODULES([Eigen3], [eigen3])
+PKG_CHECK_MODULES([SFML], [sfml-system >= 2.0 sfml-window >= 2.0])
 
 
 AC_CONFIG_FILES([Makefile])

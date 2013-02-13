@@ -95,16 +95,10 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/viewer.cc \
 					   src/DisplayOutput/VideoReader.cc \
 					   src/DTCWT/energyMapEigen.cc
-displayDTCWT_LDADD = libbufferfilter.la libclutil.la -lsfml-window -lsfml-system \
-				   @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread \
-				   libkeypoints.la
+displayDTCWT_LDADD = libbufferfilter.la libclutil.la libkeypoints.la \
+					 @SFML_LIBS@ @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread 
+displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
 
-
-#testOutputEigenDetector_SOURCES = src/test/testOutputEigenDetector.cc \
-					 #src/MiscKernels/abs.cc \
-					 #src/DTCWT/energyMapEigen.cc
-#testOutputEigenDetector_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
-				   #@opencv_LIBS@
 
 noinst_PROGRAMS += testFilter
 testFilter_SOURCES = src/test/testFilter.cc 
