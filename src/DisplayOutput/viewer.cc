@@ -87,26 +87,26 @@ void Viewer::setNumFloatsPerKeypoint(size_t n)
 
 void Viewer::update()
 {
-    if (!window.IsOpened())
+    if (!window.isOpen())
         return;
 
 
     sf::Event event;
-    while (window.GetEvent(event)) {
+    while (window.pollEvent(event)) {
 
         // If the user tried to close the window, flag that everything is
         // done
-        if (event.Type == sf::Event::Closed) {
+        if (event.type == sf::Event::Closed) {
             done_ = true;
             return;
         }
 
     }
 
-    window.SetActive();
+    window.setActive();
 
     // Set up the area of the rendering region
-    glViewport(0, 0, window.GetWidth(), window.GetHeight());
+    glViewport(0, 0, window.getSize().x, window.getSize().y);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-1, 0.5, -0.5, 1, 0, 2);
@@ -150,7 +150,7 @@ void Viewer::update()
 	glDisable(GL_TEXTURE_2D);
 
     timeb t1, t2;
-    window.Display();
+    window.display();
     ftime(&t1);
     glFlush();
     ftime(&t2);
