@@ -31,7 +31,7 @@ int main()
                                 false);
         PadY padY(context.context, context.devices);
   
-        const size_t width = /*1280 / 4*/ 16, height = /*720 / 4*/ 16 , 
+        const size_t width = 1280 / 2, height = 720 , 
                      padding = 16, alignment = 2*16;
 
         // Create input and output buffers
@@ -40,10 +40,10 @@ int main()
 
         ImageBuffer<Complex<cl_float>> sb0(context.context,
                        CL_MEM_READ_WRITE,
-                       2 * width / 2, height / 4, 0, 0),
+                       width / 2, height / 4, 0, 0),
                     sb1(context.context,
                        CL_MEM_READ_WRITE,
-                       2 * width / 2, height / 4, 0, 0);
+                       width / 2, height / 4, 0, 0);
 
 
         ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
