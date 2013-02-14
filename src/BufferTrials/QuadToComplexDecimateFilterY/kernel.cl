@@ -85,6 +85,7 @@ void decimateFilterY(__global const float* input,
                      __global float* output1,
                      unsigned int outputWidth,
                      unsigned int outputHeight,
+                     unsigned int outputStride,
                      __constant float* filter,
                      unsigned int height, 
                      unsigned int stride,
@@ -179,7 +180,7 @@ void decimateFilterY(__global const float* input,
         __global float* output = (l.y & 1)? output1 : output0;
         
         // Add or subtract, and place in appropriate output
-        output[outPos.x * 2 + (l.x & 1) + outPos.y * outputWidth * 2]
+        output[outPos.x * 2 + (l.x & 1) + outPos.y * outputStride * 2]
             = factor * (((l.x & 1) ^ (l.y & 1))? rplus : rminus);
 
     }

@@ -58,7 +58,7 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(5, filter_);
+    kernel_.setArg(6, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -111,9 +111,10 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
     kernel_.setArg(2, output1.buffer());
     kernel_.setArg(3, int(output0.width()));
     kernel_.setArg(4, int(output0.height()));
-    kernel_.setArg(6, int(input.height()));
-    kernel_.setArg(7, int(input.stride()));
-    kernel_.setArg(8, int(symmetricPadding));
+    kernel_.setArg(5, int(output0.stride()));
+    kernel_.setArg(7, int(input.height()));
+    kernel_.setArg(8, int(input.stride()));
+    kernel_.setArg(9, int(symmetricPadding));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,

@@ -176,11 +176,11 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
 
         ImageBuffer<Complex<cl_float>> sb0Image(context.context, CL_MEM_READ_WRITE,
                                        sb0.cols(), sb0.rows(),
-                                       0, 1);
+                                       0, alignment);
 
         ImageBuffer<Complex<cl_float>> sb1Image(context.context, CL_MEM_READ_WRITE,
                                        sb1.cols(), sb1.rows(),
-                                       0, 1);
+                                       0, alignment);
 
         // Upload the data
         input.write(cq, &inValues[0]);
