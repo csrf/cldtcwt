@@ -39,7 +39,7 @@ int main()
         filter[n] = n + 1;
 
 
-    Eigen::ArrayXXf X1(8,16);
+    Eigen::ArrayXXf X1(16,22);
     X1.setRandom();
 
     float eps = 1.e-3;
@@ -57,7 +57,7 @@ int main()
         return -1;
     }
 
-    Eigen::ArrayXXf X2(8,18);
+    Eigen::ArrayXXf X2(6,24);
     X2.setRandom();
 
     if (compareImplementations(X2, filter, false, eps)) {
@@ -135,7 +135,6 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
     Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         Array;
         
-
     // Copy into an array where we set up the backing, so should
     // know the data format!
     std::vector<float> inValues(in.rows() * in.cols());
