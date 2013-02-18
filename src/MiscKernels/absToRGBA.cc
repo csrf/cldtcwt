@@ -2,7 +2,9 @@
 #include "util/clUtil.h"
 #include <string>
 #include <iostream>
-#include "MiscKernels/absToRGBAKernel.h"
+
+#include "absToRGBAKernel.h"
+using namespace AbsToRGBANS;
 
 
 AbsToRGBA::AbsToRGBA(cl::Context& context, 
@@ -12,8 +14,8 @@ AbsToRGBA::AbsToRGBA(cl::Context& context,
     cl::Program::Sources source;
     source.push_back(
         std::make_pair(reinterpret_cast<const char*>
-                          (src_MiscKernels_absToRGBAKernel_h_src), 
-                       src_MiscKernels_absToRGBAKernel_h_src_len)
+                          (absToRGBAKernel_cl), 
+                       absToRGBAKernel_cl_len)
     );
 
     // Compile it...

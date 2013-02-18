@@ -15,7 +15,8 @@ static const char clBuildOptions[] = "";
 #include <stdexcept>
 
 
-#include "KeypointDetector/EnergyMaps/interpPhaseMapKernel.h"
+#include "interpPhaseMapKernel.h"
+using namespace InterpPhaseMapNS;
 
 InterpPhaseMap::InterpPhaseMap(cl::Context& context,
                      const std::vector<cl::Device>& devices)
@@ -30,9 +31,8 @@ InterpPhaseMap::InterpPhaseMap(cl::Context& context,
    
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
-            (src_KeypointDetector_EnergyMaps_interpPhaseMapKernel_h_src);
-    size_t fileTextLength = 
-        src_KeypointDetector_EnergyMaps_interpPhaseMapKernel_h_src_len;
+                                (interpPhaseMapKernel_cl);
+    size_t fileTextLength = interpPhaseMapKernel_cl_len;
 
     std::copy(fileText, fileText + fileTextLength,
               std::ostream_iterator<char>(kernelInput));

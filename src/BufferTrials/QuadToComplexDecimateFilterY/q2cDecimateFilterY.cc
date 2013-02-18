@@ -5,7 +5,9 @@
 #include <iostream>
 #include <cassert>
 
-#include "BufferTrials/QuadToComplexDecimateFilterY/kernel.h"
+#include "kernel.h"
+
+using namespace QuadToComplexDecimateFilterYNS;
 
 
 QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context, 
@@ -16,9 +18,8 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-              (src_BufferTrials_QuadToComplexDecimateFilterY_kernel_h_src), 
-               src_BufferTrials_QuadToComplexDecimateFilterY_kernel_h_src_len)
+        std::make_pair(reinterpret_cast<const char*>(kernel_cl), 
+                       kernel_cl_len)
     );
 
     std::ostringstream compilerOptions;

@@ -5,8 +5,9 @@
 #include <iostream>
 #include <cassert>
 
-#include "BufferTrials/DecimateFilterY/kernel.h"
+#include "kernel.h"
 
+using namespace DecimateFilterYNS;
 
 DecimateFilterY::DecimateFilterY(cl::Context& context, 
                  const std::vector<cl::Device>& devices,
@@ -16,9 +17,8 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-              (src_BufferTrials_DecimateFilterY_kernel_h_src), 
-               src_BufferTrials_DecimateFilterY_kernel_h_src_len)
+        std::make_pair(reinterpret_cast<const char*>(kernel_cl), 
+                       kernel_cl_len)
     );
 
     std::ostringstream compilerOptions;

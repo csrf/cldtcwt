@@ -2,7 +2,8 @@
 #include "util/clUtil.h"
 #include <string>
 #include <iostream>
-#include "MiscKernels/pyramidSumKernel.h"
+#include "pyramidSumKernel.h"
+using namespace PyramidSumNS;
 
 
 PyramidSum::PyramidSum(cl::Context& context, 
@@ -11,9 +12,8 @@ PyramidSum::PyramidSum(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-                          (src_MiscKernels_pyramidSumKernel_h_src), 
-                       src_MiscKernels_pyramidSumKernel_h_src_len)
+        std::make_pair(reinterpret_cast<const char*> (pyramidSumKernel_cl), 
+                       pyramidSumKernel_cl_len)
     );
 
     // Compile it...

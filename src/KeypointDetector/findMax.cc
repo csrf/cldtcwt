@@ -1,5 +1,6 @@
 #include "findMax.h"
-#include "KeypointDetector/findMaxKernel.h"
+#include "findMaxKernel.h"
+using namespace FindMaxNS;
 
 #include <string>
 #include <sstream>
@@ -22,8 +23,8 @@ FindMax::FindMax(cl::Context& context,
    
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
-            (src_KeypointDetector_findMaxKernel_h_src);
-    size_t fileTextLength = src_KeypointDetector_findMaxKernel_h_src_len;
+                                (findMaxKernel_cl);
+    size_t fileTextLength = findMaxKernel_cl_len;
 
     std::copy(fileText, fileText + fileTextLength,
               std::ostream_iterator<char>(kernelInput));

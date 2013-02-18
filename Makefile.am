@@ -3,17 +3,8 @@ ACLOCAL_AMFLAGS=-I m4
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
 			-I${builddir}/src @V4L2_CFLAGS@
 
-# Rule to turn an OpenCL source file into a C string within a header file.
-# xxd uses its input's filename to name the string and its length, so we
-# need to move them to a name that depends only on the path output, not its
-# input.  Otherwise, builds in different relative locations would put the
-# source into different variable names, and everything would fall over.
-# The actual name will be 
-%.h: %.cl Makefile
-	cp $< $@_src
-	xxd -i $@_src $@
-	rm $@_src
-
+# For turning OpenCL source files into C++ source
+include $(srcdir)/BuildRules/ClToCc.makerule
 
 TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
@@ -28,12 +19,6 @@ libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la
 
 
 noinst_LTLIBRARIES += libkeypoints.la
-BUILT_SOURCES = src/KeypointDetector/findMaxKernel.h \
-				src/KeypointDetector/concatKernel.h \
-				src/KeypointDetector/EnergyMaps/interpMapKernel.h \
-			src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.h \
-				src/KeypointDescriptor/extractDescriptorsKernel.h \
-				src/MiscKernels/accumulateKernel.h 
 libkeypoints_la_SOURCES = \
 					  src/KeypointDescriptor/extractDescriptors.cc \
 					  src/KeypointDetector/findMax.cc \
@@ -42,6 +27,14 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/EnergyMaps/interpPhaseMap.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
+nodist_libkeypoints_la_SOURCES = \
+				src/KeypointDetector/concatKernel.cc \
+				src/KeypointDetector/findMaxKernel.cc \
+				src/KeypointDetector/EnergyMaps/interpMapKernel.cc \
+				src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.cc \
+				src/KeypointDescriptor/kernel.cc \
+				src/MiscKernels/accumulateKernel.cc 
+CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
 
 
@@ -71,9 +64,11 @@ testPeakDetector_SOURCES = src/test/testPeakDetector.cc
 testPeakDetector_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testPyramidSum
-BUILT_SOURCES += src/MiscKernels/pyramidSumKernel.h 
 testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
 						 src/test/testPyramidSum.cc 
+nodist_testPyramidSum_SOURCES = \
+			src/MiscKernels/pyramidSumKernel.cc 
+CLEANFILES += $(nodist_testPyramidSum_SOURCES)
 testPyramidSum_LDADD = libkeypoints.la @opencv_LIBS@
 
 #testOutput_SOURCES = src/test/testOutput.cc \
@@ -82,8 +77,6 @@ testPyramidSum_LDADD = libkeypoints.la @opencv_LIBS@
 #				   @opencv_LIBS@
 
 noinst_PROGRAMS += displayDTCWT
-BUILT_SOURCES += src/MiscKernels/absToRGBAKernel.h \
-				 src/MiscKernels/greyscaleToRGBAKernel.h 
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
@@ -95,6 +88,10 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/viewer.cc \
 					   src/DisplayOutput/VideoReader.cc \
 					   src/DTCWT/energyMapEigen.cc
+nodist_displayDTCWT_SOURCES = \
+	src/MiscKernels/absToRGBAKernel.cc \
+	src/MiscKernels/greyscaleToRGBAKernel.cc 
+CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libbufferfilter.la libclutil.la libkeypoints.la \
 					 @SFML_LIBS@ @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread 
 displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
@@ -119,16 +116,6 @@ verifyBasic_LDADD = libbufferfilter.la @opencv_LIBS@
 
 
 noinst_LTLIBRARIES += libbufferfilter.la
-BUILT_SOURCES += src/BufferTrials/FilterX/filterXKernel.h \
-                 src/BufferTrials/FilterY/filterYKernel.h \
-                 src/BufferTrials/DecimateFilterX/kernel.h \
-                 src/BufferTrials/DecimateFilterY/kernel.h \
-                 src/BufferTrials/QuadToComplexDecimateFilterY/kernel.h \
-                 src/BufferTrials/DecimateTripleFilterX/kernel.h \
-                 src/BufferTrials/QuadToComplex/kernel.h \
-                 src/BufferTrials/PadX/kernel.h \
-                 src/BufferTrials/PadY/kernel.h \
-                 src/BufferTrials/ImageToImageBuffer/kernel.h
 libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/imageBuffer.cc \
 		 src/BufferTrials/FilterX/filterX.cc \
@@ -142,6 +129,18 @@ libbufferfilter_la_SOURCES = \
 		 src/BufferTrials/PadY/padY.cc \
 		 src/BufferTrials/ImageToImageBuffer/imageToImageBuffer.cc \
 		 src/BufferTrials/DTCWT/dtcwt.cc
+nodist_libbufferfilter_la_SOURCES = \
+		 src/BufferTrials/DecimateFilterX/kernel.cc \
+		 src/BufferTrials/DecimateFilterY/kernel.cc \
+		 src/BufferTrials/FilterX/kernel.cc \
+		 src/BufferTrials/FilterY/kernel.cc \
+		 src/BufferTrials/QuadToComplexDecimateFilterY/kernel.cc \
+         src/BufferTrials/DecimateTripleFilterX/kernel.cc \
+         src/BufferTrials/QuadToComplex/kernel.cc \
+         src/BufferTrials/PadX/kernel.cc \
+         src/BufferTrials/PadY/kernel.cc \
+         src/BufferTrials/ImageToImageBuffer/kernel.cc
+CLEANFILES += $(nodist_libbufferfilter_la_SOURCES)
 libbufferfilter_la_LIBADD = @CL_LIBS@ libclutil.la 
 
 

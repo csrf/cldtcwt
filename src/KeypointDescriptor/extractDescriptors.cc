@@ -10,7 +10,8 @@
 #include <algorithm>
 
 
-#include "KeypointDescriptor/extractDescriptorsKernel.h"
+#include "kernel.h"
+using namespace ExtractDescriptorsNS;
 
 
 Interpolator::Interpolator(cl::Context& context,
@@ -31,9 +32,9 @@ Interpolator::Interpolator(cl::Context& context,
 
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
-            (src_KeypointDescriptor_extractDescriptorsKernel_h_src);
+                            (kernel_cl);
     size_t fileTextLength = 
-        src_KeypointDescriptor_extractDescriptorsKernel_h_src_len;
+                kernel_cl_len;
 
     std::copy(fileText, fileText + fileTextLength,
               std::ostream_iterator<char>(kernelInput));

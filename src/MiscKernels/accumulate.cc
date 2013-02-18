@@ -2,7 +2,8 @@
 #include <iostream>
 #include "util/clUtil.h"
 
-#include "MiscKernels/accumulateKernel.h"
+#include "accumulateKernel.h"
+using namespace AccumulateNS;
 
 Accumulate::Accumulate(cl::Context& context, 
                        const std::vector<cl::Device>& devices)
@@ -10,8 +11,8 @@ Accumulate::Accumulate(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(std::make_pair(
-        reinterpret_cast<const char*>(src_MiscKernels_accumulateKernel_h_src),
-        src_MiscKernels_accumulateKernel_h_src_len));
+        reinterpret_cast<const char*>(accumulateKernel_cl),
+        accumulateKernel_cl_len));
 
     // Compile it...
     cl::Program program(context, source);

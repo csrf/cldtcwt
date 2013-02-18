@@ -2,7 +2,9 @@
 #include "util/clUtil.h"
 #include <string>
 #include <iostream>
-#include "MiscKernels/greyscaleToRGBAKernel.h"
+
+#include "greyscaleToRGBAKernel.h"
+using namespace GreyscaleToRGBANS;
 
 
 GreyscaleToRGBA::GreyscaleToRGBA(cl::Context& context, 
@@ -11,9 +13,9 @@ GreyscaleToRGBA::GreyscaleToRGBA(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-                          (src_MiscKernels_greyscaleToRGBAKernel_h_src), 
-                       src_MiscKernels_greyscaleToRGBAKernel_h_src_len)
+        std::make_pair(reinterpret_cast<const char*> 
+                        (greyscaleToRGBAKernel_cl), 
+                       greyscaleToRGBAKernel_cl_len)
     );
 
     // Compile it...

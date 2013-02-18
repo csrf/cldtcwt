@@ -5,8 +5,9 @@
 #include <iostream>
 #include <cassert>
 
-#include "BufferTrials/ImageToImageBuffer/kernel.h"
+#include "kernel.h"
 
+using namespace ImageToImageBufferNS;
 
 ImageToImageBuffer::ImageToImageBuffer(cl::Context& context, 
                  const std::vector<cl::Device>& devices)
@@ -14,9 +15,8 @@ ImageToImageBuffer::ImageToImageBuffer(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-              (src_BufferTrials_ImageToImageBuffer_kernel_h_src), 
-               src_BufferTrials_ImageToImageBuffer_kernel_h_src_len)
+        std::make_pair(reinterpret_cast<const char*>(kernel_cl), 
+                       kernel_cl_len)
     );
 
     std::ostringstream compilerOptions;

@@ -1,5 +1,7 @@
 #include "concat.h"
-#include "KeypointDetector/concatKernel.h"
+#include "concatKernel.h"
+
+using namespace ConcatNS;
 
 #include <string>
 #include <sstream>
@@ -19,8 +21,8 @@ Concat::Concat(cl::Context& context,
    
     // Get input from the source file
     const char* fileText = reinterpret_cast<const char*>
-            (src_KeypointDetector_concatKernel_h_src);
-    size_t fileTextLength = src_KeypointDetector_concatKernel_h_src_len;
+                            (concatKernel_cl);
+    size_t fileTextLength = concatKernel_cl_len;
 
     // Bundle the code up
     cl::Program::Sources source;
