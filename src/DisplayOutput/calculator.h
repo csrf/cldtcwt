@@ -5,7 +5,7 @@
 #include <CL/cl.hpp>
 
 #include "BufferTrials/DTCWT/dtcwt.h"
-#include "MiscKernels/abs.h"
+#include "Abs/abs.h"
 #include "KeypointDetector/peakDetector.h"
 #include "KeypointDetector/EnergyMaps/InterpMap/interpMap.h"
 #include "KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.h"

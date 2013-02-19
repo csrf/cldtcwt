@@ -71,16 +71,11 @@ noinst_PROGRAMS += testPyramidSum
 testPyramidSum_SOURCES = src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libkeypoints.la @opencv_LIBS@
 
-#testOutput_SOURCES = src/test/testOutput.cc \
-#					 src/MiscKernels/abs.cc
-#testOutput_LDADD = libdtcwt.la libclutil.la -lsfml-window -lsfml-system \
-#				   @opencv_LIBS@
-
 noinst_PROGRAMS += displayDTCWT
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
-					   src/MiscKernels/abs.cc \
+					   src/DisplayOutput/Abs/abs.cc \
 					   src/MiscKernels/greyscaleToRGBA.cc \
 					   src/MiscKernels/absToRGBA.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
