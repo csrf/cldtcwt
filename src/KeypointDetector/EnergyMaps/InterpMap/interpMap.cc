@@ -15,7 +15,7 @@ static const char clBuildOptions[] = "";
 #include <stdexcept>
 
 
-#include "interpMapKernel.h"
+#include "kernel.h"
 using namespace InterpMapNS;
 
 InterpMapEigen::InterpMapEigen(cl::Context& context,
@@ -30,9 +30,8 @@ InterpMapEigen::InterpMapEigen(cl::Context& context,
                    "#define WG_SIZE_Y (16)\n";
    
     // Get input from the source file
-    const char* fileText = reinterpret_cast<const char*>
-                                (interpMapKernel_cl);
-    size_t fileTextLength = interpMapKernel_cl_len;
+    const char* fileText = reinterpret_cast<const char*> (kernel_cl);
+    size_t fileTextLength = kernel_cl_len;
 
     std::copy(fileText, fileText + fileTextLength,
               std::ostream_iterator<char>(kernelInput));
