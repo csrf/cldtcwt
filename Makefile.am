@@ -10,13 +10,18 @@ TESTS=src/test/verifyDTCWT.sh src/test/verifyInterpolation.sh
 TEST_EXTENSIONS=.sh
 
 
-noinst_LTLIBRARIES = libdtcwt.la 
+noinst_LTLIBRARIES = libclutil.la
+libclutil_la_SOURCES = src/util/clUtil.cc
+libclutil_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
+
+
+
+noinst_LTLIBRARIES += libdtcwt.la 
 libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
 					  src/DTCWT/filterer.cc \
 					  src/DTCWT/fourTree.cc 
 libdtcwt_la_LIBADD = libclutil.la 
-libdtcwt_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
-
+libdtcwt_la_LDFLAGS = @CL_LIBS@ 
 
 
 noinst_LTLIBRARIES += libkeypoints.la
@@ -41,13 +46,9 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDescriptor/kernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = libclutil.la 
-libkeypoints_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
+libkeypoints_la_LDFLAGS = @CL_LIBS@ 
 
 
-
-noinst_LTLIBRARIES += libclutil.la
-libclutil_la_SOURCES = src/util/clUtil.cc
-libclutil_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
 
 noinst_PROGRAMS = testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
@@ -178,7 +179,7 @@ noinst_PROGRAMS += speedTestQuadToComplexDecimateFilterY
 speedTestQuadToComplexDecimateFilterY_SOURCES = \
 	   src/Filter/QuadToComplexDecimateFilterY/speedTest.cc 
 speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
-speedTestQuadToComplexDecimateFilterY_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
+speedTestQuadToComplexDecimateFilterY_LDFLAGS =@opencv_LIBS@ 
 
 noinst_PROGRAMS += testDTCWT
 testDTCWT_SOURCES = src/test/test.cc 
