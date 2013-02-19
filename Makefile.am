@@ -31,7 +31,7 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/concatKernel.cc \
 				src/KeypointDetector/findMaxKernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/interpMapKernel.cc \
-				src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMapKernel.cc \
+				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
 				src/KeypointDescriptor/kernel.cc \
 				src/MiscKernels/accumulateKernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
