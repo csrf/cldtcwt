@@ -25,6 +25,7 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/concat.cc \
 					  src/KeypointDetector/EnergyMaps/InterpMap/interpMap.cc \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
+					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
 nodist_libkeypoints_la_SOURCES = \
@@ -86,8 +87,7 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
 					   src/DisplayOutput/viewer.cc \
-					   src/DisplayOutput/VideoReader.cc \
-					   src/DTCWT/energyMapEigen.cc
+					   src/DisplayOutput/VideoReader.cc 
 nodist_displayDTCWT_SOURCES = \
 	src/MiscKernels/absToRGBAKernel.cc \
 	src/MiscKernels/greyscaleToRGBAKernel.cc 
