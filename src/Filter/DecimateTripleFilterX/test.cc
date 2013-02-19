@@ -9,8 +9,8 @@
 
 #include "util/clUtil.h"
 
-#include "BufferTrials/PadX/padX.h"
-#include "BufferTrials/DecimateTripleFilterX/decimateTripleFilterX.h"
+#include "Filter/PadX/padX.h"
+#include "Filter/DecimateTripleFilterX/decimateTripleFilterX.h"
 
 #include "../referenceImplementation.h"
 

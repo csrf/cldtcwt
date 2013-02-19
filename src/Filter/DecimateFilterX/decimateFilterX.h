@@ -1,5 +1,5 @@
-#ifndef DECIMATE_FILTERY_H
-#define DECIMATE_FILTERY_H
+#ifndef DECIMATE_FILTERX_H
+#define DECIMATE_FILTERX_H
 
 
 #ifndef __CL_ENABLE_EXCEPTIONS
@@ -8,19 +8,19 @@
 #include "CL/cl.hpp"
 
 
-#include "BufferTrials/imageBuffer.h"
+#include "Filter/imageBuffer.h"
 
 
-class DecimateFilterY {
-    // Decimated convolution along the y axis, with an even-
+class DecimateFilterX {
+    // Decimated convolution along the x axis, with an even-
     // lengthed set of coefficients.  The images must be padded,
     // with alignment of twice the workgroup size.
 
 public:
 
-    DecimateFilterY() = default;
-    DecimateFilterY(const DecimateFilterY&) = default;
-    DecimateFilterY(cl::Context& context, 
+    DecimateFilterX() = default;
+    DecimateFilterX(const DecimateFilterX&) = default;
+    DecimateFilterX(cl::Context& context, 
             const std::vector<cl::Device>& devices,
             std::vector<float> filter,
             bool swapPairOrder);

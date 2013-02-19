@@ -9,8 +9,8 @@
 #include "util/clUtil.h"
 
 
-#include "BufferTrials/PadY/padY.h"
-#include "BufferTrials/DecimateFilterY/decimateFilterY.h"
+#include "Filter/PadY/padY.h"
+#include "Filter/DecimateFilterY/decimateFilterY.h"
 
 #include "../referenceImplementation.h"
 

@@ -10,8 +10,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <array>
 
-#include "BufferTrials/imageBuffer.h"
-#include "BufferTrials/ImageToImageBuffer/imageToImageBuffer.h"
+#include "Filter/imageBuffer.h"
+#include "Filter/ImageToImageBuffer/imageToImageBuffer.h"
 
 #if defined(CL_VERSION_1_2)
     typedef cl::ImageGL GLImage;

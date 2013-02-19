@@ -1,5 +1,5 @@
-#ifndef FILTERX_H
-#define FILTERX_H
+#ifndef FILTERY_H
+#define FILTERY_H
 
 
 #ifndef __CL_ENABLE_EXCEPTIONS
@@ -8,20 +8,18 @@
 #include "CL/cl.hpp"
 
 
-#include "BufferTrials/imageBuffer.h"
+#include "Filter/imageBuffer.h"
 
 
-
-
-class FilterX {
-    // Straightforward convolution along the x axis, with an odd-
+class FilterY {
+    // Straightforward convolution along the y axis, with an odd-
     // lengthed set of coefficients.  The images are padded.
 
 public:
 
-    FilterX() = default;
-    FilterX(const FilterX&) = default;
-    FilterX(cl::Context& context, 
+    FilterY() = default;
+    FilterY(const FilterY&) = default;
+    FilterY(cl::Context& context, 
             const std::vector<cl::Device>& devices,
             std::vector<float> filter);
 

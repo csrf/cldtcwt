@@ -11,7 +11,7 @@
 
 #include <ctime>
 
-#include "../BufferTrials/DTCWT/dtcwt.h"
+#include "Filter/DTCWT/dtcwt.h"
 
 #include <highgui.h>
 

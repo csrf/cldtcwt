@@ -8,7 +8,7 @@
 #include "CL/cl.hpp"
 
 
-#include "BufferTrials/imageBuffer.h"
+#include "Filter/imageBuffer.h"
 
 
 class DecimateTripleFilterX {

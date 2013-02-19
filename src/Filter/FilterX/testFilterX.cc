@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
@@ -8,16 +9,16 @@
 
 #include "util/clUtil.h"
 
-
-#include "BufferTrials/PadY/padY.h"
-#include "BufferTrials/FilterY/filterY.h"
+#include "Filter/PadX/padX.h"
+#include "Filter/FilterX/filterX.h"
 
 #include "../referenceImplementation.h"
 
 
-// Check that the FilterY kernel actually does what it should
 
-Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in, 
+// Check that the FilterX kernel actually does what it should
+
+Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter);
 
 
@@ -28,12 +29,12 @@ int main()
     for (int n = 0; n < filter.size(); ++n)
         filter[n] = n + 1;
 
-    Eigen::ArrayXXf X(18,5);
+    Eigen::ArrayXXf X(5,12);
     X.setRandom();
     
     // Try with reference and GPU implementations
-    Eigen::ArrayXXf refResult = convolveCols(X, filter);
-    Eigen::ArrayXXf gpuResult = convolveColsGPU(X, filter);
+    Eigen::ArrayXXf refResult = convolveRows(X, filter);
+    Eigen::ArrayXXf gpuResult = convolveRowsGPU(X, filter);
    
     // Check the maximum error is within tolerances
     float biggestDiscrepancy = 
@@ -58,9 +59,7 @@ int main()
 
 
 
-
-
-Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in, 
+Eigen::ArrayXXf convolveRowsGPU(const Eigen::ArrayXXf& in, 
                                 const std::vector<float>& filter)
 {
     typedef
@@ -74,7 +73,6 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
     Eigen::Map<Array> input(&inValues[0], in.rows(), in.cols());
     input = in;
 
-
     std::vector<float> outValues(in.rows() * in.cols());
     Eigen::Map<Array> output(&outValues[0], in.rows(), in.cols());
 
@@ -85,8 +83,9 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        PadY padY(context.context, context.devices);
-        FilterY filterY(context.context, context.devices, filter);
+
+        PadX padX(context.context, context.devices);
+        FilterX filterX(context.context, context.devices, filter);
 
   
         const size_t width = in.cols(), height = in.rows(),
@@ -102,8 +101,8 @@ Eigen::ArrayXXf convolveColsGPU(const Eigen::ArrayXXf& in,
         input.write(cq, &inValues[0]);
 
         // Try the filter
-        padY(cq, input);
-        filterY(cq, input, output);
+        padX(cq, input);
+        filterX(cq, input, output);
 
         // Download the data
         output.read(cq, &outValues[0]);
