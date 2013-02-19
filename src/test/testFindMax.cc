@@ -15,7 +15,7 @@
 #include <highgui.h>
 
 
-#include "KeypointDetector/findMax.h"
+#include "KeypointDetector/FindMax/findMax.h"
 
 
 

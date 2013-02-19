@@ -12,7 +12,7 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <GL/glext.h>
-#include "KeypointDetector/findMax.h"
+#include "KeypointDetector/FindMax/findMax.h"
 
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"

@@ -7,8 +7,8 @@
 #include "CL/cl.hpp"
 #include <vector>
 
-#include "KeypointDetector/concat.h"
-#include "KeypointDetector/findMax.h"
+#include "Concat/concat.h"
+#include "FindMax/findMax.h"
 #include "MiscKernels/accumulate.h"
 
 struct PeakDetectorResults {

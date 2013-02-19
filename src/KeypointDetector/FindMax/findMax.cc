@@ -1,5 +1,5 @@
 #include "findMax.h"
-#include "findMaxKernel.h"
+#include "kernel.h"
 using namespace FindMaxNS;
 
 #include <string>
@@ -22,9 +22,8 @@ FindMax::FindMax(cl::Context& context,
                    "#define POS_LEN (" << posLen_ << ")\n";
    
     // Get input from the source file
-    const char* fileText = reinterpret_cast<const char*>
-                                (findMaxKernel_cl);
-    size_t fileTextLength = findMaxKernel_cl_len;
+    const char* fileText = reinterpret_cast<const char*> (kernel_cl);
+    size_t fileTextLength = kernel_cl_len;
 
     std::copy(fileText, fileText + fileTextLength,
               std::ostream_iterator<char>(kernelInput));

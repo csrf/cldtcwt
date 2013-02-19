@@ -1,5 +1,5 @@
 #include "concat.h"
-#include "concatKernel.h"
+#include "kernel.h"
 
 using namespace ConcatNS;
 
@@ -20,9 +20,8 @@ Concat::Concat(cl::Context& context,
     // Define some constants
    
     // Get input from the source file
-    const char* fileText = reinterpret_cast<const char*>
-                            (concatKernel_cl);
-    size_t fileTextLength = concatKernel_cl_len;
+    const char* fileText = reinterpret_cast<const char*> (kernel_cl);
+    size_t fileTextLength = kernel_cl_len;
 
     // Bundle the code up
     cl::Program::Sources source;

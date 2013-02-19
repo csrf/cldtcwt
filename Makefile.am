@@ -20,22 +20,22 @@ libdtcwt_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la
 
 noinst_LTLIBRARIES += libkeypoints.la
 libkeypoints_la_SOURCES = \
-					  src/KeypointDescriptor/extractDescriptors.cc \
-					  src/KeypointDetector/findMax.cc \
-					  src/KeypointDetector/concat.cc \
+					  src/KeypointDetector/FindMax/findMax.cc \
+					  src/KeypointDetector/Concat/concat.cc \
 					  src/KeypointDetector/EnergyMaps/InterpMap/interpMap.cc \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
 					  src/KeypointDetector/EnergyMaps/EnergyMap/energyMap.cc \
 					  src/MiscKernels/accumulate.cc \
-					  src/KeypointDetector/peakDetector.cc
+					  src/KeypointDetector/peakDetector.cc \
+					  src/KeypointDescriptor/extractDescriptors.cc 
 nodist_libkeypoints_la_SOURCES = \
-				src/KeypointDetector/concatKernel.cc \
-				src/KeypointDetector/findMaxKernel.cc \
+				src/KeypointDetector/Concat/kernel.cc \
+				src/KeypointDetector/FindMax/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
-				src/KeypointDescriptor/kernel.cc \
-				src/MiscKernels/accumulateKernel.cc 
+				src/MiscKernels/accumulateKernel.cc \
+				src/KeypointDescriptor/kernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 
 
