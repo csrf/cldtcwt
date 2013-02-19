@@ -76,7 +76,7 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
 					   src/DisplayOutput/Abs/abs.cc \
-					   src/MiscKernels/greyscaleToRGBA.cc \
+					   src/DisplayOutput/GreyscaleToRGBA/greyscaleToRGBA.cc \
 					   src/DisplayOutput/AbsToRGBA/absToRGBA.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
@@ -84,7 +84,7 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/VideoReader.cc 
 nodist_displayDTCWT_SOURCES = \
 	src/DisplayOutput/AbsToRGBA/kernel.cc \
-	src/MiscKernels/greyscaleToRGBAKernel.cc 
+	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libbufferfilter.la libclutil.la libkeypoints.la \
 					 @SFML_LIBS@ @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread 

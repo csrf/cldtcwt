@@ -5,7 +5,7 @@
 #include "calculator.h"
 #include "VBOBuffer.h"
 #include "texture.h"
-#include "MiscKernels/greyscaleToRGBA.h"
+#include "GreyscaleToRGBA/greyscaleToRGBA.h"
 #include "AbsToRGBA/absToRGBA.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <array>

@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-#include "greyscaleToRGBAKernel.h"
+#include "kernel.h"
 using namespace GreyscaleToRGBANS;
 
 
@@ -13,9 +13,8 @@ GreyscaleToRGBA::GreyscaleToRGBA(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*> 
-                        (greyscaleToRGBAKernel_cl), 
-                       greyscaleToRGBAKernel_cl_len)
+        std::make_pair(reinterpret_cast<const char*> (kernel_cl), 
+                       kernel_cl_len)
     );
 
     // Compile it...
