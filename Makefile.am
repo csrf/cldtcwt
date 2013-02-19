@@ -26,6 +26,7 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
 					  src/KeypointDetector/EnergyMaps/EnergyMap/energyMap.cc \
+					  src/KeypointDetector/EnergyMaps/PyramidSum/pyramidSum.cc \
 					  src/KeypointDetector/Accumulate/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc \
 					  src/KeypointDescriptor/extractDescriptors.cc 
@@ -34,6 +35,7 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/FindMax/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
+				src/KeypointDetector/EnergyMaps/PyramidSum/kernel.cc \
 				src/KeypointDetector/Accumulate/kernel.cc \
 				src/KeypointDescriptor/kernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
@@ -66,11 +68,7 @@ testPeakDetector_SOURCES = src/test/testPeakDetector.cc
 testPeakDetector_LDADD = libkeypoints.la @opencv_LIBS@
 
 noinst_PROGRAMS += testPyramidSum
-testPyramidSum_SOURCES = src/MiscKernels/pyramidSum.cc \
-						 src/test/testPyramidSum.cc 
-nodist_testPyramidSum_SOURCES = \
-			src/MiscKernels/pyramidSumKernel.cc 
-CLEANFILES += $(nodist_testPyramidSum_SOURCES)
+testPyramidSum_SOURCES = src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libkeypoints.la @opencv_LIBS@
 
 #testOutput_SOURCES = src/test/testOutput.cc \

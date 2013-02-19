@@ -7,7 +7,7 @@
 #include "util/clUtil.h"
 
 
-#include "MiscKernels/pyramidSum.h"
+#include "KeypointDetector/EnergyMaps/PyramidSum/pyramidSum.h"
 
 
 
