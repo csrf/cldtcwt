@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-#include "absToRGBAKernel.h"
+#include "kernel.h"
 using namespace AbsToRGBANS;
 
 
@@ -13,9 +13,8 @@ AbsToRGBA::AbsToRGBA(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(
-        std::make_pair(reinterpret_cast<const char*>
-                          (absToRGBAKernel_cl), 
-                       absToRGBAKernel_cl_len)
+        std::make_pair(reinterpret_cast<const char*> (kernel_cl), 
+                       kernel_cl_len)
     );
 
     // Compile it...

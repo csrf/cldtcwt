@@ -2,11 +2,11 @@
 #define CALCULATORINTERFACE_H
 
 
-#include "DisplayOutput/calculator.h"
-#include "DisplayOutput/VBOBuffer.h"
-#include "DisplayOutput/texture.h"
+#include "calculator.h"
+#include "VBOBuffer.h"
+#include "texture.h"
 #include "MiscKernels/greyscaleToRGBA.h"
-#include "MiscKernels/absToRGBA.h"
+#include "AbsToRGBA/absToRGBA.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <array>
 

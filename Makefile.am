@@ -77,13 +77,13 @@ displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
 					   src/DisplayOutput/Abs/abs.cc \
 					   src/MiscKernels/greyscaleToRGBA.cc \
-					   src/MiscKernels/absToRGBA.cc \
+					   src/DisplayOutput/AbsToRGBA/absToRGBA.cc \
 					   src/DisplayOutput/displayDTCWT.cc \
 					   src/DisplayOutput/texture.cc \
 					   src/DisplayOutput/viewer.cc \
 					   src/DisplayOutput/VideoReader.cc 
 nodist_displayDTCWT_SOURCES = \
-	src/MiscKernels/absToRGBAKernel.cc \
+	src/DisplayOutput/AbsToRGBA/kernel.cc \
 	src/MiscKernels/greyscaleToRGBAKernel.cc 
 CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libbufferfilter.la libclutil.la libkeypoints.la \
