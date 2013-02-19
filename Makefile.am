@@ -23,15 +23,15 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDescriptor/extractDescriptors.cc \
 					  src/KeypointDetector/findMax.cc \
 					  src/KeypointDetector/concat.cc \
-					  src/KeypointDetector/EnergyMaps/interpMap.cc \
-					  src/KeypointDetector/EnergyMaps/interpPhaseMap.cc \
+					  src/KeypointDetector/EnergyMaps/InterpMap/interpMap.cc \
+					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
 nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/concatKernel.cc \
 				src/KeypointDetector/findMaxKernel.cc \
-				src/KeypointDetector/EnergyMaps/interpMapKernel.cc \
-				src/KeypointDetector/EnergyMaps/interpPhaseMapKernel.cc \
+				src/KeypointDetector/EnergyMaps/InterpMap/interpMapKernel.cc \
+				src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMapKernel.cc \
 				src/KeypointDescriptor/kernel.cc \
 				src/MiscKernels/accumulateKernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)

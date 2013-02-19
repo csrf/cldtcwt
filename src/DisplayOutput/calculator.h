@@ -7,8 +7,8 @@
 #include "BufferTrials/DTCWT/dtcwt.h"
 #include "MiscKernels/abs.h"
 #include "KeypointDetector/peakDetector.h"
-#include "KeypointDetector/EnergyMaps/interpMap.h"
-#include "KeypointDetector/EnergyMaps/interpPhaseMap.h"
+#include "KeypointDetector/EnergyMaps/InterpMap/interpMap.h"
+#include "KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.h"
 #include "KeypointDescriptor/extractDescriptors.h"
 
 
