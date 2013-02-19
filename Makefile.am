@@ -26,6 +26,7 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/EnergyMaps/InterpMap/interpMap.cc \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
+					  src/KeypointDetector/EnergyMaps/EnergyMap/energyMap.cc \
 					  src/MiscKernels/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc
 nodist_libkeypoints_la_SOURCES = \
