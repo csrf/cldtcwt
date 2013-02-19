@@ -2,7 +2,7 @@
 #include <iostream>
 #include "util/clUtil.h"
 
-#include "accumulateKernel.h"
+#include "kernel.h"
 using namespace AccumulateNS;
 
 Accumulate::Accumulate(cl::Context& context, 
@@ -11,8 +11,8 @@ Accumulate::Accumulate(cl::Context& context,
     // Bundle the code up
     cl::Program::Sources source;
     source.push_back(std::make_pair(
-        reinterpret_cast<const char*>(accumulateKernel_cl),
-        accumulateKernel_cl_len));
+        reinterpret_cast<const char*>(kernel_cl),
+        kernel_cl_len));
 
     // Compile it...
     cl::Program program(context, source);

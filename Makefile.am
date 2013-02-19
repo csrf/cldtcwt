@@ -26,7 +26,7 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
 					  src/KeypointDetector/EnergyMaps/EnergyMap/energyMap.cc \
-					  src/MiscKernels/accumulate.cc \
+					  src/KeypointDetector/Accumulate/accumulate.cc \
 					  src/KeypointDetector/peakDetector.cc \
 					  src/KeypointDescriptor/extractDescriptors.cc 
 nodist_libkeypoints_la_SOURCES = \
@@ -34,7 +34,7 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/FindMax/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
-				src/MiscKernels/accumulateKernel.cc \
+				src/KeypointDetector/Accumulate/kernel.cc \
 				src/KeypointDescriptor/kernel.cc 
 CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = @CL_LIBS@ @opencv_LIBS@ libclutil.la 

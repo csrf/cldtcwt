@@ -10,7 +10,7 @@
 #include <iomanip>
 
 
-#include "MiscKernels/accumulate.h"
+#include "KeypointDetector/Accumulate/accumulate.h"
 
 
 

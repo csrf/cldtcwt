@@ -9,7 +9,7 @@
 
 #include "Concat/concat.h"
 #include "FindMax/findMax.h"
-#include "MiscKernels/accumulate.h"
+#include "Accumulate/accumulate.h"
 
 struct PeakDetectorResults {
 
