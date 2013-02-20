@@ -8,7 +8,7 @@ using namespace AbsToRGBANS;
 
 
 AbsToRGBA::AbsToRGBA(cl::Context& context, 
-                                 const std::vector<cl::Device>& devices)
+                     const std::vector<cl::Device>& devices)
 {
     // Bundle the code up
     cl::Program::Sources source;
@@ -34,10 +34,12 @@ AbsToRGBA::AbsToRGBA(cl::Context& context,
 
 
 
-void AbsToRGBA::operator() (cl::CommandQueue& cq, cl::Image& input,
-                            cl::Image& output, float gain,
-                 const std::vector<cl::Event>& waitEvents,
-                 cl::Event* doneEvent)
+void AbsToRGBA::operator() (cl::CommandQueue& cq, 
+                            ImageBuffer<Complex<cl_float>>& input,
+                            cl::Image& output,
+                            float gain,
+                            const std::vector<cl::Event>& waitEvents,
+                            cl::Event* doneEvent)
 {
     const int wgSize = 16;
 
@@ -51,8 +53,10 @@ void AbsToRGBA::operator() (cl::CommandQueue& cq, cl::Image& input,
 
     // Set all the arguments
     kernel_.setArg(0, sizeof(input), &input);
-    kernel_.setArg(1, sizeof(output), &output);
-    kernel_.setArg(2, float(gain));
+    kernel_.setArg(1, cl_uint(input.padding()));
+    kernel_.setArg(2, cl_uint(input.stride()));
+    kernel_.setArg(3, sizeof(output), &output);
+    kernel_.setArg(4, float(gain));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,

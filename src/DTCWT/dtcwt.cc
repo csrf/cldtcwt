@@ -80,11 +80,13 @@ DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
 
         // Create all the complex images at the right size
         for (auto& sb: sbs.sb)
-            sb = {env.context_, 0, {CL_RG, CL_FLOAT}, width, height};
+            sb = ImageBuffer<Complex<cl_float>>
+                  (env.context_, CL_MEM_READ_WRITE,
+                   width, height, 
+                   0, 1);
 
         // Add another set of outputs
         subbands.push_back(sbs);
-        
 
     }
 }
@@ -155,15 +157,6 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
                              (context_, CL_MEM_READ_WRITE,
                               newWidth, height, 
                               padding_, alignment_);
-
-            // Create the complex outputs.  The width is multiplied by 2 
-            // due to the complex numbers.
-            for (int n = 0; n < 6; ++n)
-                c.levelTemps.back().sb[n]
-                    = ImageBuffer<Complex<cl_float>>
-                            (context_, CL_MEM_READ_WRITE,
-                                  newWidth / 2, newHeight / 2, 
-                                  0, 1);
 
 
             // We need more intermediate images if producing outputs
@@ -345,15 +338,15 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 
-                levelTemps.sb[0], levelTemps.sb[5],
+                subbands->sb[0], subbands->sb[5],
                 {loPadded}, &subbands->done[0]); 
 
         q2ch0by(commandQueue, levelTemps.hi, 
-                levelTemps.sb[2], levelTemps.sb[3],
+                subbands->sb[2], subbands->sb[3],
                 {hiPadded}, &subbands->done[1]); 
 
         q2ch2by(commandQueue, levelTemps.bp, 
-                levelTemps.sb[1], levelTemps.sb[4],
+                subbands->sb[1], subbands->sb[4],
                 {bpPadded}, &subbands->done[2]); 
     }
 }

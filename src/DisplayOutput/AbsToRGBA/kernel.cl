@@ -1,16 +1,17 @@
 __kernel
-void absToRGBA(__read_only image2d_t input,
+void absToRGBA(const __global float2* input,
+               unsigned int padding,
+               unsigned int stride,
                __write_only image2d_t output,
                float gain)
 {
-    sampler_t s = CLK_NORMALIZED_COORDS_FALSE | CLK_FILTER_NEAREST;
-
     int2 pos = (int2) (get_global_id(0), get_global_id(1));
 
     // Make sure we're within the valid region
     if (all(pos < get_image_dim(output))) {
 
-        float v = gain * fast_length(read_imagef(input, s, pos).s01);
+        float v = gain * 
+            fast_length(input[padding + pos.x + stride * (padding + pos.y)]);
         write_imagef(output, pos, (float4) (v, v, v, 1.0f));
 
     }

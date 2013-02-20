@@ -35,7 +35,7 @@ class ImageBuffer {
 public:
     ImageBuffer() = default;
     ImageBuffer(const ImageBuffer<MemType>&) = default;
-    ImageBuffer(cl::Context& context,
+    ImageBuffer(cl::Context context,
                 cl_mem_flags flags,
                 size_t width, size_t height,
                 size_t padding, size_t alignment);
@@ -70,7 +70,7 @@ private:
 
 
 template <typename MemType>
-ImageBuffer<MemType>::ImageBuffer(cl::Context& context,
+ImageBuffer<MemType>::ImageBuffer(cl::Context context,
                          cl_mem_flags flags,
                          size_t width, size_t height,
                          size_t padding, size_t alignment)

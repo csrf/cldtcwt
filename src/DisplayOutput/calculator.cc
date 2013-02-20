@@ -27,8 +27,8 @@ Calculator::Calculator(cl::Context& context,
     for (int l = 0; l < (dtcwtOut.subbands.size() - 1); ++l) {
         energyMaps.push_back(
             createImage2D(context, 
-                dtcwtOut.subbands[l].sb[0].getImageInfo<CL_IMAGE_WIDTH>(),
-                dtcwtOut.subbands[l].sb[0].getImageInfo<CL_IMAGE_HEIGHT>())
+                dtcwtOut.subbands[l].sb[0].width(),
+                dtcwtOut.subbands[l].sb[0].height())
         );
 
         energyMapsDone.push_back(cl::Event());

@@ -42,10 +42,6 @@ struct LevelTemps {
     cl::Event loDone, hiDone, bpDone, 
               loloDone; 
 
-    // Subband matrices
-    std::array<ImageBuffer<Complex<cl_float>>, 6> sb;
-    std::vector<cl::Event> sbDone;
-
 };
 
 
@@ -62,11 +58,13 @@ struct DtcwtTemps {
 
 
 struct LevelOutput {
-    // 2-element images
-    std::array<cl::Image2D, 6> sb;
+
+    // Subband matrices
+    std::array<ImageBuffer<Complex<cl_float>>, 6> sb;
 
     // List of events: when all done, all of sb are ready to use
     std::vector<cl::Event> done;
+
 };
 
 

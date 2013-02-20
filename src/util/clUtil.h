@@ -13,6 +13,7 @@
 #include <highgui.h>
 #include <stdexcept>
 
+#include "Filter/imageBuffer.h"
 
 template <int numDims>
 cl::size_t<numDims> makeCLSizeT(std::array<size_t, numDims> input)
@@ -70,7 +71,8 @@ void saveRealImage(std::string filename,
                    cl::CommandQueue& cq, cl::Image2D& image);
 
 void saveComplexImage(std::string filename,
-                      cl::CommandQueue& cq, cl::Image2D& image);
+                      cl::CommandQueue& cq, 
+                      ImageBuffer<Complex<cl_float>>& image);
 
 void saveComplexBuffer(std::string filename,
                        cl::CommandQueue& cq, cl::Buffer& buffer);

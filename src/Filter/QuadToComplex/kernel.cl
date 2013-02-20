@@ -3,8 +3,12 @@
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 __kernel void quadToComplex(__global const float* input,
                             unsigned int stride,
-                            __write_only image2d_t output0,
-                            __write_only image2d_t output1)
+                            __global float2* output0,
+                            __global float2* output1,
+                            unsigned int outputPadding,
+                            unsigned int outputStride,
+                            unsigned int outWidth,
+                            unsigned int outHeight)
 {
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
@@ -21,7 +25,8 @@ __kernel void quadToComplex(__global const float* input,
 
     // Output only using the top right of each square of four pixels,
     // and only within the confines of the image
-    if (all(outPos < get_image_dim(output0)) && !(g.x & 1) && !(g.y & 1)) {
+    if (all(outPos < (int2)(outWidth, outHeight)) 
+         & !(g.x & 1) & !(g.y & 1)) {
 
         // Sample upper left, upper right, etc
         float ul = cache[l.y][l.x];
@@ -32,10 +37,10 @@ __kernel void quadToComplex(__global const float* input,
         const float factor = 1.0f / sqrt(2.0f);
 
         // Combine into complex pairs
-        write_imagef(output0, outPos,
-                     factor * (float4) (ul - lr, ur + ll, 0.0, 1.0));
-        write_imagef(output1, outPos,
-                     factor * (float4) (ul + lr, ur - ll, 0.0, 1.0));
+        const size_t loc = outPos.x + outputPadding
+                        + (outPos.y + outputPadding) * outputStride;
+        output0[loc] = factor * (float2) (ul - lr, ur + ll);
+        output1[loc] = factor * (float2) (ul + lr, ur - ll);
 
     }
 

@@ -142,12 +142,13 @@ void saveRealImage(std::string filename,
 
 
 void saveComplexImage(std::string filename,
-                      cl::CommandQueue& cq, cl::Image2D& image)
+                      cl::CommandQueue& cq, 
+                      ImageBuffer<Complex<cl_float>>& image)
 {
-    const size_t width = image.getImageInfo<CL_IMAGE_WIDTH>(),
-                height = image.getImageInfo<CL_IMAGE_HEIGHT>();
-    float output[height][width][2];
-    readImage2D(cq, &output[0][0][0], image);
+    const size_t width = image.width(),
+                height = image.height();
+    std::vector<Complex<cl_float>> output(height*width);
+    image.read(cq, &output[0]);
 
     // Open the file for output
     std::ofstream out(filename, std::ios_base::trunc | std::ios_base::out);
@@ -155,10 +156,10 @@ void saveComplexImage(std::string filename,
     // Produce the output in a file readable by MATLAB dlmread
     for (size_t y = 0; y < height; ++y) {
         for (size_t x = 0; x < width; ++x) {
-            out << output[y][x][0];
-            if (output[y][x][1] >= 0)
+            out << output[y*width+x].real;
+            if (output[y*width+x].imag >= 0)
                 out << "+";
-            out << output[y][x][1] << "j"
+            out << output[y*width+x].imag << "j"
                 << ((x+1) < width? "," : "");
         }
 

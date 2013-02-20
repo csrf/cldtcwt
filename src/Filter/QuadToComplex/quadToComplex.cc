@@ -44,7 +44,8 @@ QuadToComplex::QuadToComplex(cl::Context& context,
 
 void QuadToComplex::operator() (cl::CommandQueue& cq, 
                  ImageBuffer<cl_float>& input, 
-                 cl::Image2D& output0, cl::Image2D& output1,
+                 ImageBuffer<Complex<cl_float>>& output0, 
+                 ImageBuffer<Complex<cl_float>>& output1,
                  const std::vector<cl::Event>& waitEvents,
                  cl::Event* doneEvent)
 {
@@ -61,16 +62,20 @@ void QuadToComplex::operator() (cl::CommandQueue& cq,
     assert(input.padding() == padding_);
 
     // Input and output formats need to be compatible
-    assert(input.width() == 2*output0.getImageInfo<CL_IMAGE_WIDTH>());
-    assert(input.height() == 2*output0.getImageInfo<CL_IMAGE_HEIGHT>());
-    assert(input.width() == 2*output1.getImageInfo<CL_IMAGE_WIDTH>());
-    assert(input.height() == 2*output1.getImageInfo<CL_IMAGE_HEIGHT>());
+    assert(input.width() == 2*output0.width());
+    assert(input.height() == 2*output0.height());
+    assert(input.width() == 2*output1.width());
+    assert(input.height() == 2*output1.height());
 
     // Set all the arguments
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, int(input.stride()));
-    kernel_.setArg(2, output0);
-    kernel_.setArg(3, output1);
+    kernel_.setArg(1, cl_uint(input.stride()));
+    kernel_.setArg(2, output0.buffer());
+    kernel_.setArg(3, output1.buffer());
+    kernel_.setArg(4, cl_uint(output0.padding()));
+    kernel_.setArg(5, cl_uint(output0.stride()));
+    kernel_.setArg(6, cl_uint(output0.width()));
+    kernel_.setArg(7, cl_uint(output0.height()));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,
