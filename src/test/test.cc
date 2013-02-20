@@ -7,7 +7,7 @@
 #include "CL/cl.hpp"
 
 #include "util/clUtil.h"
-#include "Filter/DTCWT/dtcwt.h"
+#include "DTCWT/dtcwt.h"
 #include <iomanip>
 
 #include <sys/timeb.h>

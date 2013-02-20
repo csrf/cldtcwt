@@ -6,7 +6,6 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
-#include "DTCWT/filterer.h"
 #include "util/clUtil.h"
 #include "DTCWT/dtcwt.h"
 #include <iomanip>

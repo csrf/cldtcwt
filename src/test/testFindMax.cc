@@ -6,13 +6,10 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
-#include "DTCWT/filterer.h"
 #include "util/clUtil.h"
+
 #include <iomanip>
-
 #include <stdexcept>
-
-#include <highgui.h>
 
 
 #include "KeypointDetector/FindMax/findMax.h"

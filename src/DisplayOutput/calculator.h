@@ -4,7 +4,7 @@
 #include <vector>
 #include <CL/cl.hpp>
 
-#include "Filter/DTCWT/dtcwt.h"
+#include "DTCWT/dtcwt.h"
 #include "Abs/abs.h"
 #include "KeypointDetector/peakDetector.h"
 #include "KeypointDetector/EnergyMaps/InterpMap/interpMap.h"

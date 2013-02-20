@@ -6,45 +6,30 @@
 #endif
 #include "CL/cl.hpp"
 
-#include "../imageBuffer.h"
-
-#include "../PadX/padX.h"
-#include "../PadY/padY.h"
-
-#include "../FilterX/filterX.h"
-#include "../FilterY/filterY.h"
-#include "../QuadToComplex/quadToComplex.h"
-
-#include "../DecimateFilterX/decimateFilterX.h"
-#include "../DecimateTripleFilterX/decimateTripleFilterX.h"
-#include "../DecimateFilterY/decimateFilterY.h"
-#include "../QuadToComplexDecimateFilterY/q2cDecimateFilterY.h"
+#include "filterer.h"
 
 #include <vector>
 #include <tuple>
 #include <array>
 
+struct Filters {
+    // Low pass, high pass and band pass coefficients (respectively)
+    cl::Buffer h0, h1, hbp;
+};
+
 
 // Temporary images needed only when the level produces an output 
 struct LevelTemps {
 
-    // Rows filtered
-    ImageBuffer<cl_float> lo, hi, bp;
+    // Columns filtered
+    cl::Image2D lo, bp, hi;
 
-    // Columns & rows filtered for next stage
-    ImageBuffer<cl_float> lolo;
+    // Columns & rows filtered
+    cl::Image2D lolo, lohi, hilo, bpbp;
 
-    // These only get used if producing outputs at Level 1
-    ImageBuffer<cl_float> lohi, hilo, bpbp;
-    cl::Event lohiDone, hiloDone, bpbpDone;
-    
     // Done events for each of these
-    cl::Event loDone, hiDone, bpDone, 
-              loloDone; 
-
-    // Subband matrices
-    std::array<ImageBuffer<Complex<cl_float>>, 6> sb;
-    std::vector<cl::Event> sbDone;
+    cl::Event loDone, bpDone, hiDone,
+              loloDone, lohiDone, hiloDone, bpbpDone;
 
 };
 
@@ -88,33 +73,22 @@ private:
 
     cl::Context context_;
 
-    PadX padX;
-    PadY padY;
-    
-    FilterX h0ox, h1ox, h2ox;
-    FilterY h0oy, h1oy, h2oy;
+    Filters level1_, leveln_;
+
+    Filter h0x, h0y, h1x, h1y, hbpx, hbpy;
+    DecimateFilter g0x, g0y, g1x, g1y, gbpx, gbpy;
+
 
     QuadToComplex quadToComplex;
-
-    DecimateFilterX h0bx;
-    DecimateFilterY h0by;
-
-    DecimateTripleFilterX h012bx;
-
-    QuadToComplexDecimateFilterY q2ch0by, q2ch1by, q2ch2by;
-
-    const size_t padding_ = 16;
-    const size_t alignment_ = 32;
 
 // Debug:
 public:
     void filter(cl::CommandQueue& commandQueue,
-                ImageBuffer<cl_float>& xx, 
-                const std::vector<cl::Event>& xxEvents,
+                cl::Image& xx, const std::vector<cl::Event>& xxEvents,
                 LevelTemps& levelTemps, LevelOutput* subbands);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
-                        ImageBuffer<cl_float>& xx, 
+                        cl::Image2D& xx, 
                         const std::vector<cl::Event>& xxEvents,
                         LevelTemps& levelTemps, LevelOutput* subbands);
 public:
@@ -123,13 +97,13 @@ public:
     Dtcwt(const Dtcwt&) = default;
 
     Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
-          float scaleFactor = 1.f);
+          cl::CommandQueue commandQueue, float scaleFactor = 1.f);
     // Scale factor selects how much to multiply each level by,
     // cumulatively.  0.5 is useful in quite a few cases, because otherwise
     // the coarser scales have much greater magnitudes.
 
     void operator() (cl::CommandQueue& commandQueue,
-                     ImageBuffer<cl_float>& image, 
+                     cl::Image& image, 
                      DtcwtTemps& env,
                      DtcwtOutput& subbandOutputs,
                      const std::vector<cl::Event>& waitEvents
@@ -140,6 +114,7 @@ public:
                            size_t numLevels, size_t startLevel);
 
 };
+
 
 
 

@@ -15,13 +15,41 @@ libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
 
 
+noinst_LTLIBRARIES += libbufferfilter.la
+libbufferfilter_la_SOURCES = \
+		 src/Filter/imageBuffer.cc \
+		 src/Filter/FilterX/filterX.cc \
+		 src/Filter/FilterY/filterY.cc \
+		 src/Filter/DecimateFilterX/decimateFilterX.cc \
+		 src/Filter/DecimateFilterY/decimateFilterY.cc \
+		 src/Filter/QuadToComplexDecimateFilterY/q2cDecimateFilterY.cc \
+		 src/Filter/DecimateTripleFilterX/decimateTripleFilterX.cc \
+		 src/Filter/QuadToComplex/quadToComplex.cc \
+		 src/Filter/PadX/padX.cc \
+		 src/Filter/PadY/padY.cc \
+		 src/Filter/ImageToImageBuffer/imageToImageBuffer.cc 
+nodist_libbufferfilter_la_SOURCES = \
+		 src/Filter/DecimateFilterX/kernel.cc \
+		 src/Filter/DecimateFilterY/kernel.cc \
+		 src/Filter/FilterX/kernel.cc \
+		 src/Filter/FilterY/kernel.cc \
+		 src/Filter/QuadToComplexDecimateFilterY/kernel.cc \
+         src/Filter/DecimateTripleFilterX/kernel.cc \
+         src/Filter/QuadToComplex/kernel.cc \
+         src/Filter/PadX/kernel.cc \
+         src/Filter/PadY/kernel.cc \
+         src/Filter/ImageToImageBuffer/kernel.cc
+CLEANFILES = $(nodist_libbufferfilter_la_SOURCES)
+libbufferfilter_la_LIBADD = libclutil.la 
+libbufferfilter_la_LDFLAGS = @CL_LIBS@
+
+
 
 noinst_LTLIBRARIES += libdtcwt.la 
-libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc \
-					  src/DTCWT/filterer.cc \
-					  src/DTCWT/fourTree.cc 
-libdtcwt_la_LIBADD = libclutil.la 
+libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc 
+libdtcwt_la_LIBADD = libclutil.la libbufferfilter.la
 libdtcwt_la_LDFLAGS = @CL_LIBS@ 
+
 
 
 noinst_LTLIBRARIES += libkeypoints.la
@@ -44,10 +72,16 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/EnergyMaps/PyramidSum/kernel.cc \
 				src/KeypointDetector/Accumulate/kernel.cc \
 				src/KeypointDescriptor/kernel.cc 
-CLEANFILES = $(noinst_libkeypoints_la_SOURCES)
+CLEANFILES += $(nodist_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = libclutil.la 
 libkeypoints_la_LDFLAGS = @CL_LIBS@ 
 
+
+noinst_LTLIBRARIES += librescale.la
+librescale_la_SOURCES = \
+             	src/MiscKernels/Rescale/rescale.cc 
+librescale_la_LIBADD = libclutil.la 
+librescale_la_LDFLAGS = @CL_LIBS@ 
 
 
 noinst_PROGRAMS = testDescriptor
@@ -95,61 +129,28 @@ nodist_displayDTCWT_SOURCES = \
 	src/DisplayOutput/AbsToRGBA/kernel.cc \
 	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayDTCWT_SOURCES)
-displayDTCWT_LDADD = libbufferfilter.la libclutil.la libkeypoints.la 
+displayDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la 
 displayDTCWT_LDFLAGS = @SFML_LIBS@ @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread 
 displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
 
 
-noinst_PROGRAMS += testFilter
-testFilter_SOURCES = src/test/testFilter.cc 
-testFilter_LDADD = libdtcwt.la
-testFilter_LDFLAGS = @opencv_LIBS@
-
 noinst_PROGRAMS += testRescale
 testRescale_SOURCES = src/test/testRescale.cc 
-testRescale_LDADD = libdtcwt.la
+testRescale_LDADD = librescale.la
 testRescale_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += verify
 verify_SOURCES = src/test/verify.cc 
-verify_LDADD = libbufferfilter.la
+verify_LDADD = libdtcwt.la
 verify_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += verifyBasic
 verifyBasic_SOURCES = src/test/verifyBasic.cc 
-verifyBasic_LDADD = libbufferfilter.la
+verifyBasic_LDADD = libdtcwt.la
 verifyBasic_LDFLAGS = @opencv_LIBS@
 
 
 
-noinst_LTLIBRARIES += libbufferfilter.la
-libbufferfilter_la_SOURCES = \
-		 src/Filter/imageBuffer.cc \
-		 src/Filter/FilterX/filterX.cc \
-		 src/Filter/FilterY/filterY.cc \
-		 src/Filter/DecimateFilterX/decimateFilterX.cc \
-		 src/Filter/DecimateFilterY/decimateFilterY.cc \
-		 src/Filter/QuadToComplexDecimateFilterY/q2cDecimateFilterY.cc \
-		 src/Filter/DecimateTripleFilterX/decimateTripleFilterX.cc \
-		 src/Filter/QuadToComplex/quadToComplex.cc \
-		 src/Filter/PadX/padX.cc \
-		 src/Filter/PadY/padY.cc \
-		 src/Filter/ImageToImageBuffer/imageToImageBuffer.cc \
-		 src/Filter/DTCWT/dtcwt.cc
-nodist_libbufferfilter_la_SOURCES = \
-		 src/Filter/DecimateFilterX/kernel.cc \
-		 src/Filter/DecimateFilterY/kernel.cc \
-		 src/Filter/FilterX/kernel.cc \
-		 src/Filter/FilterY/kernel.cc \
-		 src/Filter/QuadToComplexDecimateFilterY/kernel.cc \
-         src/Filter/DecimateTripleFilterX/kernel.cc \
-         src/Filter/QuadToComplex/kernel.cc \
-         src/Filter/PadX/kernel.cc \
-         src/Filter/PadY/kernel.cc \
-         src/Filter/ImageToImageBuffer/kernel.cc
-CLEANFILES += $(nodist_libbufferfilter_la_SOURCES)
-libbufferfilter_la_LIBADD = libclutil.la 
-libbufferfilter_la_LDFLAGS = @CL_LIBS@
 
 
 noinst_PROGRAMS += speedTestBufferTrial
@@ -183,7 +184,7 @@ speedTestQuadToComplexDecimateFilterY_LDFLAGS =@opencv_LIBS@
 
 noinst_PROGRAMS += testDTCWT
 testDTCWT_SOURCES = src/test/test.cc 
-testDTCWT_LDADD   = libbufferfilter.la libclutil.la 
+testDTCWT_LDADD   = libdtcwt.la
 testDTCWT_LDFLAGS = @opencv_LIBS@
 
 

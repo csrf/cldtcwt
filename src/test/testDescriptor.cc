@@ -6,7 +6,6 @@
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
 
-#include "DTCWT/filterer.h"
 #include "util/clUtil.h"
 #include "DTCWT/dtcwt.h"
 #include <iomanip>
@@ -36,14 +35,18 @@ int main(int argc, char** argv)
 
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
-        Dtcwt dtcwt(context.context, context.devices, cq);
+        Dtcwt dtcwt(context.context, context.devices);
 
         DescriptorExtracter describer(context.context, context.devices,
                                       2);
 
         // Read in image
         cv::Mat bmp = cv::imread(argv[1], 0) / 255.0f;
-        cl::Image2D inImage = createImage2D(context.context, bmp);
+
+        ImageBuffer<cl_float> inImage(context.context, CL_MEM_READ_WRITE,
+                                      bmp.cols, bmp.rows,
+                                      16, 32);
+        inImage.write(cq, reinterpret_cast<cl_float*>(bmp.data));
 
         // Create temporaries and outputs for the DTCWT
         DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
