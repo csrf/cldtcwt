@@ -4,7 +4,7 @@ octave --eval "
 
 % Produce a bitmap with the desired pattern
 
-X = zeros(128); X(128, 128) = 1;
+X = zeros(128); X(128, 128) = 255;
 
 
 imwrite(X, 'test.bmp');
@@ -21,7 +21,7 @@ z = exp(i * (0:11)' / 12 * 2 * pi);
 pattern = [0 0; real(z) imag(z)];
 
 
-locs = bsxfun(@plus, [31 30.5], pattern)
+locs = bsxfun(@plus, [28.5 28.75], pattern)
 
 % Correct the phases and perform band-pass interpolation
 Yh = correctPhase(Yh);

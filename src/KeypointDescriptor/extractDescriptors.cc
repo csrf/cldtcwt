@@ -91,12 +91,16 @@ void Interpolator::operator()
                 cl::Event* doneEvent)
 {
     // Set subband arguments
-    kernel_.setArg(9, subbands.sb[0]);
-    kernel_.setArg(10, subbands.sb[1]);
-    kernel_.setArg(11, subbands.sb[2]);
-    kernel_.setArg(12, subbands.sb[3]);
-    kernel_.setArg(13, subbands.sb[4]);
-    kernel_.setArg(14, subbands.sb[5]);
+    kernel_.setArg(9, subbands.sb[0].buffer());
+    kernel_.setArg(10, subbands.sb[1].buffer());
+    kernel_.setArg(11, subbands.sb[2].buffer());
+    kernel_.setArg(12, subbands.sb[3].buffer());
+    kernel_.setArg(13, subbands.sb[4].buffer());
+    kernel_.setArg(14, subbands.sb[5].buffer());
+    kernel_.setArg(15, cl_uint(subbands.sb[0].padding()));
+    kernel_.setArg(16, cl_uint(subbands.sb[0].stride()));
+    kernel_.setArg(17, cl_uint(subbands.sb[0].width()));
+    kernel_.setArg(18, cl_uint(subbands.sb[0].height()));
 
     // Set descriptor location arguments relative to the centre of the 
     // image.  scale should be the number of original image pixels per 
@@ -104,9 +108,9 @@ void Interpolator::operator()
     // (x, y, ...), with each record being of length numFloatsPerPos
     // (set at creation).  
     kernel_.setArg(0, locations);
-    kernel_.setArg(1, float(scale));
+    kernel_.setArg(1, cl_float(scale));
     kernel_.setArg(2, kpOffsets);
-    kernel_.setArg(3, kpOffsetsIdx);
+    kernel_.setArg(3, cl_int(kpOffsetsIdx));
 
     // Set output argument
     kernel_.setArg(8, output);
