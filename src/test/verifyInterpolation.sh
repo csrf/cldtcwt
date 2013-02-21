@@ -1,6 +1,6 @@
 #!/bin/sh
 
-octave --eval "
+octave --silent --eval "
 
 % Produce a bitmap with the desired pattern
 
