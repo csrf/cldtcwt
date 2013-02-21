@@ -323,10 +323,6 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                levelTemps.bp,
                {xxPadded}, &levelTemps.loDone);
 
-        // Prepare low-low output
-        h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
-             {levelTemps.loDone}, &levelTemps.loloDone);
-
         // Create events that, when all done signify everything about this stage
         // is complete
         subbands->done = std::vector<cl::Event>(3);
@@ -335,6 +331,10 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
         padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
         padY(commandQueue, levelTemps.hi, {levelTemps.loDone}, &hiPadded);
         padY(commandQueue, levelTemps.bp, {levelTemps.loDone}, &bpPadded);
+
+        // Prepare low-low output
+        h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
+             {loPadded}, &levelTemps.loloDone);
 
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 

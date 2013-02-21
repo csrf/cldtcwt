@@ -54,17 +54,7 @@ int main(int argc, char** argv)
             floatBmp.cols, floatBmp.rows, 16, 32
         };
 
-
-        // Upload the data
-        cq.enqueueWriteBufferRect(inImage.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * inImage.padding(),
-                              inImage.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({inImage.width() * sizeof(float),
-                              inImage.height(), 1}),
-              inImage.stride() * sizeof(float), 0,
-              0, 0,
-              floatBmp.ptr());
+        inImage.write(cq, reinterpret_cast<cl_float*>(floatBmp.ptr()));
 
 
         // Create the DTCWT itself

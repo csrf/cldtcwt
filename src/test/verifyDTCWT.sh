@@ -1,6 +1,6 @@
 #!/bin/sh
 
-octave --eval "
+octave --silent --eval "
 
 % Produce a bitmap with the desired pattern
 
@@ -15,12 +15,12 @@ end
 
 
 
-imwrite(X, 'test.bmp');
+imwrite(X, 'testDTCWT.bmp');
 
 % Call DTCWT verification on bitmap; it will return test.bmp.0.0,
 % test.bmp.0.1 etc for increasing subbands (the other number is for wavelet 
 % level).
-system('./verifyBasic test.bmp');
+system('./verifyBasic testDTCWT.bmp');
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
 
@@ -28,7 +28,7 @@ for l = 1:3
     for sb = 1:6
 
         % Read the data
-        vbY = dlmread(sprintf('test.bmp.%d.%d', l-1, sb-1), ',');
+        vbY = dlmread(sprintf('testDTCWT.bmp.%d.%d', l-1, sb-1), ',');
 
         % Compare to reference implementation
         difference = abs(Yh{l}(:,:,sb) - vbY);
