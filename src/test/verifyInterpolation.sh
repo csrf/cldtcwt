@@ -12,7 +12,7 @@ imwrite(X, 'test.bmp');
 % Call DTCWT verification on bitmap; it will return test.bmp.0.0,
 % test.bmp.0.1 etc for increasing subbands (the other number is for wavelet 
 % level).
-system('./testDescriptor test.bmp');
+system('./testDescriptor test.bmp 49 48');
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
 

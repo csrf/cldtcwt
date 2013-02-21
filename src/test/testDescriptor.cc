@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <tuple>
 
@@ -21,6 +22,11 @@
 
 int main(int argc, char** argv)
 {
+    // Extracts descriptors from an image
+    //
+    // Arguments: image filename
+    // list of coordinates, x y x y x y etc.
+    
     if (argc < 2) {
         std::cerr << "Provide an image filename" << std::endl;
         return -1;
@@ -52,10 +58,21 @@ int main(int argc, char** argv)
         inImage.write(cq, reinterpret_cast<cl_float*>(floatBmp.ptr()));
 
 
+        // Parse sampling locations
+        std::vector<cl_float> kplocsV;
+        const size_t numKeypoints = (argc-2) / 2;
+        for (int n = 0; n < (2*numKeypoints); ++n) {
+            cl_float val;
+            std::istringstream ss(argv[n+2]);
+            ss >> val;
+            
+            kplocsV.push_back(val);
+        }
+
         
-        // Upload locations to sample at
-        cl::Buffer kplocs = createBuffer(context.context, cq, {49, 48});
-        std::vector<cl_uint> kpOffsetsV = {0, 1};
+        // Upload sampling locations
+        cl::Buffer kplocs = createBuffer(context.context, cq, kplocsV);
+        std::vector<cl_uint> kpOffsetsV = {0, numKeypoints};
         cl::Buffer kpOffsets = {context.context,
                                 CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                 kpOffsetsV.size() * sizeof(cl_uint),
@@ -70,7 +87,7 @@ int main(int argc, char** argv)
         
         // Create output buffer for the descriptors
         cl::Buffer output = createBuffer(context.context, cq, 
-                                 std::vector<float>(14 * 12));
+                             std::vector<float>(14 * 12 * numKeypoints));
 
 
         // Perform the transform
