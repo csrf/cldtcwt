@@ -6,22 +6,37 @@ octave --silent --eval "
 
 X = zeros(128); X(128, 128) = 255;
 
+testCoords = [49 48];
 
 imwrite(X, 'test.bmp');
 
 % Call DTCWT verification on bitmap; it will return test.bmp.0.0,
 % test.bmp.0.1 etc for increasing subbands (the other number is for wavelet 
 % level).
-system('./testDescriptor test.bmp 49 48');
+system(['./testDescriptor test.bmp ' num2str(testCoords)]);
 
 [Yl, Yh] = dtwavexfm2b(X, 3, 'near_sym_b_bp', 'qshift_b_bp');
+
+
+
+% Centre of the Level 2 Subband (in MATLAB)
+subbandCentre = (size(Yh{2}(:,:,1)) - 1) / 2 + 1;
+
+
 
 % Design the pattern
 z = exp(i * (0:11)' / 12 * 2 * pi);
 pattern = [0 0; real(z) imag(z)];
 
 
-locs = bsxfun(@plus, [28.5 28.75], pattern)
+% Convert the keypoint centre to MATLAB-addressing
+scale = 2^2;
+matlabCoords = subbandCentre + testCoords(:,[2 1]) / scale;
+
+% Add keypoint centre to sampling offsets
+locs = bsxfun(@plus, matlabCoords, pattern);
+
+
 
 % Correct the phases and perform band-pass interpolation
 Yh = correctPhase(Yh);
@@ -38,18 +53,20 @@ for n = 1:6
     end
 end
 
+
+
+
 out = dlmread('interpolations.dat', ',');
+
+if any(abs(out(1:numel(ref)) - ref(:)) > 1e-5)
 
     disp('Should have been:')
     ref
     disp('Was:')
     reshape(out, 6, numel(out) / 6)
 
-if any(abs(out(1:numel(ref)) - ref(:)) > 1e-5)
     disp('Interpolations did not give the same results as Octave!')
     quit(1)
-else
-    display('Interpolation worked!')
 end
 
 
