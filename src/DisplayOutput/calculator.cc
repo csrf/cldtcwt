@@ -178,7 +178,7 @@ cl::Buffer Calculator::keypointCumCounts(void)
 
 std::vector<cl::Event> Calculator::keypointLocationEvents(void)
 {
-    return peakDetectorResults.listDone;
+    return std::vector<cl::Event>(peakDetectorResults.listDone);
 }
 
 
