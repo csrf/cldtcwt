@@ -52,11 +52,11 @@ void AbsToRGBA::operator() (cl::CommandQueue& cq,
 
 
     // Set all the arguments
-    kernel_.setArg(0, sizeof(input), &input);
+    kernel_.setArg(0, input.buffer());
     kernel_.setArg(1, cl_uint(input.padding()));
     kernel_.setArg(2, cl_uint(input.stride()));
     kernel_.setArg(3, sizeof(output), &output);
-    kernel_.setArg(4, float(gain));
+    kernel_.setArg(4, cl_float(gain));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
