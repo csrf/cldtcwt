@@ -155,6 +155,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     // Copy the keypoint locations over
     std::vector<cl::Event> kplEvents = calculator_.keypointLocationEvents();
+    kplEvents.push_back(glObjsAcquired);
     cq_.enqueueCopyBuffer(calculator_.keypointLocations(), 
                           keypointLocationsBufferCL_, 
                       0, 0, keypointLocationsBufferCL_.getInfo<CL_MEM_SIZE>(),
@@ -170,14 +171,24 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     cq_.enqueueReleaseGLObjects(&glTransferObjs,
                                 &releaseEvents, &glObjsReady_);
+
 }
 
 
 bool CalculatorInterface::isDone()
 {
-    // Warning: this seems to complete much too early.  Strange.
-    return kpLocsCopied_.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>()
-                == CL_COMPLETE;
+    // The rational thing would be to check for release of the GL objects
+    // (the last operation in the chain).  However, this doesn't return 
+    // positive until cq_.finish() is called.  So, check something a little
+    // more reliable...
+    std::vector<cl::Event> events = calculator_.keypointLocationEvents();
+
+    for (const auto& ev: events)
+        if (ev.getInfo<CL_EVENT_COMMAND_EXECUTION_STATUS>()
+                != CL_COMPLETE)
+            return false;
+
+    return true;
 }
 
 

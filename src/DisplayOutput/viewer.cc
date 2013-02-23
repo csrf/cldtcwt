@@ -152,7 +152,7 @@ void Viewer::update()
     timeb t1, t2;
     window.display();
     ftime(&t1);
-    glFlush();
+    glFinish();
     ftime(&t2);
 
                 double dt = t2.time - t1.time 
