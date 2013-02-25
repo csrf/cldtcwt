@@ -8,9 +8,7 @@
 
 #include "VideoReader.h"
 
-// For timing
-#include <sys/timeb.h>
-
+#include <chrono>
 #include <queue>
 #include <utility>
 #include <iostream>
@@ -22,6 +20,9 @@
 
 std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context> 
     initOpenCL();
+
+typedef std::chrono::duration<double, std::milli>
+    DurationMilliseconds;
 
 int main(void)
 {
@@ -53,8 +54,7 @@ int main(void)
     VideoReader videoReader("/dev/video0", width, height);
     videoReader.startCapture();
 
-    timeb prevTime;
-    ftime(&prevTime);
+    auto prevTime = std::chrono::steady_clock::now();
     int n = 0;
 
     while (1) {
@@ -103,18 +103,17 @@ int main(void)
                 ready.push(ci);
                 processing.pop();
                 
-                timeb newTime;
-                ftime(&newTime);
+                auto newTime = std::chrono::steady_clock::now();
 
                 // Work out what the difference between these is
-                double t = newTime.time - prevTime.time 
-                         + 0.001 * (newTime.millitm - prevTime.millitm);
 
-                prevTime = newTime;
                 
                 std::cout << n++ << " " << numKPs 
-                                 << " " << (1000*t) << "ms\n";
+                                 << " " << 
+                        DurationMilliseconds(newTime - prevTime).count()
+                                 << "ms\n";
 
+                prevTime = newTime;
 
             } 
         }

@@ -83,7 +83,10 @@ void Viewer::setNumFloatsPerKeypoint(size_t n)
 }
 
 #include <iostream>
-#include <sys/timeb.h>
+#include <chrono>
+
+typedef std::chrono::duration<double, std::milli>
+    DurationMilliseconds;
 
 void Viewer::update()
 {
@@ -149,15 +152,13 @@ void Viewer::update()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 
-    timeb t1, t2;
     window.display();
-    ftime(&t1);
+    auto startTime = std::chrono::steady_clock::now();
     glFinish();
-    ftime(&t2);
+    auto endTime = std::chrono::steady_clock::now();
 
-                double dt = t2.time - t1.time 
-                         + 0.001 * (t2.millitm - t1.millitm);
-    std::cout << "R " << (1000*dt) << "ms\n";
+    std::cout << "R " 
+        << DurationMilliseconds(endTime - startTime).count() << "ms\n";
 }
 
 
