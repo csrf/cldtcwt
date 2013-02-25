@@ -4,13 +4,17 @@
 
 float2 readSBAndDerotate(const __global float2* sb, int2 pos,
                         float2 angFreq, float2 offset,
-                        unsigned int padding, unsigned int stride)
+                        unsigned int padding, unsigned int stride,
+                        uint2 sbSize)
 {
     // Read pos, apply offset and derotate by angFreq
 
-    // Clamping means it returns zero out of the image, which is what we
-    // want
-    float2 val = sb[padding + pos.x + (padding + pos.y) * stride];
+    // Check in image; otherwise, return zero (to avoid reading garbage)
+    bool inSB = all((int2) (0,0) <= pos) & all(pos < convert_int2(sbSize));
+
+    float2 val = inSB? sb[padding + pos.x + (padding + pos.y) * stride]
+                     : (float2) (0.f, 0.f);
+
     // Apply offset to give consistent phase behaviour relative to sampling
     // point between subbands
     val = (float2) (val.x * offset.x - val.y * offset.y,
@@ -217,7 +221,8 @@ __kernel void extractDescriptor(const __global float* pos,
         sbVals[idx.y][idx.x]
                    = readSBAndDerotate(sb, readPos, 
                                        angularFreq[n], offsets[n],
-                                       sbPadding, sbStride);
+                                       sbPadding, sbStride,
+                                       (uint2) (sbWidth, sbHeight));
 
         // Make sure all items have got here
         barrier(CLK_LOCAL_MEM_FENCE);
