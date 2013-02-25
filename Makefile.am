@@ -12,7 +12,7 @@ TEST_EXTENSIONS=.sh
 
 noinst_LTLIBRARIES = libclutil.la
 libclutil_la_SOURCES = src/util/clUtil.cc
-libclutil_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
+libclutil_la_LDFLAGS = @CL_LIBS@ 
 
 
 noinst_LTLIBRARIES += libclutilcv.la
