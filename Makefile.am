@@ -72,6 +72,7 @@ libkeypoints_la_SOURCES = \
 nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/Concat/kernel.cc \
 				src/KeypointDetector/FindMax/kernel.cc \
+				src/KeypointDetector/EnergyMaps/EnergyMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/PyramidSum/kernel.cc \
