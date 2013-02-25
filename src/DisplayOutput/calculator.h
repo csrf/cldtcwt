@@ -9,6 +9,8 @@
 #include "DTCWT/dtcwt.h"
 #include "Abs/abs.h"
 #include "KeypointDetector/peakDetector.h"
+#include "KeypointDetector/EnergyMaps/Eigen/energyMapEigen.h"
+#include "KeypointDetector/EnergyMaps/EnergyMap/energyMap.h"
 #include "KeypointDetector/EnergyMaps/InterpMap/interpMap.h"
 #include "KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.h"
 #include "KeypointDescriptor/extractDescriptors.h"
