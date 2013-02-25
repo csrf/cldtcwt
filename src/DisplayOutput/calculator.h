@@ -2,7 +2,9 @@
 #define CALCULATOR_H
 
 #include <vector>
-#include <CL/cl.hpp>
+
+#define __CL_ENABLE_EXCEPTIONS
+#include "CL/cl.hpp"
 
 #include "DTCWT/dtcwt.h"
 #include "Abs/abs.h"

@@ -1,26 +1,10 @@
-#include <iostream>
-#include <tuple>
-#include <stdexcept>
-
 #include <SFML/Window.hpp>
-
-#define GL_GLEXT_PROTOTYPES
-
-#include <CL/cl_gl.h>
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
-#include <GL/glext.h>
-#include "KeypointDetector/FindMax/findMax.h"
-
-#define __CL_ENABLE_EXCEPTIONS
-#include "CL/cl.hpp"
-
-#include <highgui.h>
+#include <SFML/OpenGL.hpp>
 
 #include "DisplayOutput/viewer.h"
 #include "DisplayOutput/calculatorInterface.h"
+
+#include <GL/glx.h>
 
 
 #include "VideoReader.h"
@@ -30,6 +14,10 @@
 
 #include <queue>
 #include <utility>
+#include <iostream>
+#include <tuple>
+#include <stdexcept>
+
 
 #include "DisplayOutput/VideoReader.h"
 
