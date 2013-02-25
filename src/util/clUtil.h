@@ -10,7 +10,6 @@
 #include <vector>
 #include <array>
 
-#include <highgui.h>
 #include <stdexcept>
 
 #include "Filter/imageBuffer.h"
@@ -58,7 +57,6 @@ std::vector<T> readBuffer(cl::CommandQueue& cq, const cl::Buffer& buffer)
 
 cl::Image2D createImage2D(cl::Context&, int width, int height);
 
-cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
 
 void writeImage2D(cl::CommandQueue& commandQueue,
                   cl::Image2D& image, float* memory);
