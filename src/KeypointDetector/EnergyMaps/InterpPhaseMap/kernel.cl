@@ -6,9 +6,11 @@ typedef struct {
 typedef float2 Complex;
 
 // Load a rectangular region from a floating-point image
-void readImageRegionToShared(__read_only image2d_t input,
-                sampler_t sampler,
-                float2 regionStart,
+void readImageRegionToShared(const __global float2* input,
+                unsigned int stride,
+                unsigned int padding,
+                uint2 inSize,
+                int2 regionStart,
                 int2 regionSize, 
                 __local volatile ComplexPolar* output)
 {
@@ -32,10 +34,17 @@ void readImageRegionToShared(__read_only image2d_t input,
             // Make sure we are still in the rectangular region asked for
             if (inRegion) {
 
+                int2 pos = regionStart + readPosOffset;
+
+                bool inImage = all((int2) (0, 0) <= pos) 
+                                & all(pos < convert_int2(inSize));
+
+
                 // Read in cartesian
-                float2 cart
-                    = read_imagef(input, sampler, 
-                        regionStart + convert_float2(readPosOffset)).s01;
+                float2 cart =
+                    inImage? 
+                        input[padding + pos.x + (padding + pos.y) * stride]
+                      : (float2) (0.f, 0.f);
 
                 // Convert to polar
                 size_t idx = readPosOffset.y * regionSize.x + readPosOffset.x;
@@ -125,12 +134,16 @@ void addDiff(__local Matrix2x2ConjSymmetric* M, Complex Dx, Complex Dy)
 // Parameters: WG_SIZE_X, WG_SIZE_Y need to be set for the work group size.
 // POS_LEN should be the number of floats to make the output structure.
 __kernel __attribute__((reqd_work_group_size(WG_SIZE_X, WG_SIZE_Y, 1)))
-void interpPhaseMap(__read_only image2d_t sb0,
-                    __read_only image2d_t sb1,
-                    __read_only image2d_t sb2,
-                    __read_only image2d_t sb3,
-                    __read_only image2d_t sb4,
-                    __read_only image2d_t sb5,
+void interpPhaseMap(const __global float2* sb0,
+                    const __global float2* sb1,
+                    const __global float2* sb2,
+                    const __global float2* sb3,
+                    const __global float2* sb4,
+                    const __global float2* sb5,
+                    const unsigned int sbStride,
+                    const unsigned int sbPadding,
+                    const unsigned int sbWidth,
+                    const unsigned int sbHeight,
                     __write_only image2d_t output)
 {
 
@@ -194,42 +207,32 @@ void interpPhaseMap(__read_only image2d_t sb0,
         }
     }
 
-    float2 regionStart = convert_float2((int2)
+    int2 regionStart = (int2)
         (get_group_id(0) * get_local_size(0) - 2,
-         get_group_id(1) * get_local_size(1) - 2));
+         get_group_id(1) * get_local_size(1) - 2);
 
     int2 regionSize = (int2) (WG_SIZE_X+4, WG_SIZE_Y+4);
 
     // For each subband
     for (int n = 0; n < 6; ++n) {
 
+        const __global float* sb;
+
         // Select the correct subband as input
         switch (n) {
-        case 0: 
-            readImageRegionToShared(sb0, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
-        case 1:
-            readImageRegionToShared(sb1, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
-        case 2: 
-            readImageRegionToShared(sb2, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
-        case 3: 
-            readImageRegionToShared(sb3, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
-        case 4: 
-            readImageRegionToShared(sb4, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
-        case 5: 
-            readImageRegionToShared(sb5, sampler, regionStart,
-                                    regionSize, &sbVals[0][0]);
-            break;
+        case 0: sb = sb0; break;
+        case 1: sb = sb1; break;
+        case 2: sb = sb2; break;
+        case 3: sb = sb3; break;
+        case 4: sb = sb4; break;
+        case 5: sb = sb5; break;
         }
+
+        readImageRegionToShared(sb, sbStride, sbPadding, 
+                                (uint2) (sbWidth, sbHeight),
+                                regionStart, regionSize, 
+                                &sbVals[0][0]);
+
 
         // Make sure we don't start using values until they're valid
         barrier(CLK_LOCAL_MEM_FENCE);

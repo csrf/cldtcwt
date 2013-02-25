@@ -71,9 +71,14 @@ void InterpPhaseMap::operator() (cl::CommandQueue& commandQueue,
 {
     // Set up all the arguments to the kernel
     for (int n = 0; n < levelOutput.sb.size(); ++n)
-        kernel_.setArg(n, levelOutput.sb[n]);
+        kernel_.setArg(n, levelOutput.sb[n].buffer());
 
-    kernel_.setArg(levelOutput.sb.size(), energyMap);
+    kernel_.setArg(6, cl_uint(levelOutput.sb[0].stride()));
+    kernel_.setArg(7, cl_uint(levelOutput.sb[0].padding()));
+    kernel_.setArg(8, cl_uint(levelOutput.sb[0].width()));
+    kernel_.setArg(9, cl_uint(levelOutput.sb[0].height()));
+
+    kernel_.setArg(10, energyMap);
 
     const size_t wgSize = 16;
 
