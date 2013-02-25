@@ -54,7 +54,6 @@ libbufferfilter_la_LDFLAGS = @CL_LIBS@
 noinst_LTLIBRARIES += libdtcwt.la 
 libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc 
 libdtcwt_la_LIBADD = libclutil.la libbufferfilter.la
-libdtcwt_la_LDFLAGS = @CL_LIBS@ 
 
 
 
@@ -130,7 +129,7 @@ nodist_displayDTCWT_SOURCES = \
 	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la 
-displayDTCWT_LDFLAGS = @SFML_LIBS@ @opencv_LIBS@ @V4L2_LIBS@ -lboost_thread 
+displayDTCWT_LDFLAGS = @SFML_LIBS@ @V4L2_LIBS@ -lboost_thread 
 displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
 
 

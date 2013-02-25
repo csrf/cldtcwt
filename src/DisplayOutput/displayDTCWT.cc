@@ -1,11 +1,10 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
-#include "DisplayOutput/viewer.h"
 #include "DisplayOutput/calculatorInterface.h"
+#include "DisplayOutput/viewer.h"
 
 #include <GL/glx.h>
-
 
 #include "VideoReader.h"
 

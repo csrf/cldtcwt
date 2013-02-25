@@ -1,16 +1,15 @@
 #ifndef CALCULATORINTERFACE_H
 #define CALCULATORINTERFACE_H
 
+#include "Filter/imageBuffer.h"
 
 #include "calculator.h"
 #include "VBOBuffer.h"
 #include "texture.h"
 #include "GreyscaleToRGBA/greyscaleToRGBA.h"
 #include "AbsToRGBA/absToRGBA.h"
-#include <opencv2/imgproc/imgproc.hpp>
 #include <array>
 
-#include "Filter/imageBuffer.h"
 #include "Filter/ImageToImageBuffer/imageToImageBuffer.h"
 
 #if defined(CL_VERSION_1_2)
