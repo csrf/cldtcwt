@@ -15,6 +15,12 @@ libclutil_la_SOURCES = src/util/clUtil.cc
 libclutil_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
 
 
+noinst_LTLIBRARIES += libclutilcv.la
+libclutilcv_la_SOURCES = src/util/clUtilCV.cc
+libclutilcv_la_LDFLAGS = @CL_LIBS@ @opencv_LIBS@
+libclutilcv_la_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
+
+
 noinst_LTLIBRARIES += libbufferfilter.la
 libbufferfilter_la_SOURCES = \
 		 src/Filter/imageBuffer.cc \
