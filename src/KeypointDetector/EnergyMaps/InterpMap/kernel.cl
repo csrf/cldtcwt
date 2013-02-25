@@ -4,6 +4,7 @@ typedef float2 Complex;
 void readImageRegionToShared(const __global float2* input,
                 unsigned int stride,
                 unsigned int padding,
+                uint2 inSize,
                 int2 regionStart,
                 int2 regionSize, 
                 __local volatile Complex* output)
@@ -30,8 +31,13 @@ void readImageRegionToShared(const __global float2* input,
                 
                 int2 pos = regionStart + readPosOffset;
                 
+                bool inImage = all((int2) (0, 0) <= pos) 
+                                & all(pos < convert_int2(inSize));
+
                 output[readPosOffset.y * regionSize.x + readPosOffset.x]
-                    = input[padding + pos.x + (padding + pos.y) * stride];
+                    = inImage? 
+                        input[padding + pos.x + (padding + pos.y) * stride]
+                      : (float2) (0.f, 0.f);
             }
 
         }
@@ -121,6 +127,8 @@ void interpMap(const __global float2* sb0,
                const __global float2* sb5,
                const unsigned int sbStride,
                const unsigned int sbPadding,
+               const unsigned int sbWidth,
+               const unsigned int sbHeight,
                __write_only image2d_t output)
 {
 
@@ -201,6 +209,7 @@ void interpMap(const __global float2* sb0,
         }
 
         readImageRegionToShared(sb, sbStride, sbPadding, 
+                                (uint2) (sbWidth, sbHeight),
                                 regionStart, regionSize, 
                                 &sbVals[0][0]);
 

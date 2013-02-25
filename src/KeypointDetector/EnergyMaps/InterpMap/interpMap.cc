@@ -74,8 +74,10 @@ void InterpMapEigen::operator() (cl::CommandQueue& commandQueue,
         kernel_.setArg(n, levelOutput.sb[n].buffer());
     kernel_.setArg(6, cl_uint(levelOutput.sb[0].stride()));
     kernel_.setArg(7, cl_uint(levelOutput.sb[0].padding()));
+    kernel_.setArg(8, cl_uint(levelOutput.sb[0].width()));
+    kernel_.setArg(9, cl_uint(levelOutput.sb[0].height()));
 
-    kernel_.setArg(8, energyMap);
+    kernel_.setArg(10, energyMap);
 
     const size_t wgSize = 16;
 
