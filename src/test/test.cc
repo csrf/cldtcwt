@@ -10,7 +10,9 @@
 #include "DTCWT/dtcwt.h"
 #include <iomanip>
 
-#include <sys/timeb.h>
+#include <chrono>
+typedef std::chrono::duration<double, std::milli>
+    DurationMilliseconds;
 
 #include <stdexcept>
 
@@ -68,22 +70,20 @@ int main()
 
         std::cout << "Running DTCWT" << std::endl;
 
-        timeb start, end;
         const int numFrames = 100;
-        ftime(&start);
+        auto start = std::chrono::steady_clock::now();
 
         dtcwt(cq, inImage, env, out);
         for (int n = 0; n < (numFrames-1); ++n) 
             dtcwt(cq, inImage, env, out); //, out.subbands.back().done);
         cq.finish();
 
-        ftime(&end);
+        auto end = std::chrono::steady_clock::now();
 
         // Work out what the difference between these is
-        double t = end.time - start.time 
-                 + 0.001 * (end.millitm - start.millitm);
+        double t = DurationMilliseconds(end - start).count();
 
-        std::cout << (numFrames / t)
+        std::cout << (numFrames / (t / 1000.f))
 		  << " fps" << std::endl;
         std::cout << numFrames << " frames in " 
                   << t << "s" << std::endl;
