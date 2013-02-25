@@ -74,45 +74,39 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDescriptor/kernel.cc 
 CLEANFILES += $(nodist_libkeypoints_la_SOURCES)
 libkeypoints_la_LIBADD = libclutil.la 
-libkeypoints_la_LDFLAGS = @CL_LIBS@ 
 
 
 noinst_LTLIBRARIES += librescale.la
 librescale_la_SOURCES = \
              	src/MiscKernels/Rescale/rescale.cc 
 librescale_la_LIBADD = libclutil.la 
-librescale_la_LDFLAGS = @CL_LIBS@ 
 
 
 noinst_PROGRAMS = testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
 testDescriptor_LDADD = libdtcwt.la libkeypoints.la
 testDescriptor_LDFLAGS = @opencv_LIBS@
+testDescriptor_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 noinst_PROGRAMS += testFindMax
 testFindMax_SOURCES = src/test/testFindMax.cc
 testFindMax_LDADD = libkeypoints.la 
-testFindMax_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += testConcat
 testConcat_SOURCES = src/test/testConcat.cc
 testConcat_LDADD = libkeypoints.la
-testConcat_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += testAccumulate
 testAccumulate_SOURCES = src/test/testAccumulate.cc 
 testAccumulate_LDADD = libkeypoints.la
-testAccumulate_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += testPeakDetector
 testPeakDetector_SOURCES = src/test/testPeakDetector.cc 
 testPeakDetector_LDADD = libkeypoints.la
-testPeakDetector_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += testPyramidSum
 testPyramidSum_SOURCES = src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libkeypoints.la
-testPyramidSum_LDFLAGS = @opencv_LIBS@
 
 noinst_PROGRAMS += displayDTCWT
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
@@ -136,18 +130,21 @@ displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
 
 noinst_PROGRAMS += testRescale
 testRescale_SOURCES = src/test/testRescale.cc 
-testRescale_LDADD = librescale.la
+testRescale_LDADD = librescale.la libclutilcv.la
 testRescale_LDFLAGS = @opencv_LIBS@
+testRescale_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 noinst_PROGRAMS += verify
 verify_SOURCES = src/test/verify.cc 
 verify_LDADD = libdtcwt.la
 verify_LDFLAGS = @opencv_LIBS@
+verify_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 noinst_PROGRAMS += verifyBasic
 verifyBasic_SOURCES = src/test/verifyBasic.cc 
 verifyBasic_LDADD = libdtcwt.la
 verifyBasic_LDFLAGS = @opencv_LIBS@
+verifyBasic_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
@@ -156,36 +153,32 @@ verifyBasic_LDFLAGS = @opencv_LIBS@
 noinst_PROGRAMS += speedTestBufferTrial
 speedTestBufferTrial_SOURCES = src/Filter/speedTest.cc 
 speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la 
-speedTestBufferTrial_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
 
 noinst_PROGRAMS += speedTestDecimateFilterX
 speedTestDecimateFilterX_SOURCES = \
 	   src/Filter/DecimateFilterX/speedTestDecimateFilterX.cc 
 speedTestDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la 
-speedTestDecimateFilterX_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
 
 noinst_PROGRAMS += speedTestDecimateFilterY
 speedTestDecimateFilterY_SOURCES = \
 	   src/Filter/DecimateFilterY/speedTestDecimateFilterY.cc 
 speedTestDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
-speedTestDecimateFilterY_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
 
 noinst_PROGRAMS += speedTestDecimateTripleFilterX
 speedTestDecimateTripleFilterX_SOURCES = \
 	   src/Filter/DecimateTripleFilterX/speedTest.cc 
 speedTestDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la 
-speedTestDecimateTripleFilterX_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ 
 
 noinst_PROGRAMS += speedTestQuadToComplexDecimateFilterY
 speedTestQuadToComplexDecimateFilterY_SOURCES = \
 	   src/Filter/QuadToComplexDecimateFilterY/speedTest.cc 
 speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
-speedTestQuadToComplexDecimateFilterY_LDFLAGS =@opencv_LIBS@ 
 
 noinst_PROGRAMS += testDTCWT
 testDTCWT_SOURCES = src/test/test.cc 
-testDTCWT_LDADD   = libdtcwt.la
+testDTCWT_LDADD   = libdtcwt.la libclutilcv.la
 testDTCWT_LDFLAGS = @opencv_LIBS@
+testDTCWT_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
@@ -196,7 +189,7 @@ check_PROGRAMS = testFilterX
 testFilterX_SOURCES = src/Filter/FilterX/testFilterX.cc \
 					  src/Filter/referenceImplementation.cc
 testFilterX_LDADD   = libclutil.la libbufferfilter.la 
-testFilterX_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testFilterX_LDFLAGS = @Eigen3_LIBS@
 testFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
@@ -204,7 +197,7 @@ check_PROGRAMS += testFilterY
 testFilterY_SOURCES = src/Filter/FilterY/testFilterY.cc \
 					  src/Filter/referenceImplementation.cc
 testFilterY_LDADD   = libclutil.la libbufferfilter.la 
-testFilterY_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testFilterY_LDFLAGS = @Eigen3_LIBS@
 testFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
@@ -217,7 +210,7 @@ testDecimateFilterX_SOURCES = \
 	  src/Filter/DecimateFilterX/testDecimateFilterX.cc \
 	  src/Filter/referenceImplementation.cc
 testDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la 
-testDecimateFilterX_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testDecimateFilterX_LDFLAGS = @Eigen3_LIBS@
 testDecimateFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 check_PROGRAMS += testDecimateFilterY
@@ -225,7 +218,7 @@ testDecimateFilterY_SOURCES = \
 	  src/Filter/DecimateFilterY/testDecimateFilterY.cc \
 	  src/Filter/referenceImplementation.cc
 testDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
-testDecimateFilterY_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testDecimateFilterY_LDFLAGS = @Eigen3_LIBS@
 testDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
@@ -236,7 +229,7 @@ testDecimateTripleFilterX_SOURCES = \
 	  src/Filter/DecimateTripleFilterX/test.cc \
 	  src/Filter/referenceImplementation.cc
 testDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la 
-testDecimateTripleFilterX_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testDecimateTripleFilterX_LDFLAGS = @Eigen3_LIBS@
 testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
@@ -247,7 +240,7 @@ testQuadToComplex_SOURCES = \
 	  src/Filter/QuadToComplex/test.cc \
 	  src/Filter/referenceImplementation.cc
 testQuadToComplex_LDADD   = libclutil.la libbufferfilter.la 
-testQuadToComplex_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testQuadToComplex_LDFLAGS = @Eigen3_LIBS@
 testQuadToComplex_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 check_PROGRAMS += testQuadToComplexDecimateFilterY
@@ -255,7 +248,7 @@ testQuadToComplexDecimateFilterY_SOURCES = \
 	  src/Filter/QuadToComplexDecimateFilterY/test.cc \
 	  src/Filter/referenceImplementation.cc
 testQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la
-testQuadToComplexDecimateFilterY_LDFLAGS = @CL_LIBS@ @opencv_LIBS@ @Eigen3_LIBS@
+testQuadToComplexDecimateFilterY_LDFLAGS = @Eigen3_LIBS@
 testQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 

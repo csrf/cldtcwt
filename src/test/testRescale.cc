@@ -14,7 +14,7 @@
 
 #include <stdexcept>
 
-#include <highgui.h>
+#include "util/clUtilCV.h"
 
 
 std::tuple<cl::Platform, std::vector<cl::Device>, 
