@@ -6,7 +6,9 @@
 
 #include "util/clUtil.h"
 
-#include <sys/timeb.h>
+#include <chrono>
+typedef std::chrono::duration<double>
+    DurationSeconds;
 
 #include "PadX/padX.h"
 #include "PadY/padY.h"
@@ -52,9 +54,8 @@ int main()
 
         {
             // Run, timing
-            timeb start, end;
             const int numFrames = 1000;
-            ftime(&start);
+            auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numFrames; ++n) {
                 padX(cq, input);
@@ -62,11 +63,10 @@ int main()
             }
 
             cq.finish();
-            ftime(&end);
+            auto end = std::chrono::steady_clock::now();
 
             // Work out what the difference between these is
-            double t = end.time - start.time 
-                     + 0.001 * (end.millitm - start.millitm);
+            double t = DurationSeconds(end - start).count();
 
             std::cout << "FilterX: " 
                     << (t / numFrames * 1000) << " ms" << std::endl;
@@ -74,9 +74,8 @@ int main()
 
         {
             // Run, timing
-            timeb start, end;
             const int numFrames = 1000;
-            ftime(&start);
+            auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numFrames; ++n) {
                 padY(cq, input);
@@ -84,11 +83,10 @@ int main()
             }
 
             cq.finish();
-            ftime(&end);
+            auto end = std::chrono::steady_clock::now();
 
             // Work out what the difference between these is
-            double t = end.time - start.time 
-                     + 0.001 * (end.millitm - start.millitm);
+            double t = DurationSeconds(end - start).count();
 
             std::cout << "FilterY: " 
                     << (t / numFrames * 1000) << " ms" << std::endl;
@@ -98,9 +96,8 @@ int main()
 
         {
             // Run, timing
-            timeb start, end;
             const int numFrames = 1000;
-            ftime(&start);
+            auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numFrames; ++n) {
                 padX(cq, input);
@@ -110,11 +107,10 @@ int main()
             }
 
             cq.finish();
-            ftime(&end);
+            auto end = std::chrono::steady_clock::now();
 
             // Work out what the difference between these is
-            double t = end.time - start.time 
-                     + 0.001 * (end.millitm - start.millitm);
+            double t = DurationSeconds(end - start).count();
 
             std::cout << "Both: " 
                     << (t / numFrames * 1000) << " ms" << std::endl;

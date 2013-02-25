@@ -6,7 +6,9 @@
 
 #include "util/clUtil.h"
 
-#include <sys/timeb.h>
+#include <chrono>
+typedef std::chrono::duration<double>
+    DurationSeconds;
 
 #include "decimateFilterX.h"
 #include "../PadX/padX.h"
@@ -42,9 +44,8 @@ int main()
 
         {
             // Run, timing
-            timeb start, end;
             const int numFrames = 1000;
-            ftime(&start);
+            auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numFrames; ++n) {
                 padX(cq, input);
@@ -52,13 +53,12 @@ int main()
             }
 
             cq.finish();
-            ftime(&end);
+            auto end = std::chrono::steady_clock::now();
 
             // Work out what the difference between these is
-            double t = end.time - start.time 
-                     + 0.001 * (end.millitm - start.millitm);
+            double t = DurationSeconds(end - start).count();
 
-            std::cout << "FilterX: " 
+            std::cout << "DecimateFilterX: " 
                     << (t / numFrames * 1000) << " ms" << std::endl;
         }
     }

@@ -11,8 +11,6 @@
 #include "DTCWT/dtcwt.h"
 #include <iomanip>
 
-#include <sys/timeb.h>
-
 #include <cmath>
 #include <stdexcept>
 
