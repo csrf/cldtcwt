@@ -67,7 +67,7 @@ void Calculator::operator() (ImageBuffer<cl_float>& input,
                              const std::vector<cl::Event>& waitEvents)
 {
     // Transform
-    dtcwt(commandQueue, input, dtcwtTemps, dtcwtOut);
+    dtcwt(commandQueue, input, dtcwtTemps, dtcwtOut, waitEvents);
 
     // Calculate energy
     for (int l = 0; l < energyMaps.size(); ++l)
