@@ -95,6 +95,7 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     imageToImageBuffer_(cq_, imageGreyscale_, bufferGreyscale_,
                         {imageGreyscaleDone_}, &bufferGreyscaleDone_);
+    cq_.finish();
 
     calculator_(bufferGreyscale_, {bufferGreyscaleDone_});
 
