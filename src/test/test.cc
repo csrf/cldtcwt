@@ -19,9 +19,41 @@ typedef std::chrono::duration<double, std::milli>
 #include <highgui.h>
 #include "KeypointDescriptor/extractDescriptors.h"
 
+#include <sstream>
 
-int main()
+template <typename T>
+T readStr(const char* string)
 {
+    std::istringstream s(string);
+
+    T result;
+    s >> result;
+    return result;
+}
+
+
+int main(int argc, const char* argv[])
+{
+    // Measure the speed of the DTCWT, defaulting to these parameters:
+    size_t width = 1280, height = 720, numLevels = 6, numIterations = 1000;
+
+    // First and second arguments: width and height
+    if (argc > 2) {
+        width = readStr<size_t>(argv[1]);
+        height = readStr<size_t>(argv[2]);
+    }
+
+    // Third argument: number of levels to calculate
+    if (argc > 3) {
+        numLevels = readStr<size_t>(argv[3]);
+    }
+
+    // Fourth argument: number of iterations
+    if (argc > 4) {
+        numIterations = readStr<size_t>(argv[4]);
+    }
+
+
     try {
 
         CLContext context;
@@ -30,7 +62,6 @@ int main()
         cl::CommandQueue cq(context.context, context.devices[0]);
 
 
-        const int numLevels = 6;
         const int startLevel = 1;
 
 
@@ -41,7 +72,7 @@ int main()
         cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
         ImageBuffer<cl_float> inImage { 
             context.context, CL_MEM_READ_WRITE,
-            /*bmp.cols*/1280, /*bmp.rows*/720, 16, 32
+            width, height, 16, 32
         };
 
         // Upload the data
@@ -55,7 +86,6 @@ int main()
               0, 0,
               bmp.ptr());*/
 
-        std::cout << bmp.rows << " " << bmp.cols << std::endl;
         std::cout << "Creating Dtcwt" << std::endl;
 
         Dtcwt dtcwt(context.context, context.devices);
@@ -70,11 +100,10 @@ int main()
 
         std::cout << "Running DTCWT" << std::endl;
 
-        const int numFrames = 100;
         auto start = std::chrono::steady_clock::now();
 
         dtcwt(cq, inImage, env, out);
-        for (int n = 0; n < (numFrames-1); ++n) 
+        for (int n = 0; n < (numIterations-1); ++n) 
             dtcwt(cq, inImage, env, out); //, out.subbands.back().done);
         cq.finish();
 
@@ -83,10 +112,10 @@ int main()
         // Work out what the difference between these is
         double t = DurationMilliseconds(end - start).count();
 
-        std::cout << (numFrames / (t / 1000.f))
+        std::cout << (numIterations / (t / 1000.f))
 		  << " fps" << std::endl;
-        std::cout << numFrames << " frames in " 
-                  << t << "s" << std::endl;
+        std::cout << (t / numIterations) << "ms per iteration"
+                  << std::endl;
 
     }
     catch (cl::Error err) {
