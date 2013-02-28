@@ -121,7 +121,7 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
     // Accumulate the counts
     accumulate_(cq, results.counts, results.cumCounts,
                     results.maxListLength,
-                    {}, //results.levelListsDone, 
+                    results.levelListsDone, 
                     &results.cumCountsDone);
 
     // Concatenate the maximum positions
