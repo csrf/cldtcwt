@@ -1,7 +1,4 @@
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <tuple>
 
 #define __CL_ENABLE_EXCEPTIONS
 #include "CL/cl.hpp"
@@ -15,9 +12,6 @@ typedef std::chrono::duration<double, std::milli>
     DurationMilliseconds;
 
 #include <stdexcept>
-
-#include <highgui.h>
-#include "KeypointDescriptor/extractDescriptors.h"
 
 #include <sstream>
 
@@ -68,23 +62,10 @@ int main(int argc, const char* argv[])
         //-----------------------------------------------------------------
         // Starting test code
   
-        // Read in image
-        cv::Mat bmp = cv::imread("testDTCWT.bmp", 0);
         ImageBuffer<cl_float> inImage { 
             context.context, CL_MEM_READ_WRITE,
             width, height, 16, 32
         };
-
-        // Upload the data
-/*        cq.enqueueWriteBufferRect(inImage.buffer(), CL_TRUE,
-              makeCLSizeT<3>({sizeof(float) * inImage.padding(),
-                              inImage.padding(), 0}),
-              makeCLSizeT<3>({0,0,0}),
-              makeCLSizeT<3>({inImage.width() * sizeof(float),
-                              inImage.height(), 1}),
-              inImage.stride() * sizeof(float), 0,
-              0, 0,
-              bmp.ptr());*/
 
         std::cout << "Creating Dtcwt" << std::endl;
 
@@ -104,7 +85,7 @@ int main(int argc, const char* argv[])
 
         dtcwt(cq, inImage, env, out);
         for (int n = 0; n < (numIterations-1); ++n) 
-            dtcwt(cq, inImage, env, out); //, out.subbands.back().done);
+            dtcwt(cq, inImage, env, out);
         cq.finish();
 
         auto end = std::chrono::steady_clock::now();

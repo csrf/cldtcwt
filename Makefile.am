@@ -184,8 +184,6 @@ speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la
 noinst_PROGRAMS += testDTCWT
 testDTCWT_SOURCES = src/test/test.cc 
 testDTCWT_LDADD   = libdtcwt.la libclutilcv.la
-testDTCWT_LDFLAGS = @opencv_LIBS@
-testDTCWT_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
