@@ -29,6 +29,92 @@ static size_t decimateDim(size_t inSize)
 
 
 
+
+// LevelTemps functions
+
+LevelTemps::LevelTemps()
+    : inputWidth_(0), inputHeight_(0), 
+      outputWidth_(0), outputHeight_(0), 
+      isLevelOne_(false),
+      producesOutputs_(false)
+{
+    // Default constructor, so that an uninitialised DtcwtTemps
+    // will not cause problems if declared on its own.
+}
+
+
+
+LevelTemps::LevelTemps(cl::Context& context,
+                       size_t inputWidth, size_t inputHeight,
+                       size_t padding, size_t alignment,
+                       bool isLevelOne,
+                       bool producesOutputs)
+ : inputWidth_(inputWidth), inputHeight_(inputHeight), 
+   isLevelOne_(isLevelOne), producesOutputs_(producesOutputs)
+{
+    // Dimensions provided are for the input
+    
+    // If we're at level one, we do not decimate, so multiply back up
+    // This way we also deal with odd-sized images
+    outputWidth_  = (isLevelOne_? 2 : 1) * decimateDim(inputWidth_);
+    outputHeight_ = (isLevelOne_? 2 : 1) * decimateDim(inputHeight_);
+
+    // x-filtered version
+    lo = ImageBuffer<cl_float>
+                    (context, CL_MEM_READ_WRITE,
+                     outputWidth_, inputHeight_, 
+                     padding, alignment);
+
+    // x & y filtered version
+    lolo = ImageBuffer<cl_float>
+                      (context, CL_MEM_READ_WRITE,
+                       outputWidth_, outputHeight_, 
+                       padding, alignment);
+ 
+    if (producesOutputs_) {
+
+        // These are the versions that have been filtered in the
+        // x-direction (along rows), ready to be filtered along y and
+        // produce outputs.
+        hi = ImageBuffer<cl_float>
+                     (context, CL_MEM_READ_WRITE,
+                      outputWidth_, inputHeight_, 
+                      padding, alignment);
+
+            
+        bp = ImageBuffer<cl_float>
+                     (context, CL_MEM_READ_WRITE,
+                      outputWidth_, inputHeight_, 
+                      padding, alignment);
+
+
+        if (isLevelOne_) {
+            // Level one, when producing outputs, needs some extra
+            // intermediates because complex conversion isn't rolled into
+            // the filter
+            lohi = ImageBuffer<cl_float>
+                         (context, CL_MEM_READ_WRITE,
+                          outputWidth_, outputHeight_, 
+                          padding, alignment);
+
+            hilo = ImageBuffer<cl_float>
+                         (context, CL_MEM_READ_WRITE,
+                          outputWidth_, outputHeight_, 
+                          padding, alignment);
+
+            bpbp = ImageBuffer<cl_float>
+                         (context, CL_MEM_READ_WRITE,
+                          outputWidth_, outputHeight_, 
+                          padding, alignment);
+        }
+
+    }
+}
+
+
+
+
+
 Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
              float scaleFactor) : 
 
@@ -114,78 +200,17 @@ DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight,
     // Allocate space on the graphics card for each of the levels
     
     // 1st level
-    size_t width = imageWidth + imageWidth % 2;
-    size_t height = imageHeight + imageHeight % 2;
+    size_t width = imageWidth;
+    size_t height = imageHeight;
 
-    for (int l = 0; l < numLevels; ++l) {
+    for (int l = 1; l <= numLevels; ++l) {
 
-        // Decimate if we're beyond the first stage, otherwise just make
-        // sure we have even width/height
-        size_t newWidth = 
-            (l == 0)? width + width % 2
-                    : decimateDim(width);
+        c.levelTemps.emplace_back(context_, width, height,
+                                  padding_, alignment_,
+                                  l == 1, l >= startLevel);
 
-        size_t newHeight =
-            (l == 0)? height + height % 2
-                    : decimateDim(height);
-
-        c.levelTemps.push_back(LevelTemps());
-
-        // Temps that will be needed whether there's an output or not
-        c.levelTemps.back().lo = ImageBuffer<cl_float>
-                                            (context_, CL_MEM_READ_WRITE,
-                                             newWidth, height, 
-                                             padding_, alignment_);
-
-        c.levelTemps.back().lolo = ImageBuffer<cl_float>
-                                              (context_, CL_MEM_READ_WRITE,
-                                               newWidth, newHeight, 
-                                               padding_, alignment_);
-       
-        // Temps only needed when producing subband outputs
-        if  (l >= startLevel) {
-
-            c.levelTemps.back().hi
-                = ImageBuffer<cl_float>
-                             (context_, CL_MEM_READ_WRITE,
-                              newWidth, height, 
-                              padding_, alignment_);
-
-            
-            c.levelTemps.back().bp
-                = ImageBuffer<cl_float>
-                             (context_, CL_MEM_READ_WRITE,
-                              newWidth, height, 
-                              padding_, alignment_);
-
-
-            // We need more intermediate images if producing outputs
-            // at Level 1
-            if (l == 0) {
-
-                c.levelTemps.back().lohi
-                    = ImageBuffer<cl_float>
-                                 (context_, CL_MEM_READ_WRITE,
-                                  newWidth, newHeight, 
-                                  padding_, alignment_);
-
-                c.levelTemps.back().hilo
-                    = ImageBuffer<cl_float>
-                                 (context_, CL_MEM_READ_WRITE,
-                                  newWidth, newHeight, 
-                                  padding_, alignment_);
-
-                c.levelTemps.back().bpbp
-                    = ImageBuffer<cl_float>
-                                 (context_, CL_MEM_READ_WRITE,
-                                  newWidth, newHeight, 
-                                  padding_, alignment_);
-
-            }
-        }
-
-        width = newWidth;
-        height = newHeight;
+        width = c.levelTemps.back().outputWidth_;
+        height = c.levelTemps.back().outputHeight_;
     }
    
     return c;

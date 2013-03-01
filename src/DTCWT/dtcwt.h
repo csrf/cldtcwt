@@ -24,9 +24,20 @@
 #include <tuple>
 #include <array>
 
+// Forward declaration, so the processor can be used as a friend
+class Dtcwt;
+class DtcwtTemps;
+class DtcwtOutput;
 
-// Temporary images needed only when the level produces an output 
+// Temporary images used in the production of an output level
 struct LevelTemps {
+
+    LevelTemps();
+    LevelTemps(cl::Context& context,
+               size_t inputWidth, size_t inputHeight,
+               size_t padding, size_t alignment,
+               bool isLevelOne,
+               bool producesOutputs);
 
     // Rows filtered
     ImageBuffer<cl_float> lo, hi, bp;
@@ -42,6 +53,10 @@ struct LevelTemps {
     cl::Event loDone, hiDone, bpDone, 
               loloDone; 
 
+    bool isLevelOne_, producesOutputs_;
+    size_t inputWidth_, inputHeight_;
+    size_t outputWidth_, outputHeight_;
+
 };
 
 
@@ -53,6 +68,11 @@ struct DtcwtTemps {
     std::vector<LevelTemps> levelTemps;
 
     cl::Context context_;
+
+    DtcwtOutput createOutputs();
+
+    friend class Dtcwt;
+
 };
 
 
@@ -76,6 +96,12 @@ struct DtcwtOutput {
     DtcwtOutput(const DtcwtTemps& env);
 
     std::vector<LevelOutput> subbands;
+
+    // Constructed by
+    friend class DtcwtTemps;
+
+    // Modified by
+    friend class Dtcwt;
 
 };
 
