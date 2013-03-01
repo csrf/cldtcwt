@@ -138,52 +138,46 @@ void decimateTripleFilterX(__global const float* input,
     // swap the LSB of l.x, and recalculate
     int2 offsetSwapOutputs = filteringStartPositions(l.x ^ 1, pad, twiddleTree2);
 
-    // Convolve 
-    {
-        float v = 0.f;
+    for (int i = 0; i < 3; ++i) {
+        
+        __global float* output;
 
-        // Even filter locations first...
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter0[n] * cache[l.y][TREE_0_OFFSET.s0+n];
-            
-        // ...then odd
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter0[n+1] * cache[l.y][TREE_0_OFFSET.s1+n];
+        float v = 0.f;
+        if (i == 0) {
+            // Even filter locations first...
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter0[n] * cache[l.y][TREE_0_OFFSET.s0+n];
+                
+            // ...then odd
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter0[n+1] * cache[l.y][TREE_0_OFFSET.s1+n];
+
+            output = output0;
+        } else if (i == 1) {
+            // Even filter locations first...
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter1[n] * cache[l.y][TREE_1_OFFSET.s0+n];
+                
+            // ...then odd
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter1[n+1] * cache[l.y][TREE_1_OFFSET.s1+n];
+
+            output = output1;
+        } else {
+            // Even filter locations first...
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter2[n] * cache[l.y][TREE_2_OFFSET.s0+n];
+                
+            // ...then odd
+            for (int n = 0; n < FILTER_LENGTH; n += 2) 
+                v += filter2[n+1] * cache[l.y][TREE_2_OFFSET.s1+n];
+
+            output = output2;
+        }
 
         // Write it to the output
-        output0[g.y*outStride + g.x] = v;
-    }
+        output[g.y*outStride + g.x] = v;
 
-    // Convolve 
-    {
-        float v = 0.f;
-
-        // Even filter locations first...
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter1[n] * cache[l.y][TREE_1_OFFSET.s0+n];
-            
-        // ...then odd
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter1[n+1] * cache[l.y][TREE_1_OFFSET.s1+n];
-
-        // Write it to the output
-        output1[g.y*outStride + g.x] = v;
-    }
-
-    // Convolve 
-    {
-        float v = 0.f;
-
-        // Even filter locations first...
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter2[n] * cache[l.y][TREE_2_OFFSET.s0+n];
-            
-        // ...then odd
-        for (int n = 0; n < FILTER_LENGTH; n += 2) 
-            v += filter2[n+1] * cache[l.y][TREE_2_OFFSET.s1+n];
-
-        // Write it to the output
-        output2[g.y*outStride + g.x] = v;
     }
 }
 
