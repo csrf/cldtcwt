@@ -40,7 +40,7 @@ int main(int argc, char** argv)
         // This should make sure all code gets exercised, including the
         // lolo decimated
         const int numLevels = 3;
-        const int startLevel = 0;
+        const int startLevel = 1;
 
         // Read the image in
         cv::Mat bmp = cv::imread(filename, 0);
@@ -61,11 +61,12 @@ int main(int argc, char** argv)
         Dtcwt dtcwt(context.context, context.devices);
 
         // Create the intermediate storage for the DTCWT
-        DtcwtTemps env = dtcwt.createContext(floatBmp.cols, floatBmp.rows,
-                                             numLevels, startLevel);
+        DtcwtTemps env {context.context,
+                        floatBmp.cols, floatBmp.rows,
+                        startLevel, numLevels};
 
         // Create the outputs storage for the DTCWT
-        DtcwtOutput sbOutputs = {env};
+        DtcwtOutput sbOutputs = env.createOutputs();
 
         // Perform DTCWT
         dtcwt(cq, inImage, env, sbOutputs);
@@ -78,11 +79,11 @@ int main(int argc, char** argv)
                 // Construct output name in format 
                 // <original name>.<level>.<subband number>
                 std::ostringstream ss;
-                ss << filename << "." << l << "." << sb;
+                ss << filename << "." << (l + sbOutputs.startLevel()) << "." << sb;
 
                 saveComplexImage(ss.str(), 
                                  cq, 
-                                 sbOutputs.subbands[l].sb[sb]);
+                                 sbOutputs[l][sb]);
             }
         }
 

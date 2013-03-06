@@ -57,10 +57,11 @@ int main()
 
         Dtcwt dtcwt(context.context, context.devices);
 
-        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
-                                           numLevels, startLevel);
+        DtcwtTemps env {context.context, 
+                        bmp.cols, bmp.rows,
+                        startLevel, numLevels};
 
-        DtcwtOutput sbOutputs = {env};
+        DtcwtOutput sbOutputs = env.createOutputs();
 
 
         std::cout << "Running DTCWT" << std::endl;
@@ -73,12 +74,12 @@ int main()
 
         std::cout << "Saving image" << std::endl;
 
-        saveComplexImage("sb0.dat", cq, sbOutputs.subbands[0].sb[0]);
-        saveComplexImage("sb1.dat", cq, sbOutputs.subbands[0].sb[1]);
-        saveComplexImage("sb2.dat", cq, sbOutputs.subbands[0].sb[2]);
-        saveComplexImage("sb3.dat", cq, sbOutputs.subbands[0].sb[3]);
-        saveComplexImage("sb4.dat", cq, sbOutputs.subbands[0].sb[4]);
-        saveComplexImage("sb5.dat", cq, sbOutputs.subbands[0].sb[5]);
+        saveComplexImage("sb0.dat", cq, sbOutputs[0][0]);
+        saveComplexImage("sb1.dat", cq, sbOutputs[0][1]);
+        saveComplexImage("sb2.dat", cq, sbOutputs[0][2]);
+        saveComplexImage("sb3.dat", cq, sbOutputs[0][3]);
+        saveComplexImage("sb4.dat", cq, sbOutputs[0][4]);
+        saveComplexImage("sb5.dat", cq, sbOutputs[0][5]);
 
     }
     catch (cl::Error err) {

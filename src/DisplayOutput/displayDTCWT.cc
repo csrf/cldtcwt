@@ -26,8 +26,8 @@ typedef std::chrono::duration<double, std::milli>
 
 int main(void)
 {
-    //const size_t width = 1280, height = 720;
-    const size_t width = 640, height = 480;
+    const size_t width = 1280, height = 720;
+    //const size_t width = 640, height = 480;
     Viewer viewer(width, height);
 
 
@@ -99,7 +99,7 @@ int main(void)
 
                 viewer.update();
 
-                // Transfer to the ready queue
+                    // Transfer to the ready queue
                 ready.push(ci);
                 processing.pop();
                 

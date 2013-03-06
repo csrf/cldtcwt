@@ -113,6 +113,205 @@ LevelTemps::LevelTemps(cl::Context& context,
 
 
 
+Subbands::Subbands()
+{}
+
+
+
+Subbands::Subbands(cl::Context& context,
+                   size_t w, size_t h)
+{
+    // Create all the complex images at the right size
+    for (auto& sb: subbands_)
+        sb = ImageBuffer<Complex<cl_float>>
+              (context, CL_MEM_READ_WRITE,
+               w, h, 0, 1);
+}
+
+
+
+ImageBuffer<Complex<cl_float>>& Subbands::subband(int n)
+{
+    return subbands_[n];
+}
+
+
+
+const ImageBuffer<Complex<cl_float>>& Subbands::subband(int n) const
+{
+    return subbands_[n];
+}
+
+
+
+ImageBuffer<Complex<cl_float>>& Subbands::operator[](int n)
+{
+    return subbands_[n];
+}
+
+
+
+const ImageBuffer<Complex<cl_float>>& Subbands::operator[](int n) const
+{
+    return subbands_[n];
+}
+
+
+
+size_t Subbands::width() const
+{
+    return subbands_[0].width();
+}
+
+
+size_t Subbands::height() const
+{
+    return subbands_[0].height();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Create the set of images etc needed to perform a DTCWT calculation
+DtcwtTemps::DtcwtTemps(cl::Context& context,
+                       size_t imageWidth, size_t imageHeight, 
+                       size_t startLevel, size_t numLevels)
+  : context_(context),
+    width_(imageWidth), height_(imageHeight),
+    startLevel_(startLevel), numLevels_(numLevels)
+{
+    // Make space in advance for the temps
+    levelTemps_.reserve(numLevels);
+
+    // Allocate space on the graphics card for each of the levels
+    
+    // 1st level
+    size_t width  = imageWidth;
+    size_t height = imageHeight;
+
+    for (int l = 1; l < (startLevel + numLevels); ++l) {
+
+        levelTemps_.emplace_back(context_, width, height,
+                                 padding_, alignment_,
+                                 l == 1, l >= startLevel);
+
+        width  = levelTemps_.back().outputWidth_;
+        height = levelTemps_.back().outputHeight_;
+    }
+}
+
+
+
+DtcwtOutput DtcwtTemps::createOutputs()
+{
+    // Construct an output structure, using the sizes we already know
+
+    DtcwtOutput output;
+
+    output.startLevel_ = startLevel_;
+    output.numLevels_ = numLevels_;
+
+    for (const auto& levelTemp: levelTemps_)
+        if (levelTemp.producesOutputs_) {
+
+            output.levels_.emplace_back(context_, 
+                    levelTemp.outputWidth_ / 2,
+                    levelTemp.outputHeight_ / 2);
+
+            // Add a three-long vector to the list of wait events
+            output.doneEvents_.emplace_back(3);
+
+        }
+
+    return output;
+
+}
+
+
+
+
+Subbands& DtcwtOutput::level(int levelNum)
+{
+    return levels_[levelNum-startLevel_];
+}
+
+
+const Subbands& DtcwtOutput::level(int levelNum) const
+{
+    return levels_[levelNum-startLevel_];
+}
+
+
+std::vector<cl::Event> DtcwtOutput::doneEvents(int levelNum)
+{
+    return doneEvents_[levelNum - startLevel_];
+}
+
+
+const std::vector<cl::Event> DtcwtOutput::doneEvents(int levelNum) const
+{
+    return doneEvents_[levelNum - startLevel_];
+}
+
+
+
+Subbands& DtcwtOutput::operator [] (int n)
+{
+    return levels_[n];
+}
+
+
+const Subbands& DtcwtOutput::operator [] (int n) const
+{
+    return levels_[n];
+}
+
+
+std::vector<Subbands>::iterator DtcwtOutput::begin()
+{
+    return levels_.begin();
+}
+
+
+std::vector<Subbands>::const_iterator DtcwtOutput::begin() const
+{
+    return levels_.begin();
+}
+
+
+std::vector<Subbands>::iterator DtcwtOutput::end()
+{
+    return levels_.end();
+}
+
+
+std::vector<Subbands>::const_iterator DtcwtOutput::end() const
+{
+    return levels_.end();
+}
+
+
+
+size_t DtcwtOutput::startLevel() const
+{
+    return startLevel_;
+}
+
+
+size_t DtcwtOutput::numLevels() const
+{
+    return numLevels_;
+}
+
+
 
 
 Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
@@ -153,98 +352,44 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
 
 
 
-DtcwtOutput::DtcwtOutput(const DtcwtTemps& env)
-{
-    for (int l = env.startLevel; l < env.numLevels; ++l) {
-
-        const ImageBuffer<cl_float>& baseImage = env.levelTemps[l].lolo;
-
-        const size_t width = baseImage.width() / 2,
-                    height = baseImage.height() / 2;
-
-        LevelOutput sbs;
-
-        // Create all the complex images at the right size
-        for (auto& sb: sbs.sb)
-            sb = ImageBuffer<Complex<cl_float>>
-                  (env.context_, CL_MEM_READ_WRITE,
-                   width, height, 
-                   0, 1);
-
-        // Add another set of outputs
-        subbands.push_back(sbs);
-
-    }
-}
-
-
-
-// Create the set of images etc needed to perform a DTCWT calculation
-DtcwtTemps Dtcwt::createContext(size_t imageWidth, size_t imageHeight, 
-                                  size_t numLevels, size_t startLevel)
-{
-    DtcwtTemps c;
-
-    // Copy settings to the saved structure
-    c.context_ = context_;
-
-    c.width = imageWidth;
-    c.height = imageHeight;
-
-    c.numLevels = numLevels;
-    c.startLevel = startLevel;
-
-    // Make space in advance for the temps
-    c.levelTemps.reserve(numLevels);
-
-    // Allocate space on the graphics card for each of the levels
-    
-    // 1st level
-    size_t width = imageWidth;
-    size_t height = imageHeight;
-
-    for (int l = 1; l <= numLevels; ++l) {
-
-        c.levelTemps.emplace_back(context_, width, height,
-                                  padding_, alignment_,
-                                  l == 1, l >= startLevel);
-
-        width = c.levelTemps.back().outputWidth_;
-        height = c.levelTemps.back().outputHeight_;
-    }
-   
-    return c;
-}
-
 
 
 void Dtcwt::operator() (cl::CommandQueue& commandQueue,
                         ImageBuffer<cl_float>& image, 
-                        DtcwtTemps& env,
-                        DtcwtOutput& subbandOutputs,
+                        DtcwtTemps& temps,
+                        DtcwtOutput& output,
                         const std::vector<cl::Event>& waitEvents)
 {
-    for (int l = 0; l < env.numLevels; ++l) {
+    int outputIdx = 0;
+
+    for (int l = 0; l < temps.levelTemps_.size(); ++l) {
 
         if (l == 0) {
 
             filter(commandQueue, image, waitEvents,
-                   env.levelTemps[l], 
-                   (env.startLevel == 0) ? 
-                       &subbandOutputs.subbands[0]
+                   temps.levelTemps_[l], 
+                   temps.levelTemps_[l].producesOutputs_? 
+                       &output.levels_[0]
+                     : nullptr,
+                   temps.levelTemps_[l].producesOutputs_? 
+                       &output.doneEvents_[0]
                      : nullptr);
 
         } else {
 
             decimateFilter(commandQueue, 
-                           env.levelTemps[l-1].lolo, 
-                               {env.levelTemps[l-1].loloDone},
-                           env.levelTemps[l], 
-                           (l >= env.startLevel) ? 
-                               &subbandOutputs.subbands[l - env.startLevel]
-                             : nullptr);
+                           temps.levelTemps_[l-1].lolo, 
+                               {temps.levelTemps_[l-1].loloDone},
+                           temps.levelTemps_[l], 
+                           temps.levelTemps_[l].producesOutputs_? 
+                               &output.levels_[outputIdx] : nullptr,
+                           temps.levelTemps_[l].producesOutputs_? 
+                               &output.doneEvents_[outputIdx] : nullptr);
 
         }
+        
+        if (temps.levelTemps_[l].producesOutputs_)
+            ++outputIdx;
 
     }
 
@@ -256,8 +401,13 @@ void Dtcwt::operator() (cl::CommandQueue& commandQueue,
 void Dtcwt::filter(cl::CommandQueue& commandQueue,
                    ImageBuffer<cl_float>& xx, 
                    const std::vector<cl::Event>& xxEvents,
-                   LevelTemps& levelTemps, LevelOutput* subbands)
+                   LevelTemps& levelTemps, 
+                   Subbands* subbands,
+                   std::vector<cl::Event>* events)
 {
+    // Events are the events which, when done, signal that the Subband
+    // outputs are complete
+
     // Definitely need to do this padding, whether outputs or not
     cl::Event xxPadded;
     padX(commandQueue, xx, xxEvents, &xxPadded);
@@ -298,20 +448,20 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
         // Create events that, when all done signify everything about this stage
         // is complete
-        subbands->done = std::vector<cl::Event>(3);
+        *events = std::vector<cl::Event>(3);
 
         // ...and generate subband outputs.
         quadToComplex(commandQueue, levelTemps.lohi, 
-                      subbands->sb[2], subbands->sb[3],
-                      {levelTemps.lohiDone}, &subbands->done[0]); 
+                      subbands->subband(2), subbands->subband(3),
+                      {levelTemps.lohiDone}, &(*events)[0]); 
 
         quadToComplex(commandQueue, levelTemps.hilo, 
-                      subbands->sb[0], subbands->sb[5],
-                      {levelTemps.hiloDone}, &subbands->done[1]); 
+                      subbands->subband(0), subbands->subband(5),
+                      {levelTemps.hiloDone}, &(*events)[1]); 
 
         quadToComplex(commandQueue, levelTemps.bpbp, 
-                      subbands->sb[1], subbands->sb[4],
-                      {levelTemps.bpbpDone}, &subbands->done[2]); 
+                      subbands->subband(1), subbands->subband(4),
+                      {levelTemps.bpbpDone}, &(*events)[2]); 
  
     }
 }
@@ -320,8 +470,13 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
                            ImageBuffer<cl_float>& xx, 
                            const std::vector<cl::Event>& xxEvents,
-                           LevelTemps& levelTemps, LevelOutput* subbands)
+                           LevelTemps& levelTemps, 
+                           Subbands* subbands,
+                           std::vector<cl::Event>* events)
 {
+    // Events are the events which, when done, signal that the Subband
+    // outputs are complete
+
     // Definitely need to do this padding, whether outputs or not
     cl::Event xxPadded;
     padX(commandQueue, xx, xxEvents, &xxPadded);
@@ -350,7 +505,7 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // Create events that, when all done signify everything about this stage
         // is complete
-        subbands->done = std::vector<cl::Event>(3);
+        //events->resize(3);
 
         cl::Event loPadded, hiPadded, bpPadded;
         padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
@@ -363,16 +518,16 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 
-                subbands->sb[0], subbands->sb[5],
-                {loPadded}, &subbands->done[0]); 
+                subbands->subband(0), subbands->subband(5),
+                {loPadded}, &(*events)[0]); 
 
         q2ch0by(commandQueue, levelTemps.hi, 
-                subbands->sb[2], subbands->sb[3],
-                {hiPadded}, &subbands->done[1]); 
+                subbands->subband(2), subbands->subband(3),
+                {hiPadded}, &(*events)[1]); 
 
         q2ch2by(commandQueue, levelTemps.bp, 
-                subbands->sb[1], subbands->sb[4],
-                {bpPadded}, &subbands->done[2]); 
+                subbands->subband(1), subbands->subband(4),
+                {bpPadded}, &(*events)[2]); 
     }
 }
 

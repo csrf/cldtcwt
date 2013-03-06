@@ -78,9 +78,9 @@ int main(int argc, char** argv)
 
 
         // Create temporaries and outputs for the DTCWT
-        DtcwtTemps env = dtcwt.createContext(bmp.cols, bmp.rows,
-                                           numLevels, startLevel);
-        DtcwtOutput out(env);
+        DtcwtTemps env(context.context, bmp.cols, bmp.rows,
+                                        startLevel, numLevels);
+        DtcwtOutput out = env.createOutputs();
 
         
         // Create output buffer for the descriptors
@@ -93,8 +93,8 @@ int main(int argc, char** argv)
 
 
         // Extract descriptors
-        describer(cq, out.subbands[0], 4.0f,
-                      out.subbands[1], 8.0f,
+        describer(cq, out.level(2), 4.0f,
+                      out.level(3), 8.0f,
                       kplocs, 
                       kpOffsets, 0, 1,
                       output);

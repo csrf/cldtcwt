@@ -65,17 +65,18 @@ InterpMapEigen::InterpMapEigen(cl::Context& context,
 
 
 void InterpMapEigen::operator() (cl::CommandQueue& commandQueue,
-                            const LevelOutput& levelOutput,
+                            const Subbands& subbands,
                             cl::Image2D& energyMap,
+                            const std::vector<cl::Event>& preconditions,
                             cl::Event* doneEvent)
 {
     // Set up all the arguments to the kernel
-    for (int n = 0; n < levelOutput.sb.size(); ++n)
-        kernel_.setArg(n, levelOutput.sb[n].buffer());
-    kernel_.setArg(6, cl_uint(levelOutput.sb[0].stride()));
-    kernel_.setArg(7, cl_uint(levelOutput.sb[0].padding()));
-    kernel_.setArg(8, cl_uint(levelOutput.sb[0].width()));
-    kernel_.setArg(9, cl_uint(levelOutput.sb[0].height()));
+    for (int n = 0; n < 6; ++n)
+        kernel_.setArg(n, subbands[n].buffer());
+    kernel_.setArg(6, cl_uint(subbands[0].stride()));
+    kernel_.setArg(7, cl_uint(subbands[0].padding()));
+    kernel_.setArg(8, cl_uint(subbands.width()));
+    kernel_.setArg(9, cl_uint(subbands.height()));
 
     kernel_.setArg(10, energyMap);
 
@@ -90,7 +91,7 @@ void InterpMapEigen::operator() (cl::CommandQueue& commandQueue,
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
                                       globalSize,
                                       {wgSize, wgSize},
-                                      &levelOutput.done, doneEvent);
+                                      &preconditions, doneEvent);
 }
 
 

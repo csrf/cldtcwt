@@ -44,19 +44,20 @@ EnergyMapEigen::EnergyMapEigen(cl::Context& context,
 
 
 void EnergyMapEigen::operator() (cl::CommandQueue& commandQueue,
-                            const LevelOutput& levelOutput,
+                            const Subbands& subbands,
                             cl::Image2D& energyMap,
+                            const std::vector<cl::Event>& preconditions,
                             cl::Event* doneEvent)
 {
     // Set up all the arguments to the kernel
-    for (int n = 0; n < levelOutput.sb.size(); ++n)
-        kernel_.setArg(n, levelOutput.sb[n].buffer());
+    for (int n = 0; n < 6; ++n)
+        kernel_.setArg(n, subbands[n].buffer());
 
     int n = 6;
-    kernel_.setArg(n++, cl_uint(levelOutput.sb[0].stride()));
-    kernel_.setArg(n++, cl_uint(levelOutput.sb[0].padding()));
-    kernel_.setArg(n++, cl_uint(levelOutput.sb[0].width()));
-    kernel_.setArg(n++, cl_uint(levelOutput.sb[0].height()));
+    kernel_.setArg(n++, cl_uint(subbands[0].stride()));
+    kernel_.setArg(n++, cl_uint(subbands[0].padding()));
+    kernel_.setArg(n++, cl_uint(subbands.width()));
+    kernel_.setArg(n++, cl_uint(subbands.height()));
 
     kernel_.setArg(n++, energyMap);
 
@@ -71,7 +72,7 @@ void EnergyMapEigen::operator() (cl::CommandQueue& commandQueue,
     commandQueue.enqueueNDRangeKernel(kernel_, cl::NullRange,
                                       globalSize,
                                       {wgSize, wgSize},
-                                      &levelOutput.done, doneEvent);
+                                      &preconditions, doneEvent);
 }
 
 

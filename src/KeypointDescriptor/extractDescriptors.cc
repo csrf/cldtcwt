@@ -80,7 +80,7 @@ Interpolator::Interpolator(cl::Context& context,
 
 void Interpolator::operator() 
                (cl::CommandQueue& cq,
-                const LevelOutput& subbands,
+                const Subbands& subbands,
                 const cl::Buffer& locations,
                 float scale,
                 const cl::Buffer& kpOffsets,
@@ -91,16 +91,16 @@ void Interpolator::operator()
                 cl::Event* doneEvent)
 {
     // Set subband arguments
-    kernel_.setArg(9, subbands.sb[0].buffer());
-    kernel_.setArg(10, subbands.sb[1].buffer());
-    kernel_.setArg(11, subbands.sb[2].buffer());
-    kernel_.setArg(12, subbands.sb[3].buffer());
-    kernel_.setArg(13, subbands.sb[4].buffer());
-    kernel_.setArg(14, subbands.sb[5].buffer());
-    kernel_.setArg(15, cl_uint(subbands.sb[0].padding()));
-    kernel_.setArg(16, cl_uint(subbands.sb[0].stride()));
-    kernel_.setArg(17, cl_uint(subbands.sb[0].width()));
-    kernel_.setArg(18, cl_uint(subbands.sb[0].height()));
+    kernel_.setArg(9,  subbands[0].buffer());
+    kernel_.setArg(10, subbands[1].buffer());
+    kernel_.setArg(11, subbands[2].buffer());
+    kernel_.setArg(12, subbands[3].buffer());
+    kernel_.setArg(13, subbands[4].buffer());
+    kernel_.setArg(14, subbands[5].buffer());
+    kernel_.setArg(15, cl_uint(subbands[0].padding()));
+    kernel_.setArg(16, cl_uint(subbands[0].stride()));
+    kernel_.setArg(17, cl_uint(subbands[0].width()));
+    kernel_.setArg(18, cl_uint(subbands[0].height()));
 
     // Set descriptor location arguments relative to the centre of the 
     // image.  scale should be the number of original image pixels per 
@@ -115,17 +115,13 @@ void Interpolator::operator()
     // Set output argument
     kernel_.setArg(8, output);
 
-    // Wait for the subbands to be done too
-    std::copy(subbands.done.begin(), subbands.done.end(),
-              std::back_inserter(waitEvents));
-
     // Enqueue the kernel
     cl::NDRange workgroupSize = {1, diameter_+4, diameter_+4};
     cl::NDRange globalSize = {maxNumKPs, diameter_+4, diameter_+4};
 
     cq.enqueueNDRangeKernel(kernel_, cl::NullRange,
                             globalSize, workgroupSize,
-                            &subbands.done, doneEvent);    
+                            &waitEvents, doneEvent);    
 }
 
 
@@ -160,9 +156,9 @@ DescriptorExtracter::DescriptorExtracter
 
 void DescriptorExtracter::operator() 
                (cl::CommandQueue& cq,
-                const LevelOutput& fineSubbands,   
+                const Subbands& fineSubbands,   
                 float fineScale,
-                const LevelOutput& coarseSubbands,
+                const Subbands& coarseSubbands,
                 float coarseScale,
                 const cl::Buffer& locations,
                 const cl::Buffer& kpOffsets,

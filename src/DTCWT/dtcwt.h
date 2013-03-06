@@ -61,41 +61,57 @@ struct LevelTemps {
 
 
 
-struct DtcwtTemps {
-    size_t width, height;
-    int numLevels, startLevel;
-
-    std::vector<LevelTemps> levelTemps;
-
-    cl::Context context_;
-
-    DtcwtOutput createOutputs();
+class DtcwtTemps {
 
     friend class Dtcwt;
 
+private:
+    cl::Context context_;
+
+    size_t width_, height_;
+    int numLevels_, startLevel_;
+
+    size_t padding_= 16,
+           alignment_ = 32;
+
+    std::vector<LevelTemps> levelTemps_;
+
+public:
+    DtcwtOutput createOutputs();
+
+    DtcwtTemps(cl::Context& context,
+               size_t imageWidth, size_t imageHeight, 
+               size_t startLevel, size_t numLevels);
+    DtcwtTemps() = default;
+};
+
+
+class Subbands {
+
+    std::array<ImageBuffer<Complex<cl_float>>, 6> 
+        subbands_;
+
+public:
+
+    Subbands();
+    Subbands(cl::Context& context, 
+             size_t width, size_t height);
+
+    ImageBuffer<Complex<cl_float>>& subband(int n);
+    const ImageBuffer<Complex<cl_float>>& subband(int n) const;
+
+    ImageBuffer<Complex<cl_float>>& operator[](int n);
+    const ImageBuffer<Complex<cl_float>>& operator[](int n) const;
+
+    size_t width() const;
+    size_t height() const;
+
 };
 
 
 
-struct LevelOutput {
 
-    // Subband matrices
-    std::array<ImageBuffer<Complex<cl_float>>, 6> sb;
-
-    // List of events: when all done, all of sb are ready to use
-    std::vector<cl::Event> done;
-
-};
-
-
-
-struct DtcwtOutput {
-
-    DtcwtOutput(const DtcwtOutput&) = default;
-    DtcwtOutput() = default;
-    DtcwtOutput(const DtcwtTemps& env);
-
-    std::vector<LevelOutput> subbands;
+class DtcwtOutput {
 
     // Constructed by
     friend class DtcwtTemps;
@@ -103,7 +119,42 @@ struct DtcwtOutput {
     // Modified by
     friend class Dtcwt;
 
+private:
+    std::vector<Subbands> levels_;
+    std::vector<std::vector<cl::Event>> doneEvents_;
+
+    size_t startLevel_;
+    size_t numLevels_;
+
+public:
+
+    // Return the specified level (1 is the first level of the tree,
+    // etc)
+    Subbands& level(int levelNum);
+    const Subbands& level(int levelNum) const;
+
+    // Return the output level (0 is the first level producing a level,
+    // etc)
+    Subbands& operator [] (int n);
+    const Subbands& operator [] (int n) const;
+
+
+    // begin and end allow us to iterator over the levels using for
+    std::vector<Subbands>::iterator begin();
+    std::vector<Subbands>::const_iterator begin() const;
+    std::vector<Subbands>::iterator end();
+    std::vector<Subbands>::const_iterator end() const;
+
+
+    std::vector<cl::Event> doneEvents(int levelNum);
+    const std::vector<cl::Event> doneEvents(int levelNum) const;
+
+    size_t startLevel() const;
+    size_t numLevels() const;
+
 };
+
+
 
 
 
@@ -135,12 +186,17 @@ public:
     void filter(cl::CommandQueue& commandQueue,
                 ImageBuffer<cl_float>& xx, 
                 const std::vector<cl::Event>& xxEvents,
-                LevelTemps& levelTemps, LevelOutput* subbands);
+                LevelTemps& levelTemps, 
+                Subbands* subbands,
+                std::vector<cl::Event>* events);
 
     void decimateFilter(cl::CommandQueue& commandQueue,
                         ImageBuffer<cl_float>& xx, 
                         const std::vector<cl::Event>& xxEvents,
-                        LevelTemps& levelTemps, LevelOutput* subbands);
+                        LevelTemps& levelTemps, 
+                        Subbands* subbands,
+                        std::vector<cl::Event>* events);
+
 public:
 
     Dtcwt() = default;
@@ -158,10 +214,6 @@ public:
                      DtcwtOutput& subbandOutputs,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>());
-
-    // Create the set of images etc needed to perform a DTCWT calculation
-    DtcwtTemps createContext(size_t imageWidth, size_t imageHeight, 
-                           size_t numLevels, size_t startLevel);
 
 };
 

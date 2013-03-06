@@ -18,20 +18,20 @@ Calculator::Calculator(cl::Context& context,
     const int startLevel = 1;
 
     // Create the DTCWT, temporaries and outputs
-    dtcwtTemps = dtcwt.createContext(width, height,
-                                     numLevels, startLevel);
-    dtcwtOut = DtcwtOutput(dtcwtTemps);
+    dtcwtTemps = DtcwtTemps(context, width, height, startLevel, numLevels);
+    dtcwtOut = dtcwtTemps.createOutputs();
 
     // Create energy maps for each output level (other than the last,
     // which is only there for coarse detections)
-    for (int l = 0; l < (dtcwtOut.subbands.size() - 1); ++l) {
+    for (int i = 0;
+             i < (dtcwtOut.numLevels() - 1); ++i) {
         energyMaps.push_back(
             createImage2D(context, 
-                dtcwtOut.subbands[l].sb[0].width(),
-                dtcwtOut.subbands[l].sb[0].height())
+                dtcwtOut.level(dtcwtOut.startLevel() + i).width(),
+                dtcwtOut.level(dtcwtOut.startLevel() + i).height())
         );
 
-        energyMapsDone.push_back(cl::Event());
+        energyMapsDone.emplace_back();
     }
 
 
@@ -71,8 +71,11 @@ void Calculator::operator() (ImageBuffer<cl_float>& input,
 
     // Calculate energy
     for (int l = 0; l < energyMaps.size(); ++l)
-        energyMap(commandQueue, dtcwtOut.subbands[l], 
-                                energyMaps[l], &energyMapsDone[l]);
+        energyMap(commandQueue, 
+                  dtcwtOut.level(dtcwtOut.startLevel() + l), 
+                  energyMaps[l], 
+                  dtcwtOut.doneEvents(dtcwtOut.startLevel() + l), 
+                  &energyMapsDone[l]);
 
     // Adapt to input format of peakDetector, which takes a list of pointers
     std::vector<cl::Image*> emPointers;
@@ -87,8 +90,8 @@ void Calculator::operator() (ImageBuffer<cl_float>& input,
     // Extract the descriptors
     for (size_t l = 0; l < (energyMaps.size() - 1); ++l) {
         descriptorExtracter_(commandQueue, 
-                dtcwtOut.subbands[l], scales[l],      // Subband
-                dtcwtOut.subbands[l+1], scales[l+1],  // Parent subband
+                dtcwtOut[l], scales[l],      // Subband
+                dtcwtOut[l+1], scales[l+1],  // Parent subband
                 peakDetectorResults.list,         // Locations of keypoints
                 peakDetectorResults.cumCounts, l, maxNumKeypoints_, 
                         // Start indices within list of the different 
@@ -148,15 +151,33 @@ cl::Image2D Calculator::getEnergyMapLevel2()
 }
 
 
-std::vector<LevelOutput*> Calculator::levelOutputs(void)
+std::vector<Subbands*> Calculator::levelOutputs(void)
 {
-    std::vector<LevelOutput*> outputs;
+    std::vector<Subbands*> outputs;
 
-    for (auto& l: dtcwtOut.subbands)
+    for (auto& l: dtcwtOut)
         outputs.push_back(&l);
     
     return outputs;
 }
+
+
+
+
+std::vector<std::vector<cl::Event>> Calculator::levelDoneEvents(void) const
+{
+    // Get a list of the events for each level's set of outputs being done
+    // The first index in levelDoneEvents corresponds to the first
+    // in levelOutputs.
+
+    std::vector<std::vector<cl::Event>> events;
+
+    for (int n = 0; n < dtcwtOut.numLevels(); ++n)
+        events.push_back(dtcwtOut.doneEvents(dtcwtOut.startLevel() + n));
+
+    return events;
+}
+
 
 
 size_t Calculator::numFloatsPerKPLocation(void)

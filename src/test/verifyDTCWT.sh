@@ -28,7 +28,7 @@ for l = 1:3
     for sb = 1:6
 
         % Read the data
-        vbY = dlmread(sprintf('testDTCWT.bmp.%d.%d', l-1, sb-1), ',');
+        vbY = dlmread(sprintf('testDTCWT.bmp.%d.%d', l, sb-1), ',');
 
         % Compare to reference implementation
         difference = abs(Yh{l}(:,:,sb) - vbY);

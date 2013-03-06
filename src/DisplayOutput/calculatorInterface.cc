@@ -116,7 +116,8 @@ void CalculatorInterface::processImage(const void* data, size_t length)
                      {imageGreyscaleDone_, glObjsAcquired}, 
                      &imageTextureCLDone_);
 
-    auto subbands = calculator_.levelOutputs();
+    auto levels = calculator_.levelOutputs();
+    auto levelEvents = calculator_.levelDoneEvents();
 
     std::vector<cl::Event> subbandsConverted(2*numSubbands);
 
@@ -124,26 +125,27 @@ void CalculatorInterface::processImage(const void* data, size_t length)
 
     // Wait for the level and the GL objects to be acquired
     std::vector<cl::Event> subbandsInput2Ready = {glObjsAcquired};
-    std::copy(subbands[0]->done.begin(), subbands[0]->done.end(),
+    std::copy(levelEvents[0].begin(), levelEvents[0].end(),
               std::back_inserter(subbandsInput2Ready));
 
     std::vector<cl::Event> subbandsInput3Ready = {glObjsAcquired};
-    std::copy(subbands[1]->done.begin(), subbands[1]->done.end(),
+    std::copy(levelEvents[1].begin(), levelEvents[1].end(),
               std::back_inserter(subbandsInput3Ready));
     
     for (size_t n = 0; n < numSubbands; ++n) {
 
-        absToRGBA_(cq_, subbands[0]->sb[n], 
+        absToRGBA_(cq_, levels[0]->subband(n), 
                         subbandTextures2CL_[n], 4.0f, subbandsInput2Ready, 
                         &subbandsConverted[n]);
 
-        absToRGBA_(cq_, subbands[1]->sb[n], 
+        absToRGBA_(cq_, levels[1]->subband(n), 
                         subbandTextures3CL_[n], 4.0f, subbandsInput3Ready, 
                         &subbandsConverted[numSubbands+n]);
 
     }
 
-    std::vector<cl::Event> energyMapReady = calculator_.keypointLocationEvents();
+    std::vector<cl::Event> energyMapReady 
+        = calculator_.keypointLocationEvents();
     energyMapReady.push_back(glObjsAcquired);
 
     cl::Image2D energyMapInput = calculator_.getEnergyMapLevel2();

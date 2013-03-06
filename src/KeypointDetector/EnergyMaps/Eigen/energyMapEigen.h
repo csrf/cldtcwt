@@ -22,8 +22,9 @@ public:
 
     void
     operator() (cl::CommandQueue& commandQueue,
-           const LevelOutput& levelOutput,
+           const Subbands& levelOutput,
            cl::Image2D& energyMap,
+           const std::vector<cl::Event>& preconditions = {},
            cl::Event* doneEvent = nullptr);
 
 private:

@@ -35,7 +35,7 @@ public:
 
     void
     operator() (cl::CommandQueue& cq,
-                const LevelOutput& subbands,
+                const Subbands& subbands,
                 const cl::Buffer& locations,
                 float scale,
                 const cl::Buffer& kpOffsets,
@@ -74,9 +74,9 @@ public:
 
     void
     operator() (cl::CommandQueue& cq,
-                const LevelOutput& fineSubbands,   
+                const Subbands& fineSubbands,   
                 float fineScale,
-                const LevelOutput& coarseSubbands,
+                const Subbands& coarseSubbands,
                 float coarseScale,
                 const cl::Buffer& locations,
                 const cl::Buffer& kpOffsets,

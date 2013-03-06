@@ -56,7 +56,7 @@ int main(int argc, const char* argv[])
         cl::CommandQueue cq(context.context, context.devices[0]);
 
 
-        const int startLevel = 1;
+        const int startLevel = 2;
 
 
         //-----------------------------------------------------------------
@@ -73,11 +73,12 @@ int main(int argc, const char* argv[])
 
         std::cout << "Creating the DTCWT environment..." << std::endl;
 
-        DtcwtTemps env = dtcwt.createContext(inImage.width(), inImage.height(),
-                                           numLevels, startLevel);
+        DtcwtTemps env {context.context,
+                        inImage.width(), inImage.height(),
+                        startLevel, numLevels};
 
         std::cout << "Creating the subband output images..." << std::endl;
-        DtcwtOutput out(env);
+        DtcwtOutput out = env.createOutputs();
 
         std::cout << "Running DTCWT" << std::endl;
 
