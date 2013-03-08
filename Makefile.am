@@ -157,6 +157,20 @@ verifyBasic_CXXFLAGS = @opencv_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
+# Speed tests for the non-very-used, but helpful for comparison with
+# alternative techniques.
+
+noinst_PROGRAMS += speedTestFilterXWithExtension
+speedTestFilterXWithExtension_SOURCES = \
+	src/SpeedComparisonFilters/FilterXWithSymExtension/speedTest.cc \
+	src/SpeedComparisonFilters/FilterXWithSymExtension/filterX.cc 
+speedTestFilterXWithExtension_LDADD = libclutil.la 
+nodist_speedTestFilterXWithExtension_SOURCES = \
+	src/SpeedComparisonFilters/FilterXWithSymExtension/kernel.cc
+
+
+
+
 noinst_PROGRAMS += speedTestBufferTrial
 speedTestBufferTrial_SOURCES = src/Filter/speedTest.cc 
 speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la 
