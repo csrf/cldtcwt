@@ -5,7 +5,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 dnl We want to make sure objects can be in appropriate directories to avoid 
-AM_INIT_AUTOMAKE([1.11 foreign subdir-objects silent-rules])
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects silent-rules parallel-tests])
 
 LT_INIT
 
