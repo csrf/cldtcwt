@@ -15,7 +15,7 @@ Calculator::Calculator(cl::Context& context,
     maxNumKeypoints_(maxNumKeypoints)
 {
     const int numLevels = 3;
-    const int startLevel = 1;
+    const int startLevel = 2;
 
     // Create the DTCWT, temporaries and outputs
     dtcwtTemps = DtcwtTemps(context, width, height, startLevel, numLevels);
