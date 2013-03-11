@@ -34,6 +34,7 @@ int main(int argc, const char* argv[])
     size_t width = 1280, height = 720, len = 13, numIterations = 1000;
     bool pad = true;
     size_t padding = 16;
+    size_t alignment = 16;
 
     // First and second arguments: width and height
     if (argc > 2) {
@@ -56,6 +57,12 @@ int main(int argc, const char* argv[])
         padding = readStr<size_t>(argv[5]);
     }
 
+    // Sixth argument: Pixels of padding
+    if (argc > 6) {
+        alignment = readStr<size_t>(argv[6]);
+    }
+
+
 
 
     try {
@@ -64,8 +71,6 @@ int main(int argc, const char* argv[])
 
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
-
-        const size_t alignment = 16;
 
         std::vector<float> filter(len, 0.0);
         FilterX filterX(context.context, context.devices, filter,
