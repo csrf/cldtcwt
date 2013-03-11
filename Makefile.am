@@ -168,6 +168,15 @@ speedTestFilterXWithExtension_LDADD = libclutil.la
 nodist_speedTestFilterXWithExtension_SOURCES = \
 	src/SpeedComparisonFilters/FilterXWithSymExtension/kernel.cc
 
+# Again, but this time allowing adjustment of the padding in the buffer
+noinst_PROGRAMS += speedTestFilterXAdjustablePadding
+speedTestFilterXAdjustablePadding_SOURCES = \
+	src/SpeedComparisonFilters/FilterXAdjustablePadding/speedTest.cc \
+	src/SpeedComparisonFilters/FilterXAdjustablePadding/filterX.cc 
+speedTestFilterXAdjustablePadding_LDADD = libclutil.la 
+nodist_speedTestFilterXAdjustablePadding_SOURCES = \
+	src/SpeedComparisonFilters/FilterXAdjustablePadding/kernel.cc
+
 
 
 
