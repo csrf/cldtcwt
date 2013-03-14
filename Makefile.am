@@ -177,6 +177,28 @@ speedTestFilterXAdjustablePadding_LDADD = libclutil.la
 nodist_speedTestFilterXAdjustablePadding_SOURCES = \
 	src/SpeedComparisonFilters/FilterXAdjustablePadding/kernel.cc
 
+# Straightforward copy, to work out how fast we can do the memory transfers
+noinst_PROGRAMS += speedTestCopyImage
+speedTestCopyImage_SOURCES = \
+	src/SpeedComparisonFilters/CopyImage/speedTest.cc \
+	src/SpeedComparisonFilters/CopyImage/copyImage.cc 
+speedTestCopyImage_LDADD = libclutil.la 
+nodist_speedTestCopyImage_SOURCES = \
+	src/SpeedComparisonFilters/CopyImage/kernel.cc
+CLEANFILES += $(nodist_speedTestCopyImage_SOURCES)
+
+# Straightforward copy, to work out how fast we can do the memory transfers
+# Here, rather than bothering with the image format, we just copy the 
+# right amount of data
+noinst_PROGRAMS += speedTestCopyImageLinearly
+speedTestCopyImageLinearly_SOURCES = \
+	src/SpeedComparisonFilters/CopyImageLinearly/speedTest.cc \
+	src/SpeedComparisonFilters/CopyImageLinearly/copyImageLinearly.cc 
+speedTestCopyImageLinearly_LDADD = libclutil.la 
+nodist_speedTestCopyImageLinearly_SOURCES = \
+	src/SpeedComparisonFilters/CopyImageLinearly/kernel.cc
+CLEANFILES += $(nodist_speedTestCopyImageLinearly_SOURCES)
+
 
 
 

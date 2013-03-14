@@ -10,7 +10,7 @@
 typedef std::chrono::duration<double>
     DurationSeconds;
 
-#include "filterX.h"
+#include "copyImage.h"
 
 #include <sstream>
 
@@ -31,7 +31,7 @@ int main(int argc, const char* argv[])
     // image with a 13-long filter.  Average over 1000 runs.
     // Padding is 16 by default.
 
-    size_t width = 1280, height = 720, len = 13, numIterations = 1000;
+    size_t width = 1280, height = 720, numIterations = 1000;
     bool pad = true;
     size_t padding = 16;
     size_t alignment = 16;
@@ -42,24 +42,19 @@ int main(int argc, const char* argv[])
         height = readStr<size_t>(argv[2]);
     }
 
-    // Third argument: filter length
-    if (argc > 3) {
-        len = readStr<size_t>(argv[3]);
-    }
-
     // Fourth argument: number of iterations
-    if (argc > 4) {
-        numIterations = readStr<size_t>(argv[4]);
+    if (argc > 3) {
+        numIterations = readStr<size_t>(argv[3]);
     }
 
     // Fifth argument: Pixels of padding
-    if (argc > 5) {
-        padding = readStr<size_t>(argv[5]);
+    if (argc > 4) {
+        padding = readStr<size_t>(argv[4]);
     }
 
-    // Sixth argument: Pixels of padding
-    if (argc > 6) {
-        alignment = readStr<size_t>(argv[6]);
+    // Sixth argument: Alignment of rows
+    if (argc > 5) {
+        alignment = readStr<size_t>(argv[5]);
     }
 
 
@@ -72,9 +67,7 @@ int main(int argc, const char* argv[])
         // Ready the command queue on the first device to hand
         cl::CommandQueue cq(context.context, context.devices[0]);
 
-        std::vector<float> filter(len, 0.0);
-        FilterX filterX(context.context, context.devices, filter,
-                        padding);
+        CopyImage copyImage(context.context, context.devices, padding);
   
 
         // Create input and output buffers
@@ -91,7 +84,7 @@ int main(int argc, const char* argv[])
             auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numIterations; ++n) 
-                filterX(cq, input, output);
+                copyImage(cq, input, output);
             cq.finish();
 
             auto end = std::chrono::steady_clock::now();
@@ -99,7 +92,7 @@ int main(int argc, const char* argv[])
             // Work out what the difference between these is
             double t = DurationSeconds(end - start).count();
 
-            std::cout << "FilterX: " 
+            std::cout << "CopyImage: " 
                     << (t / numIterations * 1000) << " ms" << std::endl;
         }
 
