@@ -115,7 +115,7 @@ noinst_PROGRAMS += testPyramidSum
 testPyramidSum_SOURCES = src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libkeypoints.la
 
-noinst_PROGRAMS += displayDTCWT
+bin_PROGRAMS = displayDTCWT
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
 					   src/DisplayOutput/VBOBuffer.cc \
@@ -202,9 +202,9 @@ CLEANFILES += $(nodist_speedTestCopyImageLinearly_SOURCES)
 
 
 
-noinst_PROGRAMS += speedTestBufferTrial
-speedTestBufferTrial_SOURCES = src/Filter/speedTest.cc 
-speedTestBufferTrial_LDADD   = libclutil.la libbufferfilter.la 
+bin_PROGRAMS += clDTCWT-SpeedTest-BufferTrial
+clDTCWT_SpeedTest_BufferTrial_SOURCES = src/Filter/speedTest.cc 
+clDTCWT_SpeedTest_BufferTrial_LDADD   = libclutil.la libbufferfilter.la 
 
 noinst_PROGRAMS += speedTestDecimateFilterX
 speedTestDecimateFilterX_SOURCES = \
@@ -226,9 +226,9 @@ speedTestQuadToComplexDecimateFilterY_SOURCES = \
 	   src/Filter/QuadToComplexDecimateFilterY/speedTest.cc 
 speedTestQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
 
-noinst_PROGRAMS += testDTCWT
-testDTCWT_SOURCES = src/test/test.cc 
-testDTCWT_LDADD   = libdtcwt.la libclutilcv.la
+bin_PROGRAMS += clDTCWT-SpeedTest-DTCWT
+clDTCWT_SpeedTest_DTCWT_SOURCES = src/test/test.cc 
+clDTCWT_SpeedTest_DTCWT_LDADD   = libdtcwt.la libclutilcv.la
 
 
 
