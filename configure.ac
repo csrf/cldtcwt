@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 
-AC_INIT([test],[1.0],[timothy.gale@cantab.net])
+AC_INIT([clDTCWT],[0.1],[timothy.gale@cantab.net])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
