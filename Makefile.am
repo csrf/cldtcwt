@@ -302,3 +302,10 @@ testQuadToComplexDecimateFilterY_LDFLAGS = @Eigen3_LIBS@
 testQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
+# MATLAB scripts and functions have their own folder to be installed into
+matlabscriptdir = $(pkgdatadir)/MATLAB
+dist_matlabscript_DATA = \
+	MatlabScripts/getBufferTrialTimings.m \
+	MatlabScripts/runSpeedTestBufferTrial.m
+
+
