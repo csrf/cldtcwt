@@ -21,7 +21,7 @@ for n = 1:size(tSizes, 1)
 end
 
 save('filterTimings.mat', ...
-     'filterLengths', 'tNumTaps',
+     'filterLengths', 'tNumTaps',...
      'imageSizes', 'tSizes');
 
 
