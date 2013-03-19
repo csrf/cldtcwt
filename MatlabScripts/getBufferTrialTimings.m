@@ -11,7 +11,7 @@ for n = 1:length(filterLengths)
         runSpeedTestBufferTrial([1280 720], filterLengths(n), true);
 end
 
-imageSizes = int(1.5.^(-10:0.5:1)' * [1280 720]);
+imageSizes = int32(1.5.^(-10:0.5:1)' * [1280 720]);
 
 % Vary the size of the image
 tSizes = nan(size(imageSizes, 1),3);
