@@ -206,15 +206,17 @@ bin_PROGRAMS += clDTCWT-SpeedTest-BufferTrial
 clDTCWT_SpeedTest_BufferTrial_SOURCES = src/Filter/speedTest.cc 
 clDTCWT_SpeedTest_BufferTrial_LDADD   = libclutil.la libbufferfilter.la 
 
-noinst_PROGRAMS += speedTestDecimateFilterX
-speedTestDecimateFilterX_SOURCES = \
-	   src/Filter/DecimateFilterX/speedTestDecimateFilterX.cc 
-speedTestDecimateFilterX_LDADD   = libclutil.la libbufferfilter.la 
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateFilterX
+clDTCWT_SpeedTest_DecimateFilterX_SOURCES = \
+	src/Filter/DecimateFilterX/speedTestDecimateFilterX.cc 
+clDTCWT_SpeedTest_DecimateFilterX_LDADD   = \
+	libclutil.la libbufferfilter.la 
 
-noinst_PROGRAMS += speedTestDecimateFilterY
-speedTestDecimateFilterY_SOURCES = \
-	   src/Filter/DecimateFilterY/speedTestDecimateFilterY.cc 
-speedTestDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la 
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateFilterY
+clDTCWT_SpeedTest_DecimateFilterY_SOURCES = \
+	src/Filter/DecimateFilterY/speedTestDecimateFilterY.cc 
+clDTCWT_SpeedTest_DecimateFilterY_LDADD   = \
+	libclutil.la libbufferfilter.la 
 
 noinst_PROGRAMS += speedTestDecimateTripleFilterX
 speedTestDecimateTripleFilterX_SOURCES = \
