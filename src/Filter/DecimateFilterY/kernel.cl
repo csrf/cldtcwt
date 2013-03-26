@@ -1,79 +1,70 @@
 // Working group width and height should be defined as WG_W and WG_H;
-// the length of the filter is FILTER_LENGTH.  PADDING is the amount
-// of padding above and to the left of the image.  The global ids 
-// should be offset by the amount of the padding.  Padding and all
-// other dimensions should be the same in both input and output images
+// the length of the filter is FILTER_LENGTH.
 
 // Choosing to swap the outputs of the two trees is selected by defining
 // SWAP_TREE_1
 
 #ifndef SWAP_TREE_1 
-    #define TREE_1_OFFSET offset
+    #define SWAP_TREE_1 0
 #else
-    #define TREE_1_OFFSET offsetSwapOutputs
+    #define SWAP_TREE_1 1
 #endif
 
 
 
-void loadFourBlocks(__global const float* readPos, size_t stride,
-                    __local float cache[4*WG_H][WG_W],
-                    int2 l, int pad, bool twiddleTree2)
+void loadFourBlocks(__global const float* readPos, size_t stride, int2 l,
+                    __local float cache[4*WG_H][WG_W])
 {
-    // Load four blocks of WG_H x WG_H into cache, with this work item
-    // working around readPos.
+    // Load four blocks of WG_W x WG_H into cache: the first from the
+    // locations specified one workgroup height above readPos; the 
+    // second from readPos; the third below, and fourth below
+    // again.  These are split into even (based from 0, so we start with 
+    // even) and odd y-coords, so that the first two blocks of the output
+    // are the even rows.  The second two blocks are the odd rows.
+    // The second two blocks have been reversed along the y-axis, and adjacent
+    // rows within that are swapped.
+    //
+    // l is the coordinate within the block.
 
-    // l contains the x and y coordinates of this workitem within the group
-    // cache is the region to load into.  Even x coordinates are loaded into
-
-    // Extract evens in order (left half of cache), and odds in reverse order
-    // (right half of cache).  If extending (pad == 1) we need to swap the trees
-    // to put everything in the right place.
-
-    // If twiddling Tree 2 (to improve __local bank access efficiency by avoiding
-    // conflicts), swap each pair of values stored for Tree 2.
-
+    // Calculate output y coordinates whether reading from an even or odd
+    // address
     const int evenAddr = l.y >> 1;
 
     // Extract odds backwards, and with pairs in reverse order
     // (so as to avoid bank conflicts when reading later)
-    const int oddAddr = (4*WG_H - 1 - evenAddr) ^ twiddleTree2;
-
-    // We want to store into the reverse order if on an odd address;
-    // but the trees are swapped over if we have to pad
-    int storeBackwards = (l.y & 1) ^ pad;
-
-    const int d = 1 - 2*storeBackwards; 
+    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
 
     // Direction to move the block in: -1 for odds, 1 for evens
-    const int p = select(evenAddr, oddAddr, storeBackwards);
+    const int d = select(WG_W / 2, -WG_W / 2, l.y & 1); 
+    const int p = select(evenAddr,   oddAddr, l.y & 1);
 
-    cache[p                 ][l.x] = *(readPos-WG_H*stride);
-    cache[p + d*  (WG_H / 2)][l.x] = *(readPos);
-    cache[p + d*2*(WG_H / 2)][l.x] = *(readPos+WG_H*stride);
-    cache[p + d*3*(WG_H / 2)][l.x] = *(readPos+2*WG_H*stride);
+    cache[p      ][l.x] = *(readPos-WG_H*stride);
+    cache[p +   d][l.x] = *(readPos);
+    cache[p + 2*d][l.x] = *(readPos+WG_H*stride);
+    cache[p + 3*d][l.x] = *(readPos+2*WG_H*stride);
 }
 
 
-inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
+inline int2 filteringStartPositions(int x)
 {
-    // Padding is whether we are using symmetric extension (0 or 1)
-    // Twiddle Tree 2 is whether or not the second tree has had its pairs
-    // swapped (for an optimisation to avoid shared memory bank conflicts).
-    // x is the x position within the workgroup
+    // Calculates the positions within the block to start filtering from,
+    // for the even and odd coefficients in the filter respectively given
+    // in s0 and s1.  Assumes the four-workgroup format loaded in
+    // loadFourBlocks.
+    //
+    // x is the x position within the workgroup.
 
     // Each position along x should be calculating the output for that position.
     // The two trees are stored in the left and right halves of a 4 WG_(dim)
-    // with the second tree (right) in reverse.  If padding, the odd coeffients 
-    // for Tree 2 need to be read one further to the left.
+    // with the second tree (right) in reverse.
 
     // Calculate positions to read coefficients from
-    int baseOffset = x + ((WG_H / 2) - (FILTER_LENGTH / 2) + 1)
-                         - pad
-                         + (x & 1) * (3*WG_H - 1 - 2*x + pad);
+    int baseOffset = x + ((WG_W / 2) - (FILTER_LENGTH / 2) + 1)
+                         + (x & 1) * (3*WG_W - 1 - 2*x);
 
     // Starting locations for first and second trees
-    return (int2) (select(baseOffset, baseOffset ^ twiddleTree2, x & 1),
-                   select(baseOffset + 1, (baseOffset + 1) ^ twiddleTree2, x & 1));
+    return (int2) (select(baseOffset, baseOffset ^ 1, x & 1),
+                   select(baseOffset + 1, (baseOffset + 1) ^ 1, x & 1));
 }
 
 
@@ -81,58 +72,45 @@ inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterY(__global const float* input,
-             __global float* output,
-             __constant float* filter,
-             unsigned int height, 
-             unsigned int stride,
-             unsigned int outStride,
-             int pad)
+                     unsigned int inputStart,
+                     unsigned int inputStride,
+                     __global float* output,
+                     unsigned int outputStart,
+                     unsigned int outputStride,
+                     __constant float* filter)
 {
-    // pad should be 0 or 1: 1 if the algorithm should pretend the 
-    // image extends one of width on both sides.
-
     const int2 g = (int2) (get_global_id(0), get_global_id(1));
     const int2 l = (int2) (get_local_id(0), get_local_id(1));
+
+    __local float cache[4*WG_H][WG_W];
 
     // Decimation means we also need to move along according to
     // workgroup number (since we move along the input faster than
     // along the output matrix).
-    const int pos = (g.y + get_group_id(1) * WG_H) * stride + g.x;
-
-    // Usually we want to swap the pairs of values in the second, reversed,
-    // tree so as to keep one tree accessing odds while the other accesses
-    // events.  However, if padding, the first tree starts accessing one 
-    // lower down.  This means we don't want to do the swapping then.
-    const bool twiddleTree2 = pad == 0;
-
-    __local float cache[4*WG_H][WG_W];
+    const int pos = (g.y + get_group_id(1) * WG_H) * inputStride + g.x
+                    + inputStart;
 
     // Read into local memory
-    loadFourBlocks(&input[pos], stride, cache, l, pad, twiddleTree2);
+    loadFourBlocks(&input[pos], inputStride, l, cache);
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // Work out where we need to start the convolution from
-    int2 offset = filteringStartPositions(l.y, pad, twiddleTree2);
-
-    // If we want to swap the trees over, the easiest way is to 
-    // swap the LSB of l.x, and recalculate
-    int2 offsetSwapOutputs = filteringStartPositions(l.y ^ 1, pad, twiddleTree2);
+    int2 offset = filteringStartPositions(l.y);
 
     // Convolve 
-
     float v = 0.f;
 
     // Even filter locations first...
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n] * cache[TREE_1_OFFSET.s0+n][l.x];
+        v += filter[n] * cache[offset.s0+n][l.x];
         
     // ...then odd
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n+1] * cache[TREE_1_OFFSET.s1+n][l.x];
+        v += filter[n+1] * cache[offset.s1+n][l.x];
 
     // Write it to the output
-    output[g.y*outStride + g.x] = v;
+    output[(g.y ^ SWAP_TREE_1)*outputStride + g.x + outputStart] = v;
 
 }
 

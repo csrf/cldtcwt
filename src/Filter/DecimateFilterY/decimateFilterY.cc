@@ -24,8 +24,7 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
     std::ostringstream compilerOptions;
     compilerOptions << "-D WG_W=" << workgroupSize_ << " "
                     << "-D WG_H=" << workgroupSize_ << " "
-                    << "-D FILTER_LENGTH=" << filter.size() << " "
-                    << "-D PADDING=" << padding_ << " ";
+                    << "-D FILTER_LENGTH=" << filter.size() << " ";
 
     if (swapOutputPair)
         compilerOptions << "-D SWAP_TREE_1 ";
@@ -58,7 +57,7 @@ DecimateFilterY::DecimateFilterY(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(2, filter_);
+    kernel_.setArg(6, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -83,7 +82,6 @@ void DecimateFilterY::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
         roundWGs(output.width(), workgroupSize[0]), 
@@ -99,19 +97,29 @@ void DecimateFilterY::operator() (cl::CommandQueue& cq,
     // Input and output formats need to be exactly the same
     assert((input.height() + symmetricPadding * 2) == 2*output.height());
     assert(input.width() == output.width());
-    assert(input.padding() == output.padding());
     
+    // Work out where upper left hand corner of the relevant data starts
+    const cl_uint 
+        inputStart 
+            = (input.padding() - symmetricPadding) * input.stride()
+             + input.padding(),
+        outputStart
+            = output.padding() * output.stride() + output.padding();
 
     // Set all the arguments
+
+    // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output.buffer());
-    kernel_.setArg(3, int(input.height()));
-    kernel_.setArg(4, int(input.stride()));
-    kernel_.setArg(5, int(output.stride()));
-    kernel_.setArg(6, int(symmetricPadding));
+    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(2, cl_uint(input.stride()));
+
+    // Output buffer
+    kernel_.setArg(3, output.buffer());
+    kernel_.setArg(4, cl_uint(outputStart));
+    kernel_.setArg(5, cl_uint(output.stride()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }
