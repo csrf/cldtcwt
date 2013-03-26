@@ -218,10 +218,11 @@ clDTCWT_SpeedTest_DecimateFilterY_SOURCES = \
 clDTCWT_SpeedTest_DecimateFilterY_LDADD   = \
 	libclutil.la libbufferfilter.la 
 
-noinst_PROGRAMS += speedTestDecimateTripleFilterX
-speedTestDecimateTripleFilterX_SOURCES = \
-	   src/Filter/DecimateTripleFilterX/speedTest.cc 
-speedTestDecimateTripleFilterX_LDADD   = libclutil.la libbufferfilter.la 
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateTripleFilterX
+clDTCWT_SpeedTest_DecimateTripleFilterX_SOURCES = \
+	src/Filter/DecimateTripleFilterX/speedTest.cc 
+clDTCWT_SpeedTest_DecimateTripleFilterX_LDADD   = \
+	libclutil.la libbufferfilter.la 
 
 noinst_PROGRAMS += speedTestQuadToComplexDecimateFilterY
 speedTestQuadToComplexDecimateFilterY_SOURCES = \
