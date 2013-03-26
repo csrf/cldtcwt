@@ -16,8 +16,8 @@
 
 
 void loadFourBlocks(__global const float* readPos,
-                    __local float cache[WG_H][4*WG_W],
-                    int2 l, int pad, bool twiddleTree2)
+                    int2 l,
+                    __local float cache[WG_H][4*WG_W])
 {
     // Load four blocks of WG_H x WG_H into cache, with this work item
     // working around readPos.
@@ -36,25 +36,24 @@ void loadFourBlocks(__global const float* readPos,
 
     // Extract odds backwards, and with pairs in reverse order
     // (so as to avoid bank conflicts when reading later)
-    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ twiddleTree2;
+    const int oddAddr = (4*WG_W - 1 - evenAddr) ^ 1;
 
     // We want to store into the reverse order if on an odd address;
     // but the trees are swapped over if we have to pad
-    int storeBackwards = (l.x & 1) ^ pad;
-
-    const int d = 1 - 2*storeBackwards; 
+    int storeBackwards = l.x & 1;
 
     // Direction to move the block in: -1 for odds, 1 for evens
-    const int p = select(evenAddr, oddAddr, storeBackwards);
+    const int d = select(WG_W / 2, -WG_W / 2, storeBackwards); 
+    const int p = select(evenAddr,   oddAddr, storeBackwards);
 
-    cache[l.y][p                 ] = *(readPos-WG_W);
-    cache[l.y][p + d*  (WG_W / 2)] = *(readPos);
-    cache[l.y][p + d*2*(WG_W / 2)] = *(readPos+WG_W);
-    cache[l.y][p + d*3*(WG_W / 2)] = *(readPos+2*WG_W);
+    cache[l.y][p    ] = *(readPos-WG_W);
+    cache[l.y][p+  d] = *(readPos);
+    cache[l.y][p+2*d] = *(readPos+WG_W);
+    cache[l.y][p+3*d] = *(readPos+2*WG_W);
 }
 
 
-inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
+inline int2 filteringStartPositions(int x)
 {
     // Padding is whether we are using symmetric extension (0 or 1)
     // Twiddle Tree 2 is whether or not the second tree has had its pairs
@@ -68,12 +67,11 @@ inline int2 filteringStartPositions(int x, int pad, bool twiddleTree2)
 
     // Calculate positions to read coefficients from
     int baseOffset = x + ((WG_W / 2) - (FILTER_LENGTH / 2) + 1)
-                         - pad
-                         + (x & 1) * (3*WG_W - 1 - 2*x + pad);
+                         + (x & 1) * (3*WG_W - 1 - 2*x);
 
     // Starting locations for first and second trees
-    return (int2) (select(baseOffset, baseOffset ^ twiddleTree2, x & 1),
-                   select(baseOffset + 1, (baseOffset + 1) ^ twiddleTree2, x & 1));
+    return (int2) (select(baseOffset, baseOffset ^ 1, x & 1),
+                   select(baseOffset + 1, (baseOffset + 1) ^ 1, x & 1));
 }
 
 
@@ -97,27 +95,21 @@ void decimateFilterX(__global const float* input,
     // Decimation means we also need to move along according to
     // workgroup number (since we move along the input faster than
     // along the output matrix).
-    const int pos = g.y*stride + g.x + get_group_id(0) * WG_W;
-
-    // Usually we want to swap the pairs of values in the second, reversed,
-    // tree so as to keep one tree accessing odds while the other accesses
-    // events.  However, if padding, the first tree starts accessing one 
-    // lower down.  This means we don't want to do the swapping then.
-    const bool twiddleTree2 = pad == 0;
+    const int pos = g.y*stride + g.x + get_group_id(0) * WG_W - pad;
 
     __local float cache[WG_H][4*WG_W];
 
     // Read into local memory
-    loadFourBlocks(&input[pos], cache, l, pad, twiddleTree2);
+    loadFourBlocks(&input[pos], l, cache);
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // Work out where we need to start the convolution from
-    int2 offset = filteringStartPositions(l.x, pad, twiddleTree2);
+    int2 offset = filteringStartPositions(l.x);
 
     // If we want to swap the trees over, the easiest way is to 
     // swap the LSB of l.x, and recalculate
-    int2 offsetSwapOutputs = filteringStartPositions(l.x ^ 1, pad, twiddleTree2);
+    int2 offsetSwapOutputs = filteringStartPositions(l.x ^ 1);
 
     // Convolve 
 
