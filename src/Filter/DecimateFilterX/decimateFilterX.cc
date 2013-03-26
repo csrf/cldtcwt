@@ -24,8 +24,7 @@ DecimateFilterX::DecimateFilterX(cl::Context& context,
     std::ostringstream compilerOptions;
     compilerOptions << "-D WG_W=" << workgroupSize_ << " "
                     << "-D WG_H=" << workgroupSize_ << " "
-                    << "-D FILTER_LENGTH=" << filter.size() << " "
-                    << "-D PADDING=" << padding_ << " ";
+                    << "-D FILTER_LENGTH=" << filter.size() << " ";
 
     if (swapOutputPair)
         compilerOptions << "-D SWAP_TREE_1 ";
