@@ -29,9 +29,6 @@ void loadFourBlocks(__global const float* readPos,
     // (right half of cache).  If extending (pad == 1) we need to swap the trees
     // to put everything in the right place.
 
-    // If twiddling Tree 2 (to improve __local bank access efficiency by avoiding
-    // conflicts), swap each pair of values stored for Tree 2.
-
     const int evenAddr = l.x >> 1;
 
     // Extract odds backwards, and with pairs in reverse order
@@ -79,12 +76,12 @@ inline int2 filteringStartPositions(int x)
 __kernel
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterX(__global const float* input,
-             __global float* output,
-             __constant float* filter,
-             unsigned int width, 
-             unsigned int stride,
-             unsigned int outStride,
-             int pad)
+                     unsigned int inputStart,
+                     unsigned int inputStride,
+                     __global float* output,
+                     unsigned int outputStart,
+                     unsigned int outputStride,
+                     __constant float* filter)
 {
     // pad should be 0 or 1: 1 if the algorithm should pretend the 
     // image extends one of width on both sides.
@@ -95,7 +92,8 @@ void decimateFilterX(__global const float* input,
     // Decimation means we also need to move along according to
     // workgroup number (since we move along the input faster than
     // along the output matrix).
-    const int pos = g.y*stride + g.x + get_group_id(0) * WG_W - pad;
+    const int pos = g.y*inputStride + g.x + get_group_id(0) * WG_W
+                    + inputStart;
 
     __local float cache[WG_H][4*WG_W];
 
@@ -124,7 +122,7 @@ void decimateFilterX(__global const float* input,
         v += filter[n+1] * cache[l.y][TREE_1_OFFSET.s1+n];
 
     // Write it to the output
-    output[g.y*outStride + g.x] = v;
+    output[g.y*outputStride + g.x + outputStart] = v;
 
 }
 

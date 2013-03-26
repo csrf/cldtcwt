@@ -58,7 +58,7 @@ DecimateFilterX::DecimateFilterX(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(2, filter_);
+    kernel_.setArg(6, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -83,14 +83,13 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
         roundWGs(output.width(), workgroupSize[0]), 
         roundWGs(output.height(), workgroupSize[1])
     }; 
 
-    // Must have the padding the kernel expects
+    // Must have enough padding
     assert(input.padding() == padding_);
 
     // Pad symmetrically if needed
@@ -99,19 +98,29 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
     // Input and output formats need to be exactly the same
     assert((input.width() + symmetricPadding * 2) == 2*output.width());
     assert(input.height() == output.height());
-    assert(input.padding() == output.padding());
     
+    // Work out where the upper left corners of the input and output
+    // buffers are
+    const cl_uint inputStart = input.padding() * input.stride()
+                             + input.padding() - symmetricPadding;
+
+    const cl_uint outputStart = output.padding() * output.stride()
+                             + output.padding();
 
     // Set all the arguments
+
+    // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output.buffer());
-    kernel_.setArg(3, int(input.width()));
-    kernel_.setArg(4, int(input.stride()));
-    kernel_.setArg(5, int(output.stride()));
-    kernel_.setArg(6, int(symmetricPadding));
+    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(2, cl_uint(input.stride()));
+
+    // Output buffer
+    kernel_.setArg(3, output.buffer());
+    kernel_.setArg(4, cl_uint(outputStart));
+    kernel_.setArg(5, cl_uint(output.stride()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }
