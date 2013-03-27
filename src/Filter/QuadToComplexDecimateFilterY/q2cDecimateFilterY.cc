@@ -25,8 +25,7 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
     std::ostringstream compilerOptions;
     compilerOptions << "-D WG_W=" << workgroupSize_ << " "
                     << "-D WG_H=" << workgroupSize_ << " "
-                    << "-D FILTER_LENGTH=" << filter.size() << " "
-                    << "-D PADDING=" << padding_ << " ";
+                    << "-D FILTER_LENGTH=" << filter.size() << " ";
 
     if (swapOutputPair)
         compilerOptions << "-D SWAP_TREE_1 ";
@@ -59,7 +58,7 @@ QuadToComplexDecimateFilterY::QuadToComplexDecimateFilterY(cl::Context& context,
                          &reversedFilter[0]);
 
     // Set that filter for use
-    kernel_.setArg(6, filter_);
+    kernel_.setArg(9, filter_);
 
     // Make sure the filter is even-length
     assert((filterLength_ & 1) == 0);
@@ -85,7 +84,6 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {padding_, padding_};
 
     // Must have the padding the kernel expects
     assert(input.padding() == padding_);
@@ -105,20 +103,32 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
         roundWGs(quadHeight, workgroupSize[1])
     }; 
 
+    // Indicies of the upper left corners of the input/output
+    const cl_uint inputStart
+        = input.stride() * (input.padding() - symmetricPadding) 
+         + input.padding();
 
-    // Set all the arguments
+    const cl_uint outputStart
+        = output0.stride() * output0.padding() + output0.padding();
+
+    // Set all the arguments (other than the filter, which has already
+    // been set)
+    
+    // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output0.buffer());
-    kernel_.setArg(2, output1.buffer());
-    kernel_.setArg(3, int(output0.width()));
-    kernel_.setArg(4, int(output0.height()));
-    kernel_.setArg(5, int(output0.stride()));
-    kernel_.setArg(7, int(input.height()));
-    kernel_.setArg(8, int(input.stride()));
-    kernel_.setArg(9, int(symmetricPadding));
+    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(2, cl_uint(input.stride()));
+
+    // Output buffers
+    kernel_.setArg(3, output0.buffer());
+    kernel_.setArg(4, output1.buffer());
+    kernel_.setArg(5, cl_uint(outputStart));
+    kernel_.setArg(6, cl_uint(output0.stride()));
+    kernel_.setArg(7, int(output0.width()));
+    kernel_.setArg(8, int(output0.height()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }
