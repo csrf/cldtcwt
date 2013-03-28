@@ -202,6 +202,30 @@ nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES = \
 	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/kernel.cc 
 CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES)
 
+# Non-splitting and forward load variant of DecimateFilterX, for comparison
+check_PROGRAMS += testDecimateFilterX-Alt-FL
+TESTS += testDecimateFilterX-Alt-FL
+testDecimateFilterX_Alt_FL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/decimateFilterX.cc \
+	  src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/testDecimateFilterX.cc \
+	  src/Filter/referenceImplementation.cc
+nodist_testDecimateFilterX_Alt_FL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/kernel.cc 
+testDecimateFilterX_Alt_FL_LDADD   = libclutil.la libbufferfilter.la
+testDecimateFilterX_Alt_FL_LDFLAGS = @Eigen3_LIBS@
+testDecimateFilterX_Alt_FL_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+CLEANFILES += $(nodist_testDecimateFilterX_Alt_FL_SOURCES)
+
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateFilterX-Alt-FL
+clDTCWT_SpeedTest_DecimateFilterX_Alt_FL_SOURCES = \
+	src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/decimateFilterX.cc \
+	src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/speedTestDecimateFilterX.cc 
+clDTCWT_SpeedTest_DecimateFilterX_Alt_FL_LDADD   = \
+	libclutil.la libbufferfilter.la 
+nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_FL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ForwardLoad/kernel.cc 
+CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_FL_SOURCES)
+
 
 
 # Non-splitting but reversed load variant of DecimateFilterX, for comparison
