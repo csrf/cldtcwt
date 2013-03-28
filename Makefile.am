@@ -178,7 +178,7 @@ nodist_speedTestFilterXAdjustablePadding_SOURCES = \
 	src/SpeedComparisonFilters/FilterXAdjustablePadding/kernel.cc
 CLEANFILES += $(nodist_speedTestFilterXAdjustablePadding_SOURCES)
 
-
+# No-twiddle variant of DecimateFilterX, for comparison
 check_PROGRAMS = testDecimateFilterX-Alt-RSLNT
 TESTS += testDecimateFilterX-Alt-RSLNT
 testDecimateFilterX_Alt_RSLNT_SOURCES = \
@@ -200,7 +200,34 @@ clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_LDADD   = \
 	libclutil.la libbufferfilter.la 
 nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES = \
 	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/kernel.cc 
-CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilter_Alt_RSLNT_SOURCES)
+CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES)
+
+
+
+# Non-splitting but reversed load variant of DecimateFilterX, for comparison
+check_PROGRAMS += testDecimateFilterX-Alt-RL
+TESTS += testDecimateFilterX-Alt-RL
+testDecimateFilterX_Alt_RL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/decimateFilterX.cc \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/testDecimateFilterX.cc \
+	  src/Filter/referenceImplementation.cc
+nodist_testDecimateFilterX_Alt_RL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/kernel.cc 
+testDecimateFilterX_Alt_RL_LDADD   = libclutil.la libbufferfilter.la
+testDecimateFilterX_Alt_RL_LDFLAGS = @Eigen3_LIBS@
+testDecimateFilterX_Alt_RL_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+CLEANFILES += $(nodist_testDecimateFilterX_Alt_RL_SOURCES)
+
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateFilterX-Alt-RL
+clDTCWT_SpeedTest_DecimateFilterX_Alt_RL_SOURCES = \
+	src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/decimateFilterX.cc \
+	src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/speedTestDecimateFilterX.cc 
+clDTCWT_SpeedTest_DecimateFilterX_Alt_RL_LDADD   = \
+	libclutil.la libbufferfilter.la 
+nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RL_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedLoad/kernel.cc 
+CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RL_SOURCES)
+
 
 
 
