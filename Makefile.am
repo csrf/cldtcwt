@@ -176,6 +176,33 @@ speedTestFilterXAdjustablePadding_SOURCES = \
 speedTestFilterXAdjustablePadding_LDADD = libclutil.la 
 nodist_speedTestFilterXAdjustablePadding_SOURCES = \
 	src/SpeedComparisonFilters/FilterXAdjustablePadding/kernel.cc
+CLEANFILES += $(nodist_speedTestFilterXAdjustablePadding_SOURCES)
+
+
+check_PROGRAMS = testDecimateFilterX-Alt-RSLNT
+TESTS += testDecimateFilterX-Alt-RSLNT
+testDecimateFilterX_Alt_RSLNT_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/decimateFilterX.cc \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/testDecimateFilterX.cc \
+	  src/Filter/referenceImplementation.cc
+nodist_testDecimateFilterX_Alt_RSLNT_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/kernel.cc 
+testDecimateFilterX_Alt_RSLNT_LDADD   = libclutil.la libbufferfilter.la
+testDecimateFilterX_Alt_RSLNT_LDFLAGS = @Eigen3_LIBS@
+testDecimateFilterX_Alt_RSLNT_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+CLEANFILES += $(nodist_testDecimateFilterX_Alt_RSLNT_SOURCES)
+
+bin_PROGRAMS += clDTCWT-SpeedTest-DecimateFilterX-Alt-RSLNT
+clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES = \
+	src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/decimateFilterX.cc \
+	src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/speedTestDecimateFilterX.cc 
+clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_LDADD   = \
+	libclutil.la libbufferfilter.la 
+nodist_clDTCWT_SpeedTest_DecimateFilterX_Alt_RSLNT_SOURCES = \
+	  src/SpeedComparisonFilters/DecimateFilterX/ReversedSplitLoadNoTwiddle/kernel.cc 
+CLEANFILES += $(nodist_clDTCWT_SpeedTest_DecimateFilter_Alt_RSLNT_SOURCES)
+
+
 
 # Straightforward copy, to work out how fast we can do the memory transfers
 noinst_PROGRAMS += speedTestCopyImage
@@ -239,7 +266,7 @@ clDTCWT_SpeedTest_DTCWT_LDADD   = libdtcwt.la libclutilcv.la
 
 TESTS += testFilterX testFilterY
 
-check_PROGRAMS = testFilterX
+check_PROGRAMS += testFilterX
 testFilterX_SOURCES = src/Filter/FilterX/testFilterX.cc \
 					  src/Filter/referenceImplementation.cc
 testFilterX_LDADD   = libclutil.la libbufferfilter.la 
