@@ -417,6 +417,7 @@ testQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 matlabscriptdir = $(pkgdatadir)/MATLAB
 dist_matlabscript_DATA = \
 	MatlabScripts/getBufferTrialTimings.m \
+	MatlabScripts/getDecimateFilterXTimings.m \
 	MatlabScripts/runSpeedTestBufferTrial.m \
 	MatlabScripts/runSpeedTestDecimateFilterX.m \
 	MatlabScripts/runSpeedTestDecimateFilterY.m \
