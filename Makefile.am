@@ -89,6 +89,15 @@ librescale_la_SOURCES = \
 librescale_la_LIBADD = libclutil.la 
 
 
+
+# Wrapper for the FFMPEG libraries
+noinst_LTLIBRARIES += libavmm.la
+libavmm_la_SOURCES = src/avmm/avmm.cc
+libavmm_la_CXXFLAGS = $(FFMPEG_CFLAGS) -fPIC $(AM_CXXFLAGS)
+libavmm_la_LIBADD = $(FFMPEG_LIBS)
+
+
+
 noinst_PROGRAMS = testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
 testDescriptor_LDADD = libdtcwt.la libkeypoints.la
