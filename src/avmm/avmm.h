@@ -57,7 +57,7 @@ namespace AV {
     public:
         Frame();
         Frame& operator=(Frame&&);
-        Frame(int width, int height);
+        Frame(int width, int height, AVPixelFormat pixelFormat = PIX_FMT_RGB24);
         Frame(Frame&&);
         ~Frame();
 

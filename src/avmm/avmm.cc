@@ -350,20 +350,19 @@ namespace AV {
 
 
 
-    Frame::Frame(int width, int height)
+    Frame::Frame(int width, int height, AVPixelFormat pixelFormatVal)
     {
         // Allocate a frame
         frame_ = avcodec_alloc_frame();
 
         // Members need filling in
-        frame_->linesize[0] = width * 3;
-        frame_->format = PIX_FMT_RGB24;
+        frame_->format = pixelFormatVal;
         frame_->width = width;
         frame_->height = height;
         
         // Attach an appropriately sized buffer
         avpicture_alloc(reinterpret_cast<AVPicture*>(frame_),
-                        PIX_FMT_RGB24,
+                        pixelFormatVal,
                         frame_->width,
                         frame_->height);
         // Apparently the above cast is actually safe, as the AVPicture

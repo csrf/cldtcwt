@@ -124,6 +124,8 @@ noinst_PROGRAMS += testPyramidSum
 testPyramidSum_SOURCES = src/test/testPyramidSum.cc 
 testPyramidSum_LDADD = libkeypoints.la
 
+
+# Display after input from VLC webcam
 bin_PROGRAMS = displayDTCWT
 displayDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
 					   src/DisplayOutput/calculatorInterface.cc \
@@ -142,6 +144,27 @@ CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la 
 displayDTCWT_LDFLAGS = @SFML_LIBS@ @V4L2_LIBS@ -lboost_thread 
 displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
+
+
+# Display after input from FFMPEG
+bin_PROGRAMS += displayVideoDTCWT
+displayVideoDTCWT_SOURCES = src/DisplayOutput/calculator.cc \
+					   src/DisplayOutput/calculatorInterface.cc \
+					   src/DisplayOutput/VBOBuffer.cc \
+					   src/DisplayOutput/Abs/abs.cc \
+					   src/DisplayOutput/GreyscaleToRGBA/greyscaleToRGBA.cc \
+					   src/DisplayOutput/AbsToRGBA/absToRGBA.cc \
+					   src/DisplayOutput/displayVideoDTCWT.cc \
+					   src/DisplayOutput/texture.cc \
+					   src/DisplayOutput/viewer.cc 
+nodist_displayVideoDTCWT_SOURCES = \
+	src/DisplayOutput/AbsToRGBA/kernel.cc \
+	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
+CLEANFILES += $(nodist_displayVideoDTCWT_SOURCES)
+displayVideoDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la libavmm.la
+displayVideoDTCWT_LDFLAGS = @SFML_LIBS@
+displayVideoDTCWT_CXXFLAGS = @SFML_CFLAGS@ @FFMPEG_CFLAGS@ $(AM_CXXFLAGS)
+
 
 
 noinst_PROGRAMS += testRescale
