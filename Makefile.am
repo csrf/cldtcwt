@@ -97,8 +97,15 @@ libavmm_la_CXXFLAGS = $(FFMPEG_CFLAGS) -fPIC $(AM_CXXFLAGS)
 libavmm_la_LIBADD = $(FFMPEG_LIBS)
 
 
+# Test the speed of the FFMPEG libraries
+noinst_PROGRAMS = speedTestFFMPEG
+speedTestFFMPEG_SOURCES = src/SpeedComparisonFilters/ffmpeg/speedTest.cc
+speedTestFFMPEG_LDADD = libavmm.la
+speedTestFFMPEG_CXXFLAGS = $(FFMPEG_CFLAGS) $(AM_CXXFLAGS)
 
-noinst_PROGRAMS = testDescriptor
+
+
+noinst_PROGRAMS += testDescriptor
 testDescriptor_SOURCES = src/test/testDescriptor.cc 
 testDescriptor_LDADD = libdtcwt.la libkeypoints.la
 testDescriptor_LDFLAGS = @opencv_LIBS@
