@@ -173,6 +173,13 @@ displayVideoDTCWT_LDFLAGS = @SFML_LIBS@
 displayVideoDTCWT_CXXFLAGS = @SFML_CFLAGS@ @FFMPEG_CFLAGS@ $(AM_CXXFLAGS)
 
 
+# Tests the speed of the keypoint detector/extractors
+bin_PROGRAMS += clDTCWT-SpeedTest-Keypoints
+clDTCWT_SpeedTest_Keypoints_SOURCES = \
+	src/SpeedTests/Keypoints/speedTest.cc
+clDTCWT_SpeedTest_Keypoints_LDADD = libdtcwt.la libclutil.la libkeypoints.la
+
+
 
 noinst_PROGRAMS += testRescale
 testRescale_SOURCES = src/test/testRescale.cc 
