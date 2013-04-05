@@ -63,8 +63,11 @@ void ImageToImageBuffer::operator() (cl::CommandQueue& cq,
 
     // Set all the arguments
     kernel_.setArg(0, input);
-    kernel_.setArg(1, int(output.stride()));
-    kernel_.setArg(2, output.buffer());
+
+    // Output buffer
+    kernel_.setArg(1, output.buffer());
+    kernel_.setArg(2, cl_uint(output.padding() * (1 + output.stride())));
+    kernel_.setArg(3, cl_uint(output.stride()));
 
     // Execute
     cq.enqueueNDRangeKernel(kernel_, offset,

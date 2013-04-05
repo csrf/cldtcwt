@@ -87,9 +87,10 @@ int main()
 
 
 
+ 
 
     // Transform
-    dtcwt(commandQueue, input, dtcwtTemps, dtcwtOut, {}/* wait events */);
+    //dtcwt(commandQueue, input, dtcwtTemps, dtcwtOut, {}/* wait events */);
 
     // Calculate energy
     for (int l = 0; l < energyMaps.size(); ++l)
