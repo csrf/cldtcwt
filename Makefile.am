@@ -33,7 +33,8 @@ libbufferfilter_la_SOURCES = \
 		 src/Filter/QuadToComplex/quadToComplex.cc \
 		 src/Filter/PadX/padX.cc \
 		 src/Filter/PadY/padY.cc \
-		 src/Filter/ImageToImageBuffer/imageToImageBuffer.cc 
+		 src/Filter/ImageToImageBuffer/imageToImageBuffer.cc \
+		 src/Filter/ScaleImageToImageBuffer/scaleImageToImageBuffer.cc 
 nodist_libbufferfilter_la_SOURCES = \
 		 src/Filter/DecimateFilterX/kernel.cc \
 		 src/Filter/DecimateFilterY/kernel.cc \
@@ -44,7 +45,8 @@ nodist_libbufferfilter_la_SOURCES = \
          src/Filter/QuadToComplex/kernel.cc \
          src/Filter/PadX/kernel.cc \
          src/Filter/PadY/kernel.cc \
-         src/Filter/ImageToImageBuffer/kernel.cc
+         src/Filter/ImageToImageBuffer/kernel.cc \
+         src/Filter/ScaleImageToImageBuffer/kernel.cc
 CLEANFILES = $(nodist_libbufferfilter_la_SOURCES)
 libbufferfilter_la_LIBADD = libclutil.la 
 libbufferfilter_la_LDFLAGS = @CL_LIBS@
