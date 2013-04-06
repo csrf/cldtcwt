@@ -54,7 +54,9 @@ libbufferfilter_la_LDFLAGS = @CL_LIBS@
 
 
 noinst_LTLIBRARIES += libdtcwt.la 
-libdtcwt_la_SOURCES = src/DTCWT/dtcwt.cc 
+libdtcwt_la_SOURCES = \
+	src/DTCWT/dtcwt.cc \
+	src/DTCWT/intDtcwt.cc
 libdtcwt_la_LIBADD = libclutil.la libbufferfilter.la
 
 

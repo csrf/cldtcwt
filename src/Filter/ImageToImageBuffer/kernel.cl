@@ -17,4 +17,3 @@ __kernel void imageToImageBuffer(__read_only image2d_t input,
 
 }
 
-
