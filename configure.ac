@@ -27,7 +27,7 @@ PKG_CHECK_MODULES([SFML], [sfml-system >= 2.0 sfml-window >= 2.0])
 # Make sure we can use FFMPEG for video input
 PKG_CHECK_MODULES([FFMPEG], [libavcodec >= 54
                              libavformat >= 54
-                             libavutil >= 51
+                             libavutil >= 52
                              libswscale >= 2.1.100])
 
 AC_CONFIG_FILES([Makefile])
