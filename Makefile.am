@@ -480,6 +480,7 @@ dist_matlabscript_DATA = \
 	MatlabScripts/runSpeedTestDecimateFilterX.m \
 	MatlabScripts/runSpeedTestDecimateFilterY.m \
 	MatlabScripts/runSpeedTestDecimateTripleFilterX.m \
+	MatlabScripts/runSpeedTestQuadToComplex.m \
 	MatlabScripts/runSpeedTestQuadToComplexDecimateFilterY.m
 
 
