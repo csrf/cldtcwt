@@ -41,6 +41,10 @@ public:
                 size_t padding, size_t alignment,
                 size_t numSlices = 1);
 
+    ImageBuffer(ImageBuffer& image, int slice);
+    // Create a reference to a slice of the original image.
+
+
     cl::Buffer buffer() const;
 
     size_t start(int slice = 0) const;
@@ -124,6 +128,24 @@ ImageBuffer<MemType>::ImageBuffer(cl::Context context,
         numSlices_ * pitch_ * ImageElementTraits<MemType>::size
     };
 }
+
+
+
+template <typename MemType>
+ImageBuffer<MemType>::ImageBuffer(ImageBuffer& image, int slice)
+    : buffer_(image.buffer_),
+      start_(image.start_ + image.pitch_ * slice),
+      width_(image.width_),
+      height_(image.height_),
+      padding_(image.padding_),
+      stride_(image.stride_),
+      pitch_(image.pitch_),
+      numSlices_(1)
+{
+}
+
+
+
 
 #include <iostream>
 
