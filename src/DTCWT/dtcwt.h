@@ -86,29 +86,8 @@ public:
 };
 
 
-class Subbands {
 
-    std::array<ImageBuffer<Complex<cl_float>>, 6> 
-        subbands_;
-
-public:
-
-    Subbands();
-    Subbands(cl::Context& context, 
-             size_t width, size_t height);
-
-    ImageBuffer<Complex<cl_float>>& subband(int n);
-    const ImageBuffer<Complex<cl_float>>& subband(int n) const;
-
-    ImageBuffer<Complex<cl_float>>& operator[](int n);
-    const ImageBuffer<Complex<cl_float>>& operator[](int n) const;
-
-    size_t width() const;
-    size_t height() const;
-
-};
-
-
+typedef ImageBuffer<Complex<cl_float>> Subbands;
 
 
 class DtcwtOutput {
@@ -127,6 +106,7 @@ private:
     size_t numLevels_;
 
 public:
+
 
     // Return the specified level (1 is the first level of the tree,
     // etc)

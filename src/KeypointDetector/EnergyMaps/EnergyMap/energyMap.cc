@@ -42,16 +42,15 @@ void EnergyMap::operator() (cl::CommandQueue& commandQueue,
                             cl::Event* doneEvent)
 {
     // Set up all the arguments to the kernel
-    for (int n = 0; n < 6; ++n)
-        kernel_.setArg(n, levelOutput.subband(n).buffer());
+    kernel_.setArg(0, levelOutput.buffer());
+    kernel_.setArg(1, cl_uint(levelOutput.start()));
+    kernel_.setArg(2, cl_uint(levelOutput.pitch()));
+    kernel_.setArg(3, cl_uint(levelOutput.stride()));
+    kernel_.setArg(4, cl_uint(levelOutput.padding()));
+    kernel_.setArg(5, cl_uint(levelOutput.width()));
+    kernel_.setArg(6, cl_uint(levelOutput.height()));
 
-    int n = 6;
-    kernel_.setArg(n++, cl_uint(levelOutput.subband(0).stride()));
-    kernel_.setArg(n++, cl_uint(levelOutput.subband(0).padding()));
-    kernel_.setArg(n++, cl_uint(levelOutput.subband(0).width()));
-    kernel_.setArg(n++, cl_uint(levelOutput.subband(0).height()));
-
-    kernel_.setArg(n++, energyMap);
+    kernel_.setArg(7, energyMap);
 
     const size_t wgSize = 16;
 

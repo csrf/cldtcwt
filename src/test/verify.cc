@@ -74,12 +74,19 @@ int main()
 
         std::cout << "Saving image" << std::endl;
 
-        saveComplexImage("sb0.dat", cq, sbOutputs[0][0]);
-        saveComplexImage("sb1.dat", cq, sbOutputs[0][1]);
-        saveComplexImage("sb2.dat", cq, sbOutputs[0][2]);
-        saveComplexImage("sb3.dat", cq, sbOutputs[0][3]);
-        saveComplexImage("sb4.dat", cq, sbOutputs[0][4]);
-        saveComplexImage("sb5.dat", cq, sbOutputs[0][5]);
+        ImageBuffer<Complex<cl_float>>
+            sbSlice0 {sbOutputs[0], 0},
+            sbSlice1 {sbOutputs[0], 1},
+            sbSlice2 {sbOutputs[0], 2},
+            sbSlice3 {sbOutputs[0], 3},
+            sbSlice4 {sbOutputs[0], 4},
+            sbSlice5 {sbOutputs[0], 5};
+        saveComplexImage("sb0.dat", cq, sbSlice0);
+        saveComplexImage("sb1.dat", cq, sbSlice1);
+        saveComplexImage("sb2.dat", cq, sbSlice2);
+        saveComplexImage("sb3.dat", cq, sbSlice3);
+        saveComplexImage("sb4.dat", cq, sbSlice4);
+        saveComplexImage("sb5.dat", cq, sbSlice5);
 
     }
     catch (cl::Error err) {

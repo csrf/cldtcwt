@@ -4,9 +4,9 @@ __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 __kernel void quadToComplex(__global const float* input,
                             unsigned int inputStart,
                             unsigned int inputStride,
-                            __global float2* output0,
-                            __global float2* output1,
-                            unsigned int outputStart,
+                            __global float2* output,
+                            unsigned int outputStart0,
+                            unsigned int outputStart1,
                             unsigned int outputStride,
                             unsigned int outWidth,
                             unsigned int outHeight)
@@ -37,9 +37,9 @@ __kernel void quadToComplex(__global const float* input,
         const float factor = 1.0f / sqrt(2.0f);
 
         // Combine into complex pairs
-        const size_t loc = outPos.y * outputStride + outPos.x + outputStart;
-        output0[loc] = factor * (float2) (ul - lr, ur + ll);
-        output1[loc] = factor * (float2) (ul + lr, ur - ll);
+        const size_t loc = outPos.y * outputStride + outPos.x;
+        output[loc + outputStart0] = factor * (float2) (ul - lr, ur + ll);
+        output[loc + outputStart1] = factor * (float2) (ul + lr, ur - ll);
 
     }
 

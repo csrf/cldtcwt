@@ -1,9 +1,6 @@
-__kernel void energyMap(const __global float2* sb0,
-                        const __global float2* sb1,
-                        const __global float2* sb2,
-                        const __global float2* sb3,
-                        const __global float2* sb4,
-                        const __global float2* sb5,
+__kernel void energyMap(const __global float2* sb,
+                        const unsigned int sbStart,
+                        const unsigned int sbPitch,
                         const unsigned int sbStride,
                         const unsigned int sbPadding,
                         const unsigned int sbWidth,
@@ -14,23 +11,23 @@ __kernel void energyMap(const __global float2* sb0,
 
     if (all(pos < (int2)(sbWidth, sbHeight))) {
     
-        size_t sbIdx = sbPadding + pos.x 
-                     + (sbPadding + pos.y) * sbStride;
+        size_t idx = sbStart + pos.x + pos.y * sbStride;
 
         // Sample each subband
-        float2 h0 = sb0[sbIdx];
-        float2 h1 = sb1[sbIdx];
-        float2 h2 = sb2[sbIdx];
-        float2 h3 = sb3[sbIdx];
-        float2 h4 = sb4[sbIdx];
-        float2 h5 = sb5[sbIdx];
-
-        // Convert to absolute (still squared, because it's more
-        // convenient)
-        float abs_h_2[] = { dot(h0,h0), dot(h1,h1),
-                            dot(h2,h2), dot(h3,h3),
-                            dot(h4,h4), dot(h5,h5) };
+        float abs_h_2[6];
+        for (int n = 0; n < 6; ++n) {
         
+            // Sample the subband
+            float2 h = sb[idx + sbPitch * n];
+
+            // Convert to absolute (still squared, because it's more
+            // convenient)
+            abs_h_2[n] = dot(h, h);
+
+            energy += abs_h_2[n];
+
+        }
+       
         // Approximate angular frequencies
         float wx[] = {-1.4612, -3.2674, -4.3836, -4.3836, -3.2674, -1.461};
         float wy[] = {-4.3836, -3.2674, -1.4612,  1.4612,  3.2674,  4.3836};

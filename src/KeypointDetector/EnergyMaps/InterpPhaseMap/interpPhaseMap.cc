@@ -71,15 +71,15 @@ void InterpPhaseMap::operator() (cl::CommandQueue& commandQueue,
                             cl::Event* doneEvent)
 {
     // Set up all the arguments to the kernel
-    for (int n = 0; n < 6; ++n)
-        kernel_.setArg(n, subbands[n].buffer());
+    kernel_.setArg(0, subbands.buffer());
+    kernel_.setArg(1, cl_uint(subbands.start()));
+    kernel_.setArg(2, cl_uint(subbands.pitch()));
+    kernel_.setArg(3, cl_uint(subbands.stride()));
+    kernel_.setArg(4, cl_uint(subbands.padding()));
+    kernel_.setArg(5, cl_uint(subbands.width()));
+    kernel_.setArg(6, cl_uint(subbands.height()));
 
-    kernel_.setArg(6, cl_uint(subbands[0].stride()));
-    kernel_.setArg(7, cl_uint(subbands[0].padding()));
-    kernel_.setArg(8, cl_uint(subbands.width()));
-    kernel_.setArg(9, cl_uint(subbands.height()));
-
-    kernel_.setArg(10, energyMap);
+    kernel_.setArg(7, energyMap);
 
     const size_t wgSize = 16;
 

@@ -134,11 +134,13 @@ void CalculatorInterface::processImage(const void* data, size_t length)
     
     for (size_t n = 0; n < numSubbands; ++n) {
 
-        absToRGBA_(cq_, levels[0]->subband(n), 
+        ImageBuffer<Complex<cl_float>> sbn_l2 {*levels[0], n},
+                                       sbn_l3 {*levels[1], n};
+        absToRGBA_(cq_, sbn_l2, 
                         subbandTextures2CL_[n], 4.0f, subbandsInput2Ready, 
                         &subbandsConverted[n]);
 
-        absToRGBA_(cq_, levels[1]->subband(n), 
+        absToRGBA_(cq_, sbn_l3,
                         subbandTextures3CL_[n], 4.0f, subbandsInput3Ready, 
                         &subbandsConverted[numSubbands+n]);
 

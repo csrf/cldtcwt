@@ -174,23 +174,20 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                                     width, height, padding, alignment); 
 
 
-        ImageBuffer<Complex<cl_float>> sb0Image(context.context, CL_MEM_READ_WRITE,
+        ImageBuffer<Complex<cl_float>> sbImage(context.context, CL_MEM_READ_WRITE,
                                        sb0.cols(), sb0.rows(),
-                                       0, alignment);
-
-        ImageBuffer<Complex<cl_float>> sb1Image(context.context, CL_MEM_READ_WRITE,
-                                       sb1.cols(), sb1.rows(),
-                                       0, alignment);
+                                       0, alignment,
+                                       2);
 
         // Upload the data
         input.write(cq, &inValues[0]);
 
         // Try the filter
         padY(cq, input);
-        qtcDecFilterY(cq, input, sb0Image, sb1Image);
+        qtcDecFilterY(cq, input, sbImage, 0, 1);
 
         // Download the data
-        sb0Image.read(cq, &outValues[0]);
+        sbImage.read(cq, &outValues[0], {}, 0);
 
         for (size_t r = 0; r < sb0.rows(); ++r)
             for (size_t c = 0; c < sb0.cols(); ++c) 
@@ -198,7 +195,7 @@ std::tuple<Eigen::ArrayXXcf, Eigen::ArrayXXcf>
                     (outValues[r*sb0.cols() + c].real,
                      outValues[r*sb0.cols() + c].imag);
 
-        sb1Image.read(cq, &outValues[0]);
+        sbImage.read(cq, &outValues[0], {}, 1);
 
         for (size_t r = 0; r < sb1.rows(); ++r)
             for (size_t c = 0; c < sb1.cols(); ++c) 

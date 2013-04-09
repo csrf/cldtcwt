@@ -12,7 +12,7 @@ float2 readSBAndDerotate(const __global float2* sb, int2 pos,
     // Check in image; otherwise, return zero (to avoid reading garbage)
     bool inSB = all((int2) (0,0) <= pos) & all(pos < convert_int2(sbSize));
 
-    float2 val = inSB? sb[padding + pos.x + (padding + pos.y) * stride]
+    float2 val = inSB? sb[pos.x + pos.y * stride]
                      : (float2) (0.f, 0.f);
 
     // Apply offset to give consistent phase behaviour relative to sampling
@@ -116,12 +116,9 @@ __kernel void extractDescriptor(const __global float* pos,
                                 const int numSampleLocs,
                                 int stride, int offset,
                                 __global float2* output,
-                                const __global float2* sb0,
-                                const __global float2* sb1,
-                                const __global float2* sb2,
-                                const __global float2* sb3,
-                                const __global float2* sb4,
-                                const __global float2* sb5,
+                                const __global float2* sb,
+                                unsigned int sbStart,
+                                unsigned int sbPitch,
                                 unsigned int sbPadding,
                                 unsigned int sbStride,
                                 unsigned int sbWidth,
@@ -207,19 +204,9 @@ __kernel void extractDescriptor(const __global float* pos,
     // For each subband
     for (int n = 0; n < 6; ++n) {
 
-        const __global float2* sb;
-        // Select the correct subband as input
-        switch (n) {
-        case 0: sb = sb0; break;
-        case 1: sb = sb1; break;
-        case 2: sb = sb2; break;
-        case 3: sb = sb3; break;
-        case 4: sb = sb4; break;
-        case 5: sb = sb5; break;
-        }
-
         sbVals[idx.y][idx.x]
-                   = readSBAndDerotate(sb, readPos, 
+                   = readSBAndDerotate(sb + sbStart + n * sbPitch, 
+                                       readPos, 
                                        angularFreq[n], offsets[n],
                                        sbPadding, sbStride,
                                        (uint2) (sbWidth, sbHeight));

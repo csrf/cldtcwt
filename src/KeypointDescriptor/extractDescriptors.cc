@@ -91,16 +91,13 @@ void Interpolator::operator()
                 cl::Event* doneEvent)
 {
     // Set subband arguments
-    kernel_.setArg(9,  subbands[0].buffer());
-    kernel_.setArg(10, subbands[1].buffer());
-    kernel_.setArg(11, subbands[2].buffer());
-    kernel_.setArg(12, subbands[3].buffer());
-    kernel_.setArg(13, subbands[4].buffer());
-    kernel_.setArg(14, subbands[5].buffer());
-    kernel_.setArg(15, cl_uint(subbands[0].padding()));
-    kernel_.setArg(16, cl_uint(subbands[0].stride()));
-    kernel_.setArg(17, cl_uint(subbands[0].width()));
-    kernel_.setArg(18, cl_uint(subbands[0].height()));
+    kernel_.setArg(9,  subbands.buffer());
+    kernel_.setArg(10, cl_uint(subbands.start()));
+    kernel_.setArg(11, cl_uint(subbands.pitch()));
+    kernel_.setArg(12, cl_uint(subbands.padding()));
+    kernel_.setArg(13, cl_uint(subbands.stride()));
+    kernel_.setArg(14, cl_uint(subbands.width()));
+    kernel_.setArg(15, cl_uint(subbands.height()));
 
     // Set descriptor location arguments relative to the centre of the 
     // image.  scale should be the number of original image pixels per 

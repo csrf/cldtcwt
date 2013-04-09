@@ -61,17 +61,16 @@ int main(int argc, const char* argv[])
                    width, height, padding, alignment};
 
         ImageBuffer<Complex<cl_float>> 
-            sb0 {context.context, CL_MEM_READ_WRITE, 
-                 width / 2, height / 2, 0, 0},
-            sb1 {context.context, CL_MEM_READ_WRITE,
-                 width / 2, height / 2, 0, 0};
+            sb {context.context, CL_MEM_READ_WRITE, 
+                width / 2, height / 2, 0, 0,
+                2};
 
         {
             // Run, timing
             auto start = std::chrono::steady_clock::now();
 
             for (int n = 0; n < numIterations; ++n) 
-                qtc(cq, input, sb0, sb1);
+                qtc(cq, input, sb, 0, 1);
 
             cq.finish();
             auto end = std::chrono::steady_clock::now();

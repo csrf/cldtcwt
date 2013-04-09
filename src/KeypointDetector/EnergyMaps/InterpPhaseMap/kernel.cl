@@ -43,7 +43,7 @@ void readImageRegionToShared(const __global float2* input,
                 // Read in cartesian
                 float2 cart =
                     inImage? 
-                        input[padding + pos.x + (padding + pos.y) * stride]
+                        input[pos.x + pos.y * stride]
                       : (float2) (0.f, 0.f);
 
                 // Convert to polar
@@ -134,12 +134,9 @@ void addDiff(__local Matrix2x2ConjSymmetric* M, Complex Dx, Complex Dy)
 // Parameters: WG_SIZE_X, WG_SIZE_Y need to be set for the work group size.
 // POS_LEN should be the number of floats to make the output structure.
 __kernel __attribute__((reqd_work_group_size(WG_SIZE_X, WG_SIZE_Y, 1)))
-void interpPhaseMap(const __global float2* sb0,
-                    const __global float2* sb1,
-                    const __global float2* sb2,
-                    const __global float2* sb3,
-                    const __global float2* sb4,
-                    const __global float2* sb5,
+void interpPhaseMap(const __global float2* sb,
+                    const unsigned int sbStart,
+                    const unsigned int sbPitch,
                     const unsigned int sbStride,
                     const unsigned int sbPadding,
                     const unsigned int sbWidth,
@@ -216,19 +213,8 @@ void interpPhaseMap(const __global float2* sb0,
     // For each subband
     for (int n = 0; n < 6; ++n) {
 
-        const __global float* sb;
-
-        // Select the correct subband as input
-        switch (n) {
-        case 0: sb = sb0; break;
-        case 1: sb = sb1; break;
-        case 2: sb = sb2; break;
-        case 3: sb = sb3; break;
-        case 4: sb = sb4; break;
-        case 5: sb = sb5; break;
-        }
-
-        readImageRegionToShared(sb, sbStride, sbPadding, 
+        readImageRegionToShared(sb + sbStart + n * sbPitch, 
+                                sbStride, sbPadding, 
                                 (uint2) (sbWidth, sbHeight),
                                 regionStart, regionSize, 
                                 &sbVals[0][0]);

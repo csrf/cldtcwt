@@ -74,9 +74,9 @@ __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateFilterY(__global const float* input,
                      unsigned int inputStart,
                      unsigned int inputStride,
-                     __global float* output0,
-                     __global float* output1,
-                     unsigned int outputStart,
+                     __global float* output,
+                     unsigned int outputStart0,
+                     unsigned int outputStart1,
                      unsigned int outputStride,
                      unsigned int outputWidth,
                      unsigned int outputHeight,
@@ -155,7 +155,7 @@ void decimateFilterY(__global const float* input,
         float rplus  = a + b;
         float rminus = a - b;
 
-        __global float* output = (l.y & 1)? output1 : output0;
+        unsigned int outputStart = (l.y & 1)? outputStart1 : outputStart0;
         
         // Add or subtract, and place in appropriate output
         output[2 * (outputStart + outPos.x + outPos.y*outputStride) 

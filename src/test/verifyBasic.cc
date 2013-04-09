@@ -81,9 +81,10 @@ int main(int argc, char** argv)
                 std::ostringstream ss;
                 ss << filename << "." << (l + sbOutputs.startLevel()) << "." << sb;
 
+                ImageBuffer<Complex<cl_float>> sbSlice {sbOutputs[l], sb};
                 saveComplexImage(ss.str(), 
                                  cq, 
-                                 sbOutputs[l][sb]);
+                                 sbSlice);
             }
         }
 

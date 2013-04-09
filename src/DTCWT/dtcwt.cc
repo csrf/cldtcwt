@@ -105,70 +105,6 @@ LevelTemps::LevelTemps(cl::Context& context,
 
 
 
-Subbands::Subbands()
-{}
-
-
-
-Subbands::Subbands(cl::Context& context,
-                   size_t w, size_t h)
-{
-    // Create all the complex images at the right size
-    for (auto& sb: subbands_)
-        sb = ImageBuffer<Complex<cl_float>>
-              (context, CL_MEM_READ_WRITE,
-               w, h, 0, 1);
-}
-
-
-
-ImageBuffer<Complex<cl_float>>& Subbands::subband(int n)
-{
-    return subbands_[n];
-}
-
-
-
-const ImageBuffer<Complex<cl_float>>& Subbands::subband(int n) const
-{
-    return subbands_[n];
-}
-
-
-
-ImageBuffer<Complex<cl_float>>& Subbands::operator[](int n)
-{
-    return subbands_[n];
-}
-
-
-
-const ImageBuffer<Complex<cl_float>>& Subbands::operator[](int n) const
-{
-    return subbands_[n];
-}
-
-
-
-size_t Subbands::width() const
-{
-    return subbands_[0].width();
-}
-
-
-size_t Subbands::height() const
-{
-    return subbands_[0].height();
-}
-
-
-
-
-
-
-
-
-
 
 
 
@@ -215,8 +151,11 @@ DtcwtOutput DtcwtTemps::createOutputs()
         if (levelTemp.producesOutputs_) {
 
             output.levels_.emplace_back(context_, 
+                    CL_MEM_READ_WRITE,
                     levelTemp.outputWidth_ / 2,
-                    levelTemp.outputHeight_ / 2);
+                    levelTemp.outputHeight_ / 2,
+                    0, 0,
+                    6);
 
             // Add a three-long vector to the list of wait events
             output.doneEvents_.emplace_back(3);
@@ -444,15 +383,15 @@ void Dtcwt::filter(cl::CommandQueue& commandQueue,
 
         // ...and generate subband outputs.
         quadToComplex(commandQueue, levelTemps.lohi, 
-                      subbands->subband(2), subbands->subband(3),
+                      *subbands, 2, 3,
                       {levelTemps.lohiDone}, &(*events)[0]); 
 
         quadToComplex(commandQueue, levelTemps.hilo, 
-                      subbands->subband(0), subbands->subband(5),
+                      *subbands, 0, 5,
                       {levelTemps.hiloDone}, &(*events)[1]); 
 
         quadToComplex(commandQueue, levelTemps.bpbp, 
-                      subbands->subband(1), subbands->subband(4),
+                      *subbands, 1, 4,
                       {levelTemps.bpbpDone}, &(*events)[2]); 
  
     }
@@ -507,15 +446,15 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
 
         // ...and filter in the y direction, generating subband outputs.
         q2ch1by(commandQueue, levelTemps.lo, 
-                subbands->subband(0), subbands->subband(5),
+                *subbands, 0, 5,
                 {loPadded}, &(*events)[0]); 
 
         q2ch0by(commandQueue, levelTemps.hi, 
-                subbands->subband(2), subbands->subband(3),
+                *subbands, 2, 3,
                 {hiPadded}, &(*events)[1]); 
 
         q2ch2by(commandQueue, levelTemps.bp, 
-                subbands->subband(1), subbands->subband(4),
+                *subbands, 1, 4,
                 {bpPadded}, &(*events)[2]); 
     }
 }
