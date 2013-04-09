@@ -12,7 +12,7 @@ for n = 1:size(tSizes, 1)
         runSpeedTestDecimateFilterY(imageSizes(n,:), 14, true);
 
     tSizes(n,2) = ...
-        runSpeedTestQuadToComplex(double(imageSizes(n,:)) ./ [1 2], image);
+        runSpeedTestQuadToComplex(double(imageSizes(n,:)) ./ [1 2], true);
 
     tSizes(n,3) = ...
         runSpeedTestQuadToComplexDecimateFilterY(imageSizes(n,:), 14, true);
