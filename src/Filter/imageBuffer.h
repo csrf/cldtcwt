@@ -41,6 +41,10 @@ public:
                 size_t padding, size_t alignment);
 
     cl::Buffer buffer() const;
+
+    size_t start() const;
+    // Linear index to the upper left corner of the image
+
     size_t width() const;
     size_t height() const;
     size_t padding() const;
@@ -59,6 +63,12 @@ public:
 
 private:
     cl::Buffer buffer_;
+
+
+    size_t start_;
+    // Location of the upper-left pixel in the image, linearly through
+    // the buffer
+
     size_t width_;
     size_t padding_;
     size_t stride_;
@@ -91,6 +101,10 @@ ImageBuffer<MemType>::ImageBuffer(cl::Context context,
     if (overshoot)
         fullHeight += alignment - overshoot;
 
+    // Record the location of the upper left pixel, linear index
+    // into the buffer
+    start_ = stride_ * padding_ + padding_; 
+
     buffer_ = cl::Buffer(context, flags,
              stride_ * fullHeight * ImageElementTraits<MemType>::size);
 }
@@ -109,8 +123,7 @@ void ImageBuffer<MemType>::write(cl::CommandQueue& cq,
     std::vector<MemType> bufferContents(numElements);
 
     // Copy into the output buffer row by row
-    auto writePos = bufferContents.begin() + padding_ * stride_
-                    + padding_;
+    auto writePos = bufferContents.begin() + start_;
     for (int n = 0; n < height_; ++n, writePos += stride_,
                                  input += width_) 
         std::copy(input, input + width_, writePos);
@@ -182,6 +195,16 @@ cl::Buffer ImageBuffer<MemType>::buffer() const
 {
     return buffer_;
 }
+
+
+
+
+template <typename MemType>
+size_t ImageBuffer<MemType>::start() const
+{
+    return start_;
+}
+
 
 
 template <typename MemType>
