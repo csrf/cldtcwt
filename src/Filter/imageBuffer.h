@@ -43,7 +43,7 @@ public:
 
     cl::Buffer buffer() const;
 
-    size_t start() const;
+    size_t start(int slice = 0) const;
     // Linear index to the upper left corner of the image
 
     size_t width() const;
@@ -66,7 +66,8 @@ public:
 
     void read(cl::CommandQueue& cq,
         MemType* output,
-        const std::vector<cl::Event> events = {}) const;
+        const std::vector<cl::Event> events = {},
+        int slice = 0) const;
 
 private:
     cl::Buffer buffer_;
@@ -166,7 +167,8 @@ void ImageBuffer<MemType>::write(cl::CommandQueue& cq,
 template <typename MemType>
 void ImageBuffer<MemType>::read(cl::CommandQueue& cq,
         MemType* output,
-        const std::vector<cl::Event> events) const
+        const std::vector<cl::Event> events,
+        int slice) const
 {
     const size_t numElements = buffer_.getInfo<CL_MEM_SIZE>() 
                             / ImageElementTraits<MemType>::size;
@@ -180,8 +182,7 @@ void ImageBuffer<MemType>::read(cl::CommandQueue& cq,
                          &events, nullptr);
 
     // Copy into the results row by row
-    auto readPos = bufferContents.begin() + padding_ * stride_
-                    + padding_;
+    auto readPos = bufferContents.begin() + start(slice);
     for (int n = 0; n < height_; ++n, readPos += stride_,
                                  output += width_) 
         std::copy(readPos, readPos + width_, output);
@@ -215,9 +216,9 @@ cl::Buffer ImageBuffer<MemType>::buffer() const
 
 
 template <typename MemType>
-size_t ImageBuffer<MemType>::start() const
+size_t ImageBuffer<MemType>::start(int slice) const
 {
-    return start_;
+    return start_ + pitch() * slice;
 }
 
 
