@@ -63,7 +63,8 @@ LevelTemps::LevelTemps(cl::Context& context,
     lo = ImageBuffer<cl_float>
                     (context, CL_MEM_READ_WRITE,
                      outputWidth_, inputHeight_, 
-                     padding, alignment);
+                     padding, alignment,
+                     producesOutputs_? 3 : 1);
 
     // x & y filtered version
     lolo = ImageBuffer<cl_float>
@@ -76,17 +77,8 @@ LevelTemps::LevelTemps(cl::Context& context,
         // These are the versions that have been filtered in the
         // x-direction (along rows), ready to be filtered along y and
         // produce outputs.
-        hi = ImageBuffer<cl_float>
-                     (context, CL_MEM_READ_WRITE,
-                      outputWidth_, inputHeight_, 
-                      padding, alignment);
-
-            
-        bp = ImageBuffer<cl_float>
-                     (context, CL_MEM_READ_WRITE,
-                      outputWidth_, inputHeight_, 
-                      padding, alignment);
-
+        hi = ImageBuffer<cl_float>(lo, 1);
+        bp = ImageBuffer<cl_float>(lo, 2);
 
         if (isLevelOne_) {
             // Level one, when producing outputs, needs some extra
@@ -497,10 +489,7 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
         // If we've been given subbands to output to, we need to do more work:
 
         // Produce all the vertically-filtered versions
-        h012bx(commandQueue, xx, 
-               levelTemps.lo,
-               levelTemps.hi,
-               levelTemps.bp,
+        h012bx(commandQueue, xx, levelTemps.lo,
                {xxPadded}, &levelTemps.loDone);
 
         // Create events that, when all done signify everything about this stage

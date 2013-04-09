@@ -76,12 +76,9 @@ int main(int argc, const char* argv[])
         ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                                     width, height, padding, alignment);
 
-        ImageBuffer<cl_float> output0(context.context, CL_MEM_READ_WRITE,
-                                      width / 2, height, padding, alignment);
-        ImageBuffer<cl_float> output1(context.context, CL_MEM_READ_WRITE,
-                                      width / 2, height, padding, alignment);
-        ImageBuffer<cl_float> output2(context.context, CL_MEM_READ_WRITE,
-                                      width / 2, height, padding, alignment);
+        ImageBuffer<cl_float> output(context.context, CL_MEM_READ_WRITE,
+                                     width / 2, height, padding, alignment,
+                                     3);
 
         {
             // Run, timing
@@ -90,7 +87,7 @@ int main(int argc, const char* argv[])
             for (int n = 0; n < numIterations; ++n) {
                 if (pad)
                     padX(cq, input);
-                filterX(cq, input, output0, output1, output2);
+                filterX(cq, input, output);
             }
 
             cq.finish();

@@ -206,26 +206,20 @@ std::tuple<Eigen::ArrayXXf, Eigen::ArrayXXf, Eigen::ArrayXXf>
         ImageBuffer<cl_float> input(context.context, CL_MEM_READ_WRITE,
                           width, height, padding, alignment); 
 
-        ImageBuffer<cl_float> outputImage0(context.context, CL_MEM_READ_WRITE,
-                           outputWidth, height, padding, alignment); 
-
-        ImageBuffer<cl_float> outputImage1(context.context, CL_MEM_READ_WRITE,
-                           outputWidth, height, padding, alignment); 
-
-        ImageBuffer<cl_float> outputImage2(context.context, CL_MEM_READ_WRITE,
-                           outputWidth, height, padding, alignment); 
+        ImageBuffer<cl_float> outputImage(context.context, CL_MEM_READ_WRITE,
+                           outputWidth, height, padding, alignment, 3); 
 
         // Upload the data
         input.write(cq, &inValues[0]);
 
         // Try the filter
         padX(cq, input);
-        decimateFilterX(cq, input, outputImage0, outputImage1, outputImage2);
+        decimateFilterX(cq, input, outputImage);
 
         // Download the data
-        outputImage0.read(cq, &outValues0[0]);
-        outputImage1.read(cq, &outValues1[0]);
-        outputImage2.read(cq, &outValues2[0]);
+        outputImage.read(cq, &outValues0[0], {}, 0);
+        outputImage.read(cq, &outValues1[0], {}, 1);
+        outputImage.read(cq, &outValues2[0], {}, 2);
 
     }
     catch (cl::Error err) {

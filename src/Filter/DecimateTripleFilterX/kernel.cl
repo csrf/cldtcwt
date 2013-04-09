@@ -115,11 +115,10 @@ __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 void decimateTripleFilterX(__global const float* input,
                            unsigned int inputStart,
                            unsigned int inputStride,
-                           __global float* output0,
-                           __global float* output1,
-                           __global float* output2,
+                           __global float* output,
                            unsigned int outputStart,
                            unsigned int outputStride,
+                           unsigned int outputPitch,
                            __constant float* filter0,
                            __constant float* filter1,
                            __constant float* filter2)
@@ -143,13 +142,15 @@ void decimateTripleFilterX(__global const float* input,
     // Work out where we need to start the convolution from
     int2 offset = filteringStartPositions(l.x);
 
-    output0[outputStride*g.y + (g.x ^ SWAP_TREE_0) + outputStart]
+    output[outputStride*g.y + (g.x ^ SWAP_TREE_0) + outputStart]
         = convolve(l, offset, cache, filter0);
 
-    output1[outputStride*g.y + (g.x ^ SWAP_TREE_1) + outputStart]
+    output[outputPitch 
+           + outputStride*g.y + (g.x ^ SWAP_TREE_1) + outputStart]
         = convolve(l, offset, cache, filter1);
 
-    output2[outputStride*g.y + (g.x ^ SWAP_TREE_2) + outputStart]
+    output[2*outputPitch 
+           + outputStride*g.y + (g.x ^ SWAP_TREE_2) + outputStart]
         = convolve(l, offset, cache, filter2);
 }
 

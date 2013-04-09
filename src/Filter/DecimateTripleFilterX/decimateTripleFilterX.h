@@ -38,9 +38,7 @@ public:
 
     void operator() (cl::CommandQueue& cq, 
                      ImageBuffer<cl_float>& input,
-                     ImageBuffer<cl_float>& output0,
-                     ImageBuffer<cl_float>& output1,
-                     ImageBuffer<cl_float>& output2,
+                     ImageBuffer<cl_float>& output,
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>(),
                      cl::Event* doneEvent = nullptr);
