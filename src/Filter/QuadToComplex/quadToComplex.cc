@@ -21,8 +21,7 @@ QuadToComplex::QuadToComplex(cl::Context& context,
 
     std::ostringstream compilerOptions;
     compilerOptions << "-D WG_W=" << workgroupSize_ << " "
-                    << "-D WG_H=" << workgroupSize_ << " "
-                    << "-D PADDING=" << padding_;
+                    << "-D WG_H=" << workgroupSize_;
 
     // Compile it...
     cl::Program program(context, source);
@@ -51,34 +50,34 @@ void QuadToComplex::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {0, 0};
 
     cl::NDRange globalSize = {
         roundWGs(input.width(), workgroupSize[0]), 
         roundWGs(input.height(), workgroupSize[1])
     }; 
 
-    // Must have the padding the kernel expects
-    assert(input.padding() == padding_);
-
     // Input and output formats need to be compatible
     assert(input.width() == 2*output0.width());
     assert(input.height() == 2*output0.height());
     assert(input.width() == 2*output1.width());
     assert(input.height() == 2*output1.height());
+    assert(output0.start() == output1.start());
 
     // Set all the arguments
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, cl_uint(input.stride()));
-    kernel_.setArg(2, output0.buffer());
-    kernel_.setArg(3, output1.buffer());
-    kernel_.setArg(4, cl_uint(output0.padding()));
-    kernel_.setArg(5, cl_uint(output0.stride()));
-    kernel_.setArg(6, cl_uint(output0.width()));
-    kernel_.setArg(7, cl_uint(output0.height()));
+    kernel_.setArg(1, cl_uint(input.start()));
+    kernel_.setArg(2, cl_uint(input.stride()));
+
+    kernel_.setArg(3, output0.buffer());
+    kernel_.setArg(4, output1.buffer());
+    kernel_.setArg(5, cl_uint(output0.start()));
+    kernel_.setArg(6, cl_uint(output0.stride()));
+
+    kernel_.setArg(7, cl_uint(output0.width()));
+    kernel_.setArg(8, cl_uint(output0.height()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }

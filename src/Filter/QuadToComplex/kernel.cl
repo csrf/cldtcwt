@@ -1,11 +1,12 @@
-// PADDING should have been defined externally, as should WG_W
-// and WG_H (width and height of the workgroup respectively)
+// WG_W and WG_H  should have been defined externally (width and height of 
+// the workgroup respectively)
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))
 __kernel void quadToComplex(__global const float* input,
-                            unsigned int stride,
+                            unsigned int inputStart,
+                            unsigned int inputStride,
                             __global float2* output0,
                             __global float2* output1,
-                            unsigned int outputPadding,
+                            unsigned int outputStart,
                             unsigned int outputStride,
                             unsigned int outWidth,
                             unsigned int outHeight)
@@ -16,8 +17,7 @@ __kernel void quadToComplex(__global const float* input,
     // Load the values to local to get best read performance
     __local float cache[WG_H][WG_W];
 
-    cache[l.y][l.x] = input[(PADDING + g.y) * stride
-                           + PADDING + g.x];
+    cache[l.y][l.x] = input[g.y * inputStride + g.x + inputStart];
 
     int2 outPos = g >> 1;
 
@@ -37,8 +37,7 @@ __kernel void quadToComplex(__global const float* input,
         const float factor = 1.0f / sqrt(2.0f);
 
         // Combine into complex pairs
-        const size_t loc = outPos.x + outputPadding
-                        + (outPos.y + outputPadding) * outputStride;
+        const size_t loc = outPos.y * outputStride + outPos.x + outputStart;
         output0[loc] = factor * (float2) (ul - lr, ur + ll);
         output1[loc] = factor * (float2) (ul + lr, ur - ll);
 

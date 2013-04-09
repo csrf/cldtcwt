@@ -98,31 +98,26 @@ void QuadToComplexDecimateFilterY::operator() (cl::CommandQueue& cq,
     assert(input.width() == 2 * output1.width());
     assert(quadHeight == 2*output1.height());
 
+    assert(output0.start() == output1.start());
+
     cl::NDRange globalSize = {
         roundWGs(input.width(), workgroupSize[0]), 
         roundWGs(quadHeight, workgroupSize[1])
     }; 
-
-    // Indicies of the upper left corners of the input/output
-    const cl_uint inputStart
-        = input.stride() * (input.padding() - symmetricPadding) 
-         + input.padding();
-
-    const cl_uint outputStart
-        = output0.stride() * output0.padding() + output0.padding();
 
     // Set all the arguments (other than the filter, which has already
     // been set)
     
     // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(1, cl_uint(input.start() 
+                                - symmetricPadding * input.stride()));
     kernel_.setArg(2, cl_uint(input.stride()));
 
     // Output buffers
     kernel_.setArg(3, output0.buffer());
     kernel_.setArg(4, output1.buffer());
-    kernel_.setArg(5, cl_uint(outputStart));
+    kernel_.setArg(5, cl_uint(output0.start()));
     kernel_.setArg(6, cl_uint(output0.stride()));
     kernel_.setArg(7, int(output0.width()));
     kernel_.setArg(8, int(output0.height()));

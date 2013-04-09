@@ -47,7 +47,6 @@ void PadX::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {padding_, padding_};
-    cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
         2 * workgroupSize[0], 
@@ -59,11 +58,12 @@ void PadX::operator() (cl::CommandQueue& cq,
 
     // Set all the arguments
     kernel_.setArg(0, image.buffer());
-    kernel_.setArg(1, int(image.width()));
-    kernel_.setArg(2, int(image.stride()));
+    kernel_.setArg(1, cl_uint(image.start()));
+    kernel_.setArg(2, cl_uint(image.width()));
+    kernel_.setArg(3, cl_uint(image.stride()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }

@@ -49,7 +49,7 @@ FilterX::FilterX(cl::Context& context,
     filterLength_ = filter.size();
 
     // Set that filter for use
-    kernel_.setArg(2, filter_);
+    kernel_.setArg(5, filter_);
 
     // Make sure the filter is odd-length
     assert((filterLength_ & 1) == 1);
@@ -73,7 +73,6 @@ void FilterX::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {padding_, padding_};
 
     cl::NDRange globalSize = {
         roundWGs(output.width(), workgroupSize[0]), 
@@ -81,23 +80,24 @@ void FilterX::operator() (cl::CommandQueue& cq,
     }; 
 
     // Must have the padding the kernel expects
+    // This could be relaxed, but we haven't done it yet
     assert(input.padding() == padding_);
 
     // Input and output formats need to be exactly the same
     assert(input.width() == output.width());
     assert(input.height() == output.height());
     assert(input.stride() == output.stride());
-    assert(input.padding() == output.padding());
     
 
     // Set all the arguments
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, output.buffer());
-    kernel_.setArg(3, int(input.width()));
-    kernel_.setArg(4, int(input.stride()));
+    kernel_.setArg(1, cl_uint(input.start()));
+    kernel_.setArg(2, cl_uint(input.stride()));
+    kernel_.setArg(3, output.buffer());
+    kernel_.setArg(4, cl_uint(output.start()));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }

@@ -98,24 +98,16 @@ void DecimateFilterX::operator() (cl::CommandQueue& cq,
     assert((input.width() + symmetricPadding * 2) == 2*output.width());
     assert(input.height() == output.height());
     
-    // Work out where the upper left corners of the input and output
-    // buffers are
-    const cl_uint inputStart = input.padding() * input.stride()
-                             + input.padding() - symmetricPadding;
-
-    const cl_uint outputStart = output.padding() * output.stride()
-                             + output.padding();
-
     // Set all the arguments
 
     // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(1, cl_uint(input.start() - symmetricPadding));
     kernel_.setArg(2, cl_uint(input.stride()));
 
     // Output buffer
     kernel_.setArg(3, output.buffer());
-    kernel_.setArg(4, cl_uint(outputStart));
+    kernel_.setArg(4, cl_uint(output.start()));
     kernel_.setArg(5, cl_uint(output.stride()));
 
     // Execute

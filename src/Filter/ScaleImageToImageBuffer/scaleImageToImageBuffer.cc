@@ -50,7 +50,6 @@ void ScaleImageToImageBuffer::operator() (cl::CommandQueue& cq,
 {
     // Padding etc.
     cl::NDRange workgroupSize = {workgroupSize_, workgroupSize_};
-    cl::NDRange offset = {0, 0};
 
     cl::NDRange globalSize = {
         roundWGs(output.width(), workgroupSize[0]), 
@@ -65,7 +64,7 @@ void ScaleImageToImageBuffer::operator() (cl::CommandQueue& cq,
 
     // Output buffer
     kernel_.setArg(1, output.buffer());
-    kernel_.setArg(2, cl_uint(output.padding() * (1 + output.stride())));
+    kernel_.setArg(2, cl_uint(output.start()));
     kernel_.setArg(3, cl_uint(output.stride()));
 
     // Centre of the output buffer
@@ -76,7 +75,7 @@ void ScaleImageToImageBuffer::operator() (cl::CommandQueue& cq,
     kernel_.setArg(6, cl_float(1.f / scaleFactor));
 
     // Execute
-    cq.enqueueNDRangeKernel(kernel_, offset,
+    cq.enqueueNDRangeKernel(kernel_, {0, 0},
                             globalSize, workgroupSize,
                             &waitEvents, doneEvent);
 }

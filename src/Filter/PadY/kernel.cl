@@ -18,6 +18,7 @@ int wrap(int n, int width)
 __kernel
 __attribute__((reqd_work_group_size(PADDING, PADDING, 1)))
 void padY(__global float* image,
+          unsigned int start, 
           unsigned int height, 
           unsigned int stride)
 {
@@ -32,12 +33,13 @@ void padY(__global float* image,
 
         // Read in the square that will contain everything we could want for
         // wrapping
-        cache[l.y][l.x] = image[g.y*stride + g.x];
+        cache[l.y][l.x] = image[g.y*stride + g.x + start];
 
         barrier(CLK_LOCAL_MEM_FENCE);
 
         // Write it to the output
-        image[l.y*stride + g.x] = cache[wrap(PADDING-1-l.y, height)][l.x];
+        image[(l.y - PADDING)*stride + g.x + start] 
+            = cache[wrap(PADDING-1-l.y, height)][l.x];
 
     } else {
 
@@ -45,12 +47,13 @@ void padY(__global float* image,
 
         // Read in the square that will contain everything we could want for
         // wrapping
-        cache[l.y][l.x] = image[(PADDING + height - PADDING + l.y) * stride + g.x];
+        cache[l.y][l.x] = image[(height - PADDING + l.y) * stride 
+                                 + g.x + start];
 
         barrier(CLK_LOCAL_MEM_FENCE);
 
         // Write it to the output
-        image[(PADDING + height + l.y) * stride + g.x] 
+        image[(height + l.y) * stride + g.x + start] 
             = cache[wrap(height + l.y, height) - (height - PADDING)][l.x];
     }
 

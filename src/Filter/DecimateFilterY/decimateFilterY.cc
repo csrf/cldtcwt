@@ -98,24 +98,17 @@ void DecimateFilterY::operator() (cl::CommandQueue& cq,
     assert((input.height() + symmetricPadding * 2) == 2*output.height());
     assert(input.width() == output.width());
     
-    // Work out where upper left hand corner of the relevant data starts
-    const cl_uint 
-        inputStart 
-            = (input.padding() - symmetricPadding) * input.stride()
-             + input.padding(),
-        outputStart
-            = output.padding() * output.stride() + output.padding();
-
     // Set all the arguments
 
     // Input buffer
     kernel_.setArg(0, input.buffer());
-    kernel_.setArg(1, cl_uint(inputStart));
+    kernel_.setArg(1, cl_uint(input.start() 
+                                - symmetricPadding * input.stride()));
     kernel_.setArg(2, cl_uint(input.stride()));
 
     // Output buffer
     kernel_.setArg(3, output.buffer());
-    kernel_.setArg(4, cl_uint(outputStart));
+    kernel_.setArg(4, cl_uint(output.start()));
     kernel_.setArg(5, cl_uint(output.stride()));
 
     // Execute
