@@ -38,7 +38,8 @@ public:
     ImageBuffer(cl::Context context,
                 cl_mem_flags flags,
                 size_t width, size_t height,
-                size_t padding, size_t alignment);
+                size_t padding, size_t alignment,
+                size_t numSlices = 1);
 
     cl::Buffer buffer() const;
 
@@ -50,6 +51,12 @@ public:
     size_t padding() const;
     size_t stride() const;
 
+    size_t pitch() const;
+    // Number of elements from the start of the one slice to the start
+    // of the next
+
+    size_t numSlices() const;
+    // Total number of image slices
 
     void write(cl::CommandQueue& cq,
         const MemType* input,
@@ -74,6 +81,9 @@ private:
     size_t stride_;
     size_t height_;
 
+    size_t pitch_;
+    size_t numSlices_;
+
 };
 
 
@@ -83,11 +93,13 @@ template <typename MemType>
 ImageBuffer<MemType>::ImageBuffer(cl::Context context,
                          cl_mem_flags flags,
                          size_t width, size_t height,
-                         size_t padding, size_t alignment)
+                         size_t padding, size_t alignment,
+                         size_t numSlices)
     : width_(width),
       height_(height),
       padding_(padding),
-      stride_(width + 2*padding)
+      stride_(width + 2*padding),
+      numSlices_(numSlices)
 {
     // Stride might need extending to respect alignment
     size_t overshoot = stride_ % alignment;
@@ -104,9 +116,12 @@ ImageBuffer<MemType>::ImageBuffer(cl::Context context,
     // Record the location of the upper left pixel, linear index
     // into the buffer
     start_ = stride_ * padding_ + padding_; 
+    pitch_ = fullHeight * stride_;
 
-    buffer_ = cl::Buffer(context, flags,
-             stride_ * fullHeight * ImageElementTraits<MemType>::size);
+    buffer_ = cl::Buffer {
+        context, flags,
+        numSlices_ * pitch_ * ImageElementTraits<MemType>::size
+    };
 }
 
 #include <iostream>
@@ -234,6 +249,21 @@ template <typename MemType>
 size_t ImageBuffer<MemType>::stride() const
 {
     return stride_;
+}
+
+
+
+template <typename MemType>
+size_t ImageBuffer<MemType>::pitch() const
+{
+    return pitch_;
+}
+
+
+template <typename MemType>
+size_t ImageBuffer<MemType>::numSlices() const
+{
+    return numSlices_;
 }
 
 
