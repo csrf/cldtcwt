@@ -23,7 +23,7 @@ void copyImageLinearly(__global const float* input,
     // Load a rectangle one workgroup wide
     cache[l.x] = input[pos];
 
-    barrier(CLK_LOCAL_MEM_FENCE);
+    //barrier(CLK_LOCAL_MEM_FENCE);
 
     // Write it to the output
     output[pos] = cache[l.x];

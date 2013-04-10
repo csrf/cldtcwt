@@ -57,7 +57,7 @@ namespace AV {
     public:
         Frame();
         Frame& operator=(Frame&&);
-        Frame(int width, int height, AVPixelFormat pixelFormat = PIX_FMT_RGB24);
+        Frame(int width, int height, PixelFormat pixelFormat = PIX_FMT_RGB24);
         Frame(Frame&&);
         ~Frame();
 
@@ -73,7 +73,7 @@ namespace AV {
         uint64_t getPktPos() const;
         uint64_t getPTS() const;
 
-        AVPixelFormat pixelFormat() const;
+        PixelFormat pixelFormat() const;
         // Pixel storage format
 
 
@@ -130,7 +130,7 @@ namespace AV {
         
         int width() const;
         int height() const;
-        AVPixelFormat pixelFormat() const;
+        PixelFormat pixelFormat() const;
         // Access to members of the structure
 
     private:
@@ -201,8 +201,8 @@ namespace SWS {
         Context(Context&&);
         // Create by moving resources from a redundant object.
         
-        Context(int srcW, int srcH, AVPixelFormat srcFormat,
-                int dstW, int dstH, AVPixelFormat dstFormat,
+        Context(int srcW, int srcH, PixelFormat srcFormat,
+                int dstW, int dstH, PixelFormat dstFormat,
                 int flags = 0,
                 SwsFilter* srcFilter = nullptr,
                 SwsFilter* dstFilter = nullptr,

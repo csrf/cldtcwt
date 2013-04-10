@@ -304,7 +304,7 @@ namespace AV {
     }
 
 
-    AVPixelFormat CodecContext::pixelFormat() const
+    PixelFormat CodecContext::pixelFormat() const
     {
         return codecContext_->pix_fmt;
     }
@@ -350,7 +350,7 @@ namespace AV {
 
 
 
-    Frame::Frame(int width, int height, AVPixelFormat pixelFormatVal)
+    Frame::Frame(int width, int height, PixelFormat pixelFormatVal)
     {
         // Allocate a frame
         frame_ = avcodec_alloc_frame();
@@ -444,9 +444,9 @@ namespace AV {
     }
 
 
-    AVPixelFormat Frame::pixelFormat() const
+    PixelFormat Frame::pixelFormat() const
     {
-        return AVPixelFormat(frame_->format);
+        return PixelFormat(frame_->format);
     }
 
 
@@ -520,8 +520,8 @@ namespace SWS {
 
 
 
-    Context::Context(int srcW, int srcH, AVPixelFormat srcFormat,
-                     int dstW, int dstH, AVPixelFormat dstFormat,
+    Context::Context(int srcW, int srcH, PixelFormat srcFormat,
+                     int dstW, int dstH, PixelFormat dstFormat,
                      int flags,
                      SwsFilter* srcFilter,
                      SwsFilter* dstFilter,
