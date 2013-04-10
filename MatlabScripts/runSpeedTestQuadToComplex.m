@@ -1,4 +1,4 @@
-function [dt] = runSpeedTestQuadToComplexDecimateFilterY(dims, filterLength, pad)
+function [dt] = runSpeedTestQuadToComplex(dims, filterLength, pad)
 % [dt] = runSpeedTestQuadToComplex(dims)
 % 
 % Runs clDTCWT-SpeedTest-QuadToComplex, and returns the results (in ms) as
