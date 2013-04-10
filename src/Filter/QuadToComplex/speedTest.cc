@@ -62,7 +62,7 @@ int main(int argc, const char* argv[])
 
         ImageBuffer<Complex<cl_float>> 
             sb {context.context, CL_MEM_READ_WRITE, 
-                width / 2, height / 2, 0, 0,
+                width / 2, height / 2, 0, 1,
                 2};
 
         {

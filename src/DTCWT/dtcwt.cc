@@ -154,7 +154,7 @@ DtcwtOutput DtcwtTemps::createOutputs()
                     CL_MEM_READ_WRITE,
                     levelTemp.outputWidth_ / 2,
                     levelTemp.outputHeight_ / 2,
-                    0, 0,
+                    0, 1,
                     6);
 
             // Add a three-long vector to the list of wait events
