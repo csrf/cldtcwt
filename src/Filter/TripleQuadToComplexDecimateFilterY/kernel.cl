@@ -107,7 +107,7 @@ void decimateFilterY(__global const float* input,
     // workgroup number (since we move along the input faster than
     // along the output matrix).
     const int pos = (g.y + get_group_id(1) * WG_H) * inputStride + g.x
-                    + inputStart + inputPitch * get_global_id(2);
+                    + inputStart + inputPitch * get_group_id(2);
 
     // Read into local memory
     loadFourBlocks(&input[pos], inputStride, l, cache);
@@ -122,7 +122,7 @@ void decimateFilterY(__global const float* input,
 
     // filter contains the filters for all inputs; we want to use
     // the z-index along
-    filter += get_global_id(2) * FILTER_LENGTH;
+    filter += get_group_id(2) * FILTER_LENGTH;
 
     // Even filter locations first...
     for (int n = 0; n < FILTER_LENGTH; n += 2) 
@@ -135,7 +135,7 @@ void decimateFilterY(__global const float* input,
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // Now we want to share the results
-    cache[l.y ^ swapTree[get_global_id(2)]][l.x] = v;
+    cache[l.y ^ swapTree[get_group_id(2)]][l.x] = v;
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -179,7 +179,7 @@ void decimateFilterY(__global const float* input,
         // opposite subband
         unsigned int start = 
             outputStart + outputPitch 
-                    * select(get_global_id(2), 5 - get_global_id(2), l.y & 1);
+                    * select(get_group_id(2), 5 - get_group_id(2), l.y & 1);
         
         // Add or subtract, and place in appropriate output
         output[2 * (start + outPos.x + outPos.y*outputStride) 
