@@ -397,6 +397,14 @@ clDTCWT_SpeedTest_QuadToComplexDecimateFilterY_SOURCES = \
 clDTCWT_SpeedTest_QuadToComplexDecimateFilterY_LDADD   = \
 	libclutil.la libbufferfilter.la 
 
+
+bin_PROGRAMS += clDTCWT-SpeedTest-TripleQuadToComplexDecimateFilterY
+clDTCWT_SpeedTest_TripleQuadToComplexDecimateFilterY_SOURCES = \
+	src/Filter/TripleQuadToComplexDecimateFilterY/speedTest.cc 
+clDTCWT_SpeedTest_TripleQuadToComplexDecimateFilterY_LDADD   = \
+	libclutil.la libbufferfilter.la 
+
+
 bin_PROGRAMS += clDTCWT-SpeedTest-DTCWT
 clDTCWT_SpeedTest_DTCWT_SOURCES = src/test/test.cc 
 clDTCWT_SpeedTest_DTCWT_LDADD   = libdtcwt.la libclutilcv.la
