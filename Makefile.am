@@ -29,6 +29,7 @@ libbufferfilter_la_SOURCES = \
 		 src/Filter/DecimateFilterX/decimateFilterX.cc \
 		 src/Filter/DecimateFilterY/decimateFilterY.cc \
 		 src/Filter/QuadToComplexDecimateFilterY/q2cDecimateFilterY.cc \
+		 src/Filter/TripleQuadToComplexDecimateFilterY/tripleQ2cDecimateFilterY.cc \
 		 src/Filter/DecimateTripleFilterX/decimateTripleFilterX.cc \
 		 src/Filter/QuadToComplex/quadToComplex.cc \
 		 src/Filter/PadX/padX.cc \
@@ -41,6 +42,7 @@ nodist_libbufferfilter_la_SOURCES = \
 		 src/Filter/FilterX/kernel.cc \
 		 src/Filter/FilterY/kernel.cc \
 		 src/Filter/QuadToComplexDecimateFilterY/kernel.cc \
+		 src/Filter/TripleQuadToComplexDecimateFilterY/kernel.cc \
          src/Filter/DecimateTripleFilterX/kernel.cc \
          src/Filter/QuadToComplex/kernel.cc \
          src/Filter/PadX/kernel.cc \
@@ -452,7 +454,8 @@ testDecimateTripleFilterX_LDFLAGS = @Eigen3_LIBS@
 testDecimateTripleFilterX_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
 
 
-TESTS += testQuadToComplex testQuadToComplexDecimateFilterY
+TESTS += testQuadToComplex testQuadToComplexDecimateFilterY \
+		 testTripleQuadToComplexDecimateFilterY
 
 check_PROGRAMS += testQuadToComplex 
 testQuadToComplex_SOURCES = \
@@ -469,6 +472,15 @@ testQuadToComplexDecimateFilterY_SOURCES = \
 testQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la
 testQuadToComplexDecimateFilterY_LDFLAGS = @Eigen3_LIBS@
 testQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
+check_PROGRAMS += testTripleQuadToComplexDecimateFilterY
+testTripleQuadToComplexDecimateFilterY_SOURCES = \
+	  src/Filter/TripleQuadToComplexDecimateFilterY/test.cc \
+	  src/Filter/referenceImplementation.cc
+testTripleQuadToComplexDecimateFilterY_LDADD   = libclutil.la libbufferfilter.la
+testTripleQuadToComplexDecimateFilterY_LDFLAGS = @Eigen3_LIBS@
+testTripleQuadToComplexDecimateFilterY_CXXFLAGS = @Eigen3_CFLAGS@ $(AM_CXXFLAGS)
+
 
 
 # MATLAB scripts and functions have their own folder to be installed into
