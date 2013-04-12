@@ -161,10 +161,15 @@ void ImageBuffer<MemType>::write(cl::CommandQueue& cq,
     std::vector<MemType> bufferContents(numElements);
 
     // Copy into the output buffer row by row
-    auto writePos = bufferContents.begin() + start_;
-    for (int n = 0; n < height_; ++n, writePos += stride_,
-                                 input += width_) 
-        std::copy(input, input + width_, writePos);
+    for (int s = 0; s < numSlices_; ++s) {
+
+        auto writePos = bufferContents.begin() + start_
+                            + s * pitch_;;
+        for (int n = 0; n < height_; ++n, writePos += stride_,
+                                     input += width_) 
+            std::copy(input, input + width_, writePos);
+
+    }
 
     // Read the internal contents of the buffer
     cq.enqueueWriteBuffer(buffer_, CL_TRUE, 
