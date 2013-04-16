@@ -122,15 +122,38 @@ void decimateFilterY(__global const float* input,
 
     // filter contains the filters for all inputs; we want to use
     // the z-index along
-    filter += get_group_id(2) * FILTER_LENGTH;
+    //filter += get_group_id(2) * FILTER_LENGTH;
+    if (get_group_id(2) == 0) {
 
-    // Even filter locations first...
-    for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n] * cache[offset.s0+n][l.x];
-        
-    // ...then odd
-    for (int n = 0; n < FILTER_LENGTH; n += 2) 
-        v += filter[n+1] * cache[offset.s1+n][l.x];
+        // Even filter locations first...
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[n] * cache[offset.s0+n][l.x];
+            
+        // ...then odd
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[n+1] * cache[offset.s1+n][l.x];
+
+    } else if (get_group_id(2) == 1) {
+
+        // Even filter locations first...
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[FILTER_LENGTH + n] * cache[offset.s0+n][l.x];
+            
+        // ...then odd
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[FILTER_LENGTH + n+1] * cache[offset.s1+n][l.x];
+
+    } else {
+
+        // Even filter locations first...
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[2*FILTER_LENGTH + n] * cache[offset.s0+n][l.x];
+            
+        // ...then odd
+        for (int n = 0; n < FILTER_LENGTH; n += 2) 
+            v += filter[2*FILTER_LENGTH + n+1] * cache[offset.s1+n][l.x];
+
+    }
 
     barrier(CLK_LOCAL_MEM_FENCE);
 
