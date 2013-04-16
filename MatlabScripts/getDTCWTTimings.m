@@ -1,9 +1,9 @@
 % Time how long it takes to run DTCWT.  All times are in ms.  Saves
-% results to filterTimings.mat.
+% results to DTCWTTimings.mat.
 
 numLevels = 1:10;
 
-% Vary the number of filter taps
+% Vary the number of levels calculated
 tNumLevels = nan(length(numLevels),1);
 for n = 1:length(numLevels)
     tNumLevels(n) = runSpeedTestDTCWT([1280 720], numLevels(n));
@@ -17,7 +17,7 @@ for n = 1:size(tSizes, 1)
     tSizes(n) = runSpeedTestDTCWT(imageSizes(n,:), 6);
 end
 
-save('dtcwtTimings.mat', ...
+save('DTCWTTimings.mat', ...
      'numLevels', 'tNumLevels',...
      'imageSizes', 'tSizes');
 
