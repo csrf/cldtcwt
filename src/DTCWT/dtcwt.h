@@ -18,7 +18,7 @@
 #include "Filter/DecimateFilterX/decimateFilterX.h"
 #include "Filter/DecimateTripleFilterX/decimateTripleFilterX.h"
 #include "Filter/DecimateFilterY/decimateFilterY.h"
-#include "Filter/QuadToComplexDecimateFilterY/q2cDecimateFilterY.h"
+#include "Filter/TripleQuadToComplexDecimateFilterY/tripleQ2cDecimateFilterY.h"
 
 #include <vector>
 #include <tuple>
@@ -154,9 +154,9 @@ private:
     DecimateFilterX h0bx;
     DecimateFilterY h0by;
 
-    DecimateTripleFilterX h012bx;
+    DecimateTripleFilterX h021bx;
 
-    QuadToComplexDecimateFilterY q2ch0by, q2ch1by, q2ch2by;
+    TripleQuadToComplexDecimateFilterY q2c_h1_h2_h0;
 
     const size_t padding_ = 16;
     const size_t alignment_ = 32;

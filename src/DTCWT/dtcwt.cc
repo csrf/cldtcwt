@@ -77,8 +77,8 @@ LevelTemps::LevelTemps(cl::Context& context,
         // These are the versions that have been filtered in the
         // x-direction (along rows), ready to be filtered along y and
         // produce outputs.
-        hi = ImageBuffer<cl_float>(lo, 1);
-        bp = ImageBuffer<cl_float>(lo, 2);
+        bp = ImageBuffer<cl_float>(lo, 1);
+        hi = ImageBuffer<cl_float>(lo, 2);
 
         if (isLevelOne_) {
             // Level one, when producing outputs, needs some extra
@@ -270,14 +270,15 @@ Dtcwt::Dtcwt(cl::Context& context, const std::vector<cl::Device>& devices,
     h0by {context, devices, h0bCoefs(scaleFactor), false},
 
     // 3-way decimating filter
-    h012bx {context, devices, h0bCoefs(scaleFactor), false,
-                              h1bCoefs(scaleFactor), true,
-                              h2bCoefs(scaleFactor), true},
+    h021bx {context, devices, h0bCoefs(scaleFactor), false,
+                              h2bCoefs(scaleFactor), true,
+                              h1bCoefs(scaleFactor), true},
 
     // Filtering, decimation, complex conversion
-    q2ch0by {context, devices, h0bCoefs(scaleFactor), false},
-    q2ch1by {context, devices, h1bCoefs(scaleFactor), true},
-    q2ch2by {context, devices, h2bCoefs(scaleFactor), true}
+    q2c_h1_h2_h0 {context, devices,
+                  h1bCoefs(scaleFactor), true,
+                  h2bCoefs(scaleFactor), true,
+                  h0bCoefs(scaleFactor), false}
 {}
 
 
@@ -428,34 +429,27 @@ void Dtcwt::decimateFilter(cl::CommandQueue& commandQueue,
         // If we've been given subbands to output to, we need to do more work:
 
         // Produce all the vertically-filtered versions
-        h012bx(commandQueue, xx, levelTemps.lo,
+        h021bx(commandQueue, xx, levelTemps.lo,
                {xxPadded}, &levelTemps.loDone);
 
         // Create events that, when all done signify everything about this stage
         // is complete
-        //events->resize(3);
+        *events = std::vector<cl::Event>(1);
 
         cl::Event loPadded, hiPadded, bpPadded;
         padY(commandQueue, levelTemps.lo, {levelTemps.loDone}, &loPadded);
-        padY(commandQueue, levelTemps.hi, {levelTemps.loDone}, &hiPadded);
         padY(commandQueue, levelTemps.bp, {levelTemps.loDone}, &bpPadded);
+        padY(commandQueue, levelTemps.hi, {levelTemps.loDone}, &hiPadded);
 
         // Prepare low-low output
         h0by(commandQueue, levelTemps.lo, levelTemps.lolo,
              {loPadded}, &levelTemps.loloDone);
 
         // ...and filter in the y direction, generating subband outputs.
-        q2ch1by(commandQueue, levelTemps.lo, 
-                *subbands, 0, 5,
-                {loPadded}, &(*events)[0]); 
-
-        q2ch0by(commandQueue, levelTemps.hi, 
-                *subbands, 2, 3,
-                {hiPadded}, &(*events)[1]); 
-
-        q2ch2by(commandQueue, levelTemps.bp, 
-                *subbands, 1, 4,
-                {bpPadded}, &(*events)[2]); 
+        q2c_h1_h2_h0(commandQueue, levelTemps.lo, *subbands,
+                     {loPadded, bpPadded, hiPadded},
+                     &(*events)[0]);
+     
     }
 }
 
