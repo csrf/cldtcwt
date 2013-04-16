@@ -92,13 +92,13 @@ void Calculator::operator() (ImageBuffer<cl_float>& input,
         descriptorExtracter_(commandQueue, 
                 dtcwtOut[l], scales[l],      // Subband
                 dtcwtOut[l+1], scales[l+1],  // Parent subband
-                peakDetectorResults.list,         // Locations of keypoints
-                peakDetectorResults.cumCounts, l, maxNumKeypoints_, 
+                peakDetectorResults.list(),         // Locations of keypoints
+                peakDetectorResults.cumCounts(), l, maxNumKeypoints_, 
                         // Start indices within list of the different 
                         // levels; which level to extract; what the maximum
                         // number of keypoints we could be asking for is.
                 descriptors_,
-                {peakDetectorResults.cumCountsDone},
+                peakDetectorResults.listDone(),
                         // The cumulative counts rely on everything else
                         // in the peak detector being done
                 &descriptorsDone_[l], &descriptorsDone_[l + energyMaps.size()]
@@ -182,24 +182,24 @@ std::vector<std::vector<cl::Event>> Calculator::levelDoneEvents(void) const
 
 size_t Calculator::numFloatsPerKPLocation(void)
 {
-    return peakDetectorResults.numFloatsPerPosition;
+    return peakDetectorResults.numFloatsPerPosition();
 }
 
 cl::Buffer Calculator::keypointLocations(void)
 {
-    return peakDetectorResults.list;
+    return peakDetectorResults.list();
 }
 
 
 cl::Buffer Calculator::keypointCumCounts(void)
 {
-    return peakDetectorResults.cumCounts;
+    return peakDetectorResults.cumCounts();
 }
 
 
 std::vector<cl::Event> Calculator::keypointLocationEvents(void)
 {
-    return std::vector<cl::Event>(peakDetectorResults.listDone);
+    return peakDetectorResults.listDone();
 }
 
 

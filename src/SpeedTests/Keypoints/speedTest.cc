@@ -115,13 +115,13 @@ int main()
         descriptorExtracter(commandQueue, 
                 dtcwtOut[l], scales[l],      // Subband
                 dtcwtOut[l+1], scales[l+1],  // Parent subband
-                peakDetectorResults.list,         // Locations of keypoints
-                peakDetectorResults.cumCounts, l, maxNumKeypoints, 
+                peakDetectorResults.list(),         // Locations of keypoints
+                peakDetectorResults.cumCounts(), l, maxNumKeypoints, 
                         // Start indices within list of the different 
                         // levels; which level to extract; what the maximum
                         // number of keypoints we could be asking for is.
                 descriptors,
-                {peakDetectorResults.cumCountsDone},
+                peakDetectorResults.listDone(),
                         // The cumulative counts rely on everything else
                         // in the peak detector being done
                 &descriptorsDone_[l], &descriptorsDone_[l + energyMaps.size()]

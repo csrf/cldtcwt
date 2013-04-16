@@ -69,15 +69,15 @@ int main()
 
         // Read the last accumulated value for the total number of peaks
         int numOutputsVal;
-        cq.enqueueReadBuffer(results.cumCounts, CL_TRUE, 
-                             results.levelLists.size() * sizeof(cl_uint), 
+        cq.enqueueReadBuffer(results.cumCounts(), CL_TRUE, 
+                             results.numLevels() * sizeof(cl_uint), 
                              sizeof(cl_uint),
                              &numOutputsVal);
 
         // Now read the peaks themselves out
         std::vector<float> outputs(numOutputsVal 
-                                    * results.numFloatsPerPosition);
-        cq.enqueueReadBuffer(results.list, CL_TRUE, 
+                                    * results.numFloatsPerPosition());
+        cq.enqueueReadBuffer(results.list(), CL_TRUE, 
                              0, outputs.size() * sizeof(float), 
                              &outputs[0]);
 
@@ -86,8 +86,8 @@ int main()
         // Display all the keypoints found: (x, y, scale, -)
         for (int n = 0; n < numOutputsVal; ++n) {
 
-            for (int m = 0; m < results.numFloatsPerPosition; ++m)
-                std::cout << outputs[n * results.numFloatsPerPosition + m] 
+            for (int m = 0; m < results.numFloatsPerPosition(); ++m)
+                std::cout << outputs[n * results.numFloatsPerPosition() + m] 
                           << "\t";
             std::cout << "\n";
 

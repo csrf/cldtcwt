@@ -11,27 +11,48 @@
 #include "FindMax/findMax.h"
 #include "Accumulate/accumulate.h"
 
+class PeakDetector;
+
+
 struct PeakDetectorResults {
 
+private:
     // Number of floats used for each position detected
-    size_t numFloatsPerPosition;
+    size_t numFloatsPerPosition_;
 
     // Intermediates: the per-level lists (as opposed to the full one)
-    std::vector<cl_uint> zeroCounts; // For zeroing the counts
-    cl::Buffer counts;
-    cl::Event countsCleared;
-    std::vector<cl::Buffer> levelLists;
-    std::vector<size_t> maxLevelCounts;
-    std::vector<cl::Event> levelListsDone;
+    std::vector<cl_uint> zeroCounts_; // For zeroing the counts
+    cl::Buffer counts_;
+    cl::Event countsCleared_;
+    std::vector<cl::Buffer> levelLists_;
+    std::vector<size_t> maxLevelCounts_;
+    std::vector<cl::Event> levelListsDone_;
 
     // Counts from each level
-    cl::Buffer cumCounts;
-    cl::Event cumCountsDone;
+    cl::Buffer cumCounts_;
+    cl::Event cumCountsDone_;
 
     // List of positions relative to the image centre with scales
-    cl::Buffer list;
-    std::vector<cl::Event> listDone;
-    size_t maxListLength;
+    cl::Buffer list_;
+    std::vector<cl::Event> listDone_;
+    size_t maxListLength_;
+
+public:
+    size_t numFloatsPerPosition() const;
+    // Number of floats per position
+    
+    size_t numLevels() const;
+    // Number of levels analysed
+
+    cl::Buffer cumCounts() const;
+    cl::Event cumCountsDone() const;
+    // Array of cumulative counts, starting with zero
+
+    cl::Buffer list() const;
+    std::vector<cl::Event> listDone() const;
+    // List of peak locations.
+
+    friend PeakDetector;
 
 };
 
