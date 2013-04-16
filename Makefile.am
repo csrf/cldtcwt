@@ -499,6 +499,7 @@ dist_matlabscript_DATA = \
 	MatlabScripts/getDecimateTripleFilterXTimings.m \
 	MatlabScripts/getQuadToComplexDecimateFilterYTimings.m \
 	MatlabScripts/getDTCWTTimings.m \
+	MatlabScripts/getMatlabDTCWTTimings.m \
 	MatlabScripts/runSpeedTestBufferTrial.m \
 	MatlabScripts/runSpeedTestDecimateFilterX.m \
 	MatlabScripts/runSpeedTestDecimateFilterY.m \
