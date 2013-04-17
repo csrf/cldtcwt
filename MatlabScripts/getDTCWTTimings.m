@@ -1,7 +1,7 @@
 % Time how long it takes to run DTCWT.  All times are in ms.  Saves
 % results to DTCWTTimings.mat.
 
-numLevels = 1:10;
+numLevels = 0:10;
 
 % Vary the number of levels calculated
 tNumLevels = nan(length(numLevels),1);
