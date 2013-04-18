@@ -242,6 +242,7 @@ int main()
     const int numLevels = 3;
     const int startLevel = 2;
     const size_t maxNumKeypoints = 1000;
+    const size_t numIterations = 1000;
 
 
     size_t width, height;
@@ -269,7 +270,6 @@ int main()
              * sizeof(cl_float)
     };
 
-    std::cout << width << "x" << height << std::endl;
 
     ImageBuffer<float> input {
         context, CL_MEM_READ_WRITE, 
@@ -282,25 +282,45 @@ int main()
  
     commandQueue.finish();
 
-    // Transform
-    calculator.dtcwt(commandQueue, input, 
-                     workings.dtcwtTemps, 
-                     workings.dtcwtOut);
+    auto t1 = std::chrono::steady_clock::now();
+    
+    for (int n = 0; n < numIterations; ++n)
+        // Transform
+        calculator.dtcwt(commandQueue, input, 
+                         workings.dtcwtTemps, 
+                         workings.dtcwtOut);
 
 
     commandQueue.finish();
+    auto t2 = std::chrono::steady_clock::now();
 
-    detectKeypoints(commandQueue, calculator, workings);
+    for (int n = 0; n < numIterations; ++n)
+        detectKeypoints(commandQueue, calculator, workings);
 
     commandQueue.finish();
+    auto t3 = std::chrono::steady_clock::now();
 
-    std::cout << getNumKeypoints(commandQueue, workings.peakDetectorResults)
-              << std::endl;
 
-    extractKeypoints(commandQueue, calculator, workings);
+
+    for (int n = 0; n < numIterations; ++n)
+        extractKeypoints(commandQueue, calculator, workings);
  
     commandQueue.finish();
+    auto t4 = std::chrono::steady_clock::now();
 
+    std::cout << "Dimensions: " << width << "x" << height << std::endl;
+
+    std::cout << "Keypoints: "
+              << getNumKeypoints(commandQueue, workings.peakDetectorResults)
+              << std::endl;
+
+    std::cout 
+      << "DTCWT: "
+      << DurationMilliseconds(t2 - t1).count() / numIterations << "ms\n"
+      << "Keypoint detection: "
+      << DurationMilliseconds(t3 - t2).count() / numIterations << "ms\n"
+      << "Keypoint extraction: "
+      << DurationMilliseconds(t4 - t3).count() / numIterations << "ms\n";
     return 0;
 }
 
