@@ -23,6 +23,7 @@ PKG_CHECK_MODULES([opencv], [opencv glew])
 PKG_CHECK_MODULES([V4L2], [libv4l2])
 PKG_CHECK_MODULES([Eigen3], [eigen3])
 PKG_CHECK_MODULES([SFML], [sfml-system >= 2.0 sfml-window >= 2.0])
+PKG_CHECK_MODULES([OpenEXR], [OpenEXR >= 1.7])
 
 # Make sure we can use FFMPEG for video input
 PKG_CHECK_MODULES([FFMPEG], [libavcodec >= 54

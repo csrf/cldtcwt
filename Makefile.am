@@ -184,6 +184,8 @@ bin_PROGRAMS += clDTCWT-SpeedTest-Keypoints
 clDTCWT_SpeedTest_Keypoints_SOURCES = \
 	src/SpeedTests/Keypoints/speedTest.cc
 clDTCWT_SpeedTest_Keypoints_LDADD = libdtcwt.la libclutil.la libkeypoints.la
+clDTCWT_SpeedTest_Keypoints_LDFLAGS = @OpenEXR_LIBS@
+clDTCWT_SpeedTest_Keypoints_CXXFLAGS = @OpenEXR_CFLAGS@ $(AM_CXXFLAGS)
 
 
 
