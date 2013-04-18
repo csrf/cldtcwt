@@ -2,7 +2,7 @@
 #include "CL/cl.hpp"
 #include "DTCWT/dtcwt.h"
 #include "KeypointDetector/EnergyMaps/Eigen/energyMapEigen.h"
-#include "KeypointDetector/EnergyMaps/InterpMap/interpMap.h"
+#include "KeypointDetector/EnergyMaps/EnergyMap/energyMap.h"
 #include "KeypointDetector/peakDetector.h"
 #include "KeypointDescriptor/extractDescriptors.h"
 
@@ -12,6 +12,8 @@
 #include <ImfInputFile.h>
 #include <ImfFrameBuffer.h>
 #include <half.h>
+
+#include <highgui.h>
 
 std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context> 
     initOpenCL();
@@ -24,7 +26,7 @@ struct Calculator {
 
     Dtcwt dtcwt;
 
-    InterpMapEigen energyMap;
+    EnergyMap energyMap;
     PeakDetector peakDetector;
 
     DescriptorExtracter descriptorExtracter;
@@ -50,34 +52,6 @@ Calculator::Calculator(cl::Context context,
 
 {}
 
-
-std::vector<float> readY(const char filename[], 
-                        size_t& width, size_t& height)
-{
-    Imf::InputFile file(filename);
-
-    Imath::Box2i window = file.header().dataWindow();
-    width = window.max.x - window.min.x + 1;
-    height = window.max.y - window.min.y + 1;
-
-    Imf::FrameBuffer frameBuffer;
-
-    std::vector<float> values(width * height);
-
-    frameBuffer.insert("Y", 
-        Imf::Slice {
-            Imf::FLOAT, 
-            reinterpret_cast<char*>
-                (&values[0] - window.min.x - window.min.y * width),
-            sizeof(half), sizeof(half) * width,
-            1, 1, 0.f
-        });
-                                  
-    file.setFrameBuffer(frameBuffer);
-    file.readPixels(window.min.y, window.max.y);
-
-    return values;
-}
 
 
 struct Workings {
@@ -237,17 +211,19 @@ size_t getNumKeypoints(cl::CommandQueue& cq,
 
 
 
-int main()
+int main(int argc, char** argv)
 {
-    const int numLevels = 3;
+    const int numLevels = 6;
     const int startLevel = 2;
     const size_t maxNumKeypoints = 1000;
     const size_t numIterations = 1000;
 
+    // Read the image in
+    cv::Mat bmp = cv::imread(argv[1], 0);
+    cv::Mat floatBmp;
+    bmp.convertTo(floatBmp, CV_32F);
 
-    size_t width, height;
-    std::vector<float> values = readY("logo.exr", width, height);
-
+    size_t width = floatBmp.cols, height = floatBmp.rows;
 
     cl::Platform platform;
     std::vector<cl::Device> devices;
@@ -278,7 +254,8 @@ int main()
     };
 
     cl::Event inputReady;
-    input.write(commandQueue, &values[0], {}, &inputReady);
+    input.write(commandQueue, reinterpret_cast<cl_float*>(floatBmp.ptr()), 
+                {}, &inputReady);
  
     commandQueue.finish();
 
