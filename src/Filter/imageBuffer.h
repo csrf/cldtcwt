@@ -175,7 +175,7 @@ void ImageBuffer<MemType>::write(cl::CommandQueue& cq,
     cq.enqueueWriteBuffer(buffer_, CL_TRUE, 
                          0, buffer_.getInfo<CL_MEM_SIZE>(),
                          &bufferContents[0],
-                         &events, nullptr);
+                         &events, done);
 #if 0
     cq.enqueueWriteBufferRect(input.buffer(), CL_TRUE,
               makeCLSizeT<3>({sizeof(float) * input.padding(),
