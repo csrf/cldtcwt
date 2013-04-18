@@ -85,6 +85,7 @@ struct Workings {
     DtcwtTemps dtcwtTemps;
     DtcwtOutput dtcwtOut;
 
+
     std::vector<float> scales; // List of the scale of each energy map, i.e. 
                                // how many pixels in the original image each
                                // pixel in the new image represents
@@ -93,6 +94,7 @@ struct Workings {
     std::vector<cl::Event> energyMapsDone;
     std::vector<cl::Image*> emPointers;
 
+    size_t maxNumKeypoints;
     PeakDetectorResults peakDetectorResults;
 
     cl::Buffer descriptors;
@@ -114,11 +116,13 @@ Workings::Workings(cl::Context& context,
                    size_t width, size_t height, 
                    size_t startLevel, size_t numLevels,
                    PeakDetector& peakDetector, 
-                   size_t maxNumKeypoints, 
+                   size_t maxNumKeypointsVal, 
                    size_t descriptorSize)
     :
     dtcwtTemps {context, width, height, startLevel, numLevels},
     dtcwtOut {dtcwtTemps.createOutputs()},
+
+    maxNumKeypoints {maxNumKeypointsVal},
 
     peakDetectorResults {
        peakDetector.createResultsStructure(
@@ -157,6 +161,78 @@ Workings::Workings(cl::Context& context,
 }
 
 
+
+void detectKeypoints(cl::CommandQueue& commandQueue,
+                     Calculator& calculator,
+                     Workings& workings)
+{
+
+    // Calculate energy
+    for (int l = 0; l < workings.energyMaps.size(); ++l) 
+        calculator.energyMap(commandQueue, 
+                  workings.dtcwtOut.level(workings.dtcwtOut.startLevel() + l), 
+                  workings.energyMaps[l], 
+                  workings.dtcwtOut.doneEvents(workings.dtcwtOut.startLevel() + l), 
+                  &workings.energyMapsDone[l]);
+
+    // Look for peaks
+    calculator.peakDetector(commandQueue, workings.emPointers, workings.scales, 0.02, 0.f,
+                               workings.peakDetectorResults,
+                               workings.energyMapsDone);
+
+}
+
+
+
+
+void extractKeypoints(cl::CommandQueue& commandQueue,
+                      Calculator& calculator,
+                      Workings& workings)
+{
+
+    // Extract the descriptors
+    for (size_t l = 0; l < (workings.energyMaps.size() - 1); ++l) {
+        calculator.descriptorExtracter(commandQueue, 
+                workings.dtcwtOut[l], workings.scales[l],      // Subband
+                workings.dtcwtOut[l+1], workings.scales[l+1],  // Parent subband
+                workings.peakDetectorResults.list(),         // Locations of keypoints
+                workings.peakDetectorResults.cumCounts(), l, 
+                workings.maxNumKeypoints, 
+                        // Start indices within list of the different 
+                        // levels; which level to extract; what the maximum
+                        // number of keypoints we could be asking for is.
+                workings.descriptors,
+                workings.peakDetectorResults.listDone(),
+                        // The cumulative counts rely on everything else
+                        // in the peak detector being done
+                &workings.descriptorsDone[l], &workings.descriptorsDone[l + workings.energyMaps.size()]
+                        // Wait for both coarse and fine to be done
+                );
+    }
+
+
+}
+
+
+
+size_t getNumKeypoints(cl::CommandQueue& cq,
+                       PeakDetectorResults& results)
+{
+
+    std::vector<cl::Event> waitEvents = {results.cumCountsDone()};
+
+    cl_uint result;
+
+    cq.enqueueReadBuffer(
+        results.cumCounts(),
+        CL_TRUE, // Block until read complete
+        results.numLevels() * sizeof(cl_uint), sizeof(cl_uint),
+            // Location and length to read
+        &result,
+        &waitEvents);
+
+    return result;
+}
 
 
 
@@ -204,50 +280,26 @@ int main()
     cl::Event inputReady;
     input.write(commandQueue, &values[0], {}, &inputReady);
  
+    commandQueue.finish();
+
     // Transform
-    calculator.dtcwt(commandQueue, input, workings.dtcwtTemps, workings.dtcwtOut, {inputReady});
+    calculator.dtcwt(commandQueue, input, 
+                     workings.dtcwtTemps, 
+                     workings.dtcwtOut);
 
 
+    commandQueue.finish();
 
+    detectKeypoints(commandQueue, calculator, workings);
 
+    commandQueue.finish();
 
-    // Calculate energy
-    for (int l = 0; l < workings.energyMaps.size(); ++l) 
-        calculator.energyMap(commandQueue, 
-                  workings.dtcwtOut.level(workings.dtcwtOut.startLevel() + l), 
-                  workings.energyMaps[l], 
-                  workings.dtcwtOut.doneEvents(workings.dtcwtOut.startLevel() + l), 
-                  &workings.energyMapsDone[l]);
+    std::cout << getNumKeypoints(commandQueue, workings.peakDetectorResults)
+              << std::endl;
 
-    // Look for peaks
-    calculator.peakDetector(commandQueue, workings.emPointers, workings.scales, 0.02, 0.f,
-                               workings.peakDetectorResults,
-                               workings.energyMapsDone);
-
-
-
-
-    // Extract the descriptors
-    for (size_t l = 0; l < (workings.energyMaps.size() - 1); ++l) {
-        calculator.descriptorExtracter(commandQueue, 
-                workings.dtcwtOut[l], workings.scales[l],      // Subband
-                workings.dtcwtOut[l+1], workings.scales[l+1],  // Parent subband
-                workings.peakDetectorResults.list(),         // Locations of keypoints
-                workings.peakDetectorResults.cumCounts(), l, maxNumKeypoints, 
-                        // Start indices within list of the different 
-                        // levels; which level to extract; what the maximum
-                        // number of keypoints we could be asking for is.
-                workings.descriptors,
-                workings.peakDetectorResults.listDone(),
-                        // The cumulative counts rely on everything else
-                        // in the peak detector being done
-                &workings.descriptorsDone[l], &workings.descriptorsDone[l + workings.energyMaps.size()]
-                        // Wait for both coarse and fine to be done
-                );
-    }
+    extractKeypoints(commandQueue, calculator, workings);
  
-
-    
+    commandQueue.finish();
 
     return 0;
 }
