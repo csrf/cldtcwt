@@ -119,7 +119,6 @@ Workings::Workings(cl::Context& context,
     
     // Create energy maps for each output level (other than the last,
     // which is only there for coarse detections)
-    float s = 2;
     for (int i = 0; 
          i < (dtcwtOut.numTrees() * (dtcwtOut.numLevels() - 1));
          ++i) {
@@ -156,7 +155,7 @@ void detectKeypoints(cl::CommandQueue& commandQueue,
                   &workings.energyMapsDone[l]);
 
     // Look for peaks
-    calculator.peakDetector(commandQueue, workings.emPointers, workings.scales, 0.02, 0.f,
+    calculator.peakDetector(commandQueue, workings.emPointers, workings.scales, 4.f, 0.f,
                                workings.peakDetectorResults,
                                workings.energyMapsDone);
 
@@ -216,10 +215,9 @@ size_t getNumKeypoints(cl::CommandQueue& cq,
 
 
 
-
 int main(int argc, char** argv)
 {
-    const int numLevels = 6;
+    const int numLevels = 4;
     const int startLevel = 2;
     const size_t maxNumKeypoints = 1000;
     const size_t numIterations = 1000;
@@ -306,6 +304,7 @@ int main(int argc, char** argv)
       << DurationMilliseconds(t3 - t2).count() / numIterations << "ms\n"
       << "Keypoint extraction: "
       << DurationMilliseconds(t4 - t3).count() / numIterations << "ms\n";
+
     return 0;
 }
 
