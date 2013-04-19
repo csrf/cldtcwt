@@ -1,6 +1,6 @@
 #include "util/clUtil.h"
 #include "CL/cl.hpp"
-#include "DTCWT/dtcwt.h"
+#include "DTCWT/intDtcwt.h"
 #include "KeypointDetector/EnergyMaps/Eigen/energyMapEigen.h"
 #include "KeypointDetector/EnergyMaps/EnergyMap/energyMap.h"
 #include "KeypointDetector/peakDetector.h"
@@ -24,7 +24,7 @@ typedef std::chrono::duration<double, std::milli>
 
 struct Calculator {
 
-    Dtcwt dtcwt;
+    IntDtcwt dtcwt;
 
     EnergyMap energyMap;
     PeakDetector peakDetector;
@@ -56,8 +56,7 @@ Calculator::Calculator(cl::Context context,
 
 struct Workings {
 
-    DtcwtTemps dtcwtTemps;
-    DtcwtOutput dtcwtOut;
+    IntDtcwtOutput dtcwtOut;
 
 
     std::vector<float> scales; // List of the scale of each energy map, i.e. 
@@ -75,6 +74,7 @@ struct Workings {
     std::vector<cl::Event> descriptorsDone;
 
     Workings(cl::Context& context, 
+             IntDtcwt& dtcwt,
              size_t width, size_t height, 
              size_t startLevel, size_t numLevels,
              PeakDetector& peakDetector, 
@@ -84,23 +84,27 @@ struct Workings {
 };
 
 
-
+// Scale factors
+static const std::vector<float> sf = {1.f, 7.f/8.f, 6.f/8.f, 5.f/8.f};
 
 Workings::Workings(cl::Context& context, 
+                   IntDtcwt& dtcwt,
                    size_t width, size_t height, 
                    size_t startLevel, size_t numLevels,
                    PeakDetector& peakDetector, 
                    size_t maxNumKeypointsVal, 
                    size_t descriptorSize)
     :
-    dtcwtTemps {context, width, height, startLevel, numLevels},
-    dtcwtOut {dtcwtTemps.createOutputs()},
+    dtcwtOut {
+        dtcwt.createOutputs(width, height, startLevel, numLevels, sf)
+    },
 
     maxNumKeypoints {maxNumKeypointsVal},
 
     peakDetectorResults {
        peakDetector.createResultsStructure(
-                std::vector<size_t>(numLevels - 1, maxNumKeypoints),
+                std::vector<size_t>(sf.size() * (numLevels - 1), 
+                                    maxNumKeypoints),
                 maxNumKeypoints
             )
     },
@@ -110,23 +114,25 @@ Workings::Workings(cl::Context& context,
         maxNumKeypoints * descriptorSize
     },
 
-    descriptorsDone { 2*(numLevels-1) }
+    descriptorsDone { sf.size() * 2 * (numLevels-1) }
 {
     
     // Create energy maps for each output level (other than the last,
     // which is only there for coarse detections)
     float s = 2;
-    for (int i = 0; i < (dtcwtOut.numLevels() - 1); ++i) {
+    for (int i = 0; 
+         i < (dtcwtOut.numTrees() * (dtcwtOut.numLevels() - 1));
+         ++i) {
         energyMaps.push_back(
             createImage2D(context, 
-                dtcwtOut.level(dtcwtOut.startLevel() + i).width(),
-                dtcwtOut.level(dtcwtOut.startLevel() + i).height())
+                dtcwtOut[i].width(),
+                dtcwtOut[i].height())
         );
 
         energyMapsDone.emplace_back();
 
         // Set up the scales (used in peak detection)
-        scales.push_back(s *= 2);
+        scales.push_back(dtcwtOut.scale(i));
     }
 
     // Adapt to input format of peakDetector, which takes a list of pointers
@@ -144,9 +150,9 @@ void detectKeypoints(cl::CommandQueue& commandQueue,
     // Calculate energy
     for (int l = 0; l < workings.energyMaps.size(); ++l) 
         calculator.energyMap(commandQueue, 
-                  workings.dtcwtOut.level(workings.dtcwtOut.startLevel() + l), 
+                  workings.dtcwtOut[l], 
                   workings.energyMaps[l], 
-                  workings.dtcwtOut.doneEvents(workings.dtcwtOut.startLevel() + l), 
+                  workings.dtcwtOut.doneEvents(l), 
                   &workings.energyMapsDone[l]);
 
     // Look for peaks
@@ -165,10 +171,10 @@ void extractKeypoints(cl::CommandQueue& commandQueue,
 {
 
     // Extract the descriptors
-    for (size_t l = 0; l < (workings.energyMaps.size() - 1); ++l) {
+    for (size_t l = 0; l < workings.energyMaps.size(); ++l) {
         calculator.descriptorExtracter(commandQueue, 
                 workings.dtcwtOut[l], workings.scales[l],      // Subband
-                workings.dtcwtOut[l+1], workings.scales[l+1],  // Parent subband
+                workings.dtcwtOut[l+sf.size()], workings.scales[l+sf.size()],  // Parent subband
                 workings.peakDetectorResults.list(),         // Locations of keypoints
                 workings.peakDetectorResults.cumCounts(), l, 
                 workings.maxNumKeypoints, 
@@ -238,6 +244,7 @@ int main(int argc, char** argv)
                               
     Workings workings {
         context, 
+        calculator.dtcwt,
         width, height, 
         startLevel, numLevels,
         calculator.peakDetector,
@@ -247,25 +254,26 @@ int main(int argc, char** argv)
     };
 
 
-    ImageBuffer<float> input {
-        context, CL_MEM_READ_WRITE, 
-        width, height,
-        16, 32
+    cl::Image2D input {
+        context,
+        CL_MEM_READ_WRITE,
+        cl::ImageFormat {CL_LUMINANCE, CL_FLOAT},
+        width, height, 0
     };
 
     cl::Event inputReady;
-    input.write(commandQueue, reinterpret_cast<cl_float*>(floatBmp.ptr()), 
-                {}, &inputReady);
- 
+    commandQueue.enqueueWriteImage(input, CL_TRUE, 
+                                   makeCLSizeT<3>({0, 0, 0}), 
+                                   makeCLSizeT<3>({width, height, 1}), 
+                                   0, 0,
+                                   floatBmp.ptr());
     commandQueue.finish();
 
     auto t1 = std::chrono::steady_clock::now();
     
+    // Transform
     for (int n = 0; n < numIterations; ++n)
-        // Transform
-        calculator.dtcwt(commandQueue, input, 
-                         workings.dtcwtTemps, 
-                         workings.dtcwtOut);
+        calculator.dtcwt(commandQueue, input, workings.dtcwtOut);
 
 
     commandQueue.finish();
