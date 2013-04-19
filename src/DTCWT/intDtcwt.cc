@@ -112,7 +112,7 @@ std::tuple<size_t,size_t> IntDtcwtOutput::treeLevelFromIdx(size_t idx) const
 // Get the scale of the level number or index
 float IntDtcwtOutput::scale(size_t tree, size_t level) const
 {
-    return scales_[tree] * (1 << level);
+    return (1 << level) / scales_[tree];
 }
 
 float IntDtcwtOutput::scale(size_t idx) const
