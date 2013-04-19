@@ -1,5 +1,6 @@
 __kernel
 void absToRGBA(const __global float2* input,
+               unsigned int start,
                unsigned int padding,
                unsigned int stride,
                __write_only image2d_t output,
@@ -11,7 +12,7 @@ void absToRGBA(const __global float2* input,
     if (all(pos < get_image_dim(output))) {
 
         float v = gain * 
-            fast_length(input[padding + pos.x + stride * (padding + pos.y)]);
+            fast_length(input[start + pos.x + stride * pos.y]);
         write_imagef(output, pos, (float4) (v, v, v, 1.0f));
 
     }
