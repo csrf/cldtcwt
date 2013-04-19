@@ -214,13 +214,50 @@ size_t getNumKeypoints(cl::CommandQueue& cq,
 }
 
 
+#include <sstream>
+
+template <typename T>
+T readStr(const char* string)
+{
+    std::istringstream s(string);
+
+    T result;
+    s >> result;
+    return result;
+}
+
+
+
 
 int main(int argc, char** argv)
 {
-    const int numLevels = 4;
-    const int startLevel = 2;
-    const size_t maxNumKeypoints = 1000;
-    const size_t numIterations = 1000;
+    int numLevels = 4;
+    int startLevel = 2;
+    size_t maxNumKeypoints = 1000;
+    size_t numIterations = 1000;
+
+    std::string imageFilename;
+
+    // First argument: image name
+    if (argc >= 2) 
+        imageFilename = readStr<std::string>(argv[1]);
+
+    // Second argument: start level
+    if (argc >= 3) 
+        startLevel = readStr<size_t>(argv[2]);
+
+    // Third argument: number of levels to calculate
+    if (argc >= 4) 
+        numLevels = readStr<size_t>(argv[3]);
+
+    // Fourth argument: number of iterations
+    if (argc >= 5) 
+        numIterations = readStr<size_t>(argv[4]);
+
+    // Fifth argument: maximum number of keypoints
+    if (argc >= 6) 
+        maxNumKeypoints = readStr<size_t>(argv[5]);
+
 
     // Read the image in
     cv::Mat bmp = cv::imread(argv[1], 0);
