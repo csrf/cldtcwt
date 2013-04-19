@@ -92,6 +92,12 @@ public:
     Subbands& operator[](size_t idx);
     const Subbands& operator[](size_t idx) const;
 
+    // Get the events that will be true when completed by tree & level
+    std::vector<cl::Event> doneEvents(size_t tree, size_t level) const;
+
+    // Get the events that will be true when completed by index
+    std::vector<cl::Event> doneEvents(size_t idx) const;
+
 private:
 
     float inputWidth_, inputHeight_;

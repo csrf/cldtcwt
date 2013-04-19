@@ -152,8 +152,19 @@ const Subbands& IntDtcwtOutput::operator[](size_t idx) const
 }
 
 
+std::vector<cl::Event> 
+    IntDtcwtOutput::doneEvents(size_t tree, size_t level) const
+{
+    return dtcwtOutputs_[tree].doneEvents(level);
+}
 
 
+std::vector<cl::Event> IntDtcwtOutput::doneEvents(size_t idx) const
+{
+    size_t tree, level;
+    std::tie(tree, level) = treeLevelFromIdx(idx);
+    return doneEvents(tree, level);
+}
 
 
 
