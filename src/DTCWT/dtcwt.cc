@@ -54,10 +54,12 @@ LevelTemps::LevelTemps(cl::Context& context,
 {
     // Dimensions provided are for the input
     
-    // If we're at level one, we do not decimate, so multiply back up
+    // If we're at level one, we do not decimate
     // This way we also deal with odd-sized images
-    outputWidth_  = (isLevelOne_? 2 : 1) * decimateDim(inputWidth_);
-    outputHeight_ = (isLevelOne_? 2 : 1) * decimateDim(inputHeight_);
+    outputWidth_  = isLevelOne_? (inputWidth_ +  (inputWidth & 1))
+                               : decimateDim(inputWidth_);
+    outputHeight_ = isLevelOne_? (inputHeight_ + (outputHeight_ & 1))
+                               : decimateDim(inputHeight_);
 
     // x-filtered version
     lo = ImageBuffer<cl_float>
