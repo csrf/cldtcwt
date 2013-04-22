@@ -502,6 +502,8 @@ dist_matlabscript_DATA = \
 	MatlabScripts/getQuadToComplexDecimateFilterYTimings.m \
 	MatlabScripts/getDTCWTTimings.m \
 	MatlabScripts/getMatlabDTCWTTimings.m \
+	MatlabScripts/getKeypointTimings.m \
+	MatlabScripts/getMatlabKeypointTimings.m \
 	MatlabScripts/runSpeedTestBufferTrial.m \
 	MatlabScripts/runSpeedTestDecimateFilterX.m \
 	MatlabScripts/runSpeedTestDecimateFilterY.m \
