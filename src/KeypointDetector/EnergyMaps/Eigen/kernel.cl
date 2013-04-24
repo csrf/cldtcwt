@@ -24,8 +24,6 @@ __kernel void energyMap(const __global float2* sb,
             // convenient)
             abs_h_2[n] = dot(h, h);
 
-            energy += abs_h_2[n];
-
         }
        
         // Approximate angular frequencies
@@ -48,7 +46,7 @@ __kernel void energyMap(const __global float2* sb,
 
 
         // Calculate result
-        float result = l0 / (l1 + 1000.f); 
+        float result = 200.f * l0 / (l1 + 1000.f); 
 
         // Produce output
         write_imagef(out, pos, result);

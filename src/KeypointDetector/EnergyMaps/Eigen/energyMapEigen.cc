@@ -55,7 +55,7 @@ void EnergyMapEigen::operator() (cl::CommandQueue& commandQueue,
     kernel_.setArg(2, cl_uint(subbands.pitch()));
     kernel_.setArg(3, cl_uint(subbands.stride()));
     kernel_.setArg(4, cl_uint(subbands.padding()));
-    kernel_.setArg(4, cl_uint(subbands.width()));
+    kernel_.setArg(5, cl_uint(subbands.width()));
     kernel_.setArg(6, cl_uint(subbands.height()));
 
     kernel_.setArg(7, energyMap);
