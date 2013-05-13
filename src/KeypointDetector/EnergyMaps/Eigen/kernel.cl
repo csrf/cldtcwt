@@ -46,7 +46,7 @@ __kernel void energyMap(const __global float2* sb,
 
 
         // Calculate result
-        float result = 200.f * l0 / (l1 + 1000.f); 
+        float result = l0 * l0 / (l1 + 0.1f); 
 
         // Produce output
         write_imagef(out, pos, result);
