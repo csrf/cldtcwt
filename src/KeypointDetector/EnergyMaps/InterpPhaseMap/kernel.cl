@@ -267,8 +267,8 @@ void interpPhaseMap(const __global float2* sb,
 
         float e = 0.f;
 
-        for (int n = 0; n < 2; ++n) 
-            for (int m = 0; m < 2; ++m) {
+        for (int n = 0; n < 3; ++n) 
+            for (int m = 0; m < 3; ++m) {
                 accumMatrix2x2ConjSymmetric(&R, &Q[l.y+n][l.x+m], 
                                                 h[n] * h[m]);
 
