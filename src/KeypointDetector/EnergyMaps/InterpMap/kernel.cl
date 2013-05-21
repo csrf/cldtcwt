@@ -242,10 +242,10 @@ void interpMap(const __global float2* sb,
 
         Matrix2x2ConjSymmetric R = {0, 0, 0};
 
-        float h[] = {1, 1, 1};
+        float h[] = {0.5, 1, 0.5};
 
-        for (int n = 0; n < 2; ++n) 
-            for (int m = 0; m < 2; ++m)
+        for (int n = 0; n < 3; ++n) 
+            for (int m = 0; m < 3; ++m)
                 accumMatrix2x2ConjSymmetric(&R, &Q[l.y+n][l.x+m], 
                                                 h[n] * h[m]);
 
