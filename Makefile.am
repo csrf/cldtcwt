@@ -157,8 +157,8 @@ nodist_displayDTCWT_SOURCES = \
 	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayDTCWT_SOURCES)
 displayDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la 
-displayDTCWT_LDFLAGS = @SFML_LIBS@ @V4L2_LIBS@ -lboost_thread 
-displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ $(AM_CXXFLAGS)
+displayDTCWT_LDFLAGS = @SFML_LIBS@ @V4L2_LIBS@ -lboost_thread @GL_LIBS@
+displayDTCWT_CXXFLAGS = @SFML_CFLAGS@ @GL_CFLAGS@ $(AM_CXXFLAGS)
 
 
 # Display after input from FFMPEG
@@ -177,8 +177,9 @@ nodist_displayVideoDTCWT_SOURCES = \
 	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayVideoDTCWT_SOURCES)
 displayVideoDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la libavmm.la
-displayVideoDTCWT_LDFLAGS = @SFML_LIBS@
-displayVideoDTCWT_CXXFLAGS = @SFML_CFLAGS@ @FFMPEG_CFLAGS@ $(AM_CXXFLAGS)
+displayVideoDTCWT_LDFLAGS = @SFML_LIBS@ @GL_LIBS@ 
+displayVideoDTCWT_CXXFLAGS = @SFML_CFLAGS@ @FFMPEG_CFLAGS@ @GL_CFLAGS@ \
+							 $(AM_CXXFLAGS)
 
 
 # Tests the speed of the keypoint detector/extractors
