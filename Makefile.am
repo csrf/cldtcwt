@@ -71,6 +71,7 @@ libkeypoints_la_SOURCES = \
 					  src/KeypointDetector/EnergyMaps/InterpPhaseMap/interpPhaseMap.cc \
 					  src/KeypointDetector/EnergyMaps/Eigen/energyMapEigen.cc \
 					  src/KeypointDetector/EnergyMaps/BTK/energyMap.cc \
+					  src/KeypointDetector/EnergyMaps/CrossProduct/crossProduct.cc \
 					  src/KeypointDetector/EnergyMaps/EnergyMap/energyMap.cc \
 					  src/KeypointDetector/EnergyMaps/PyramidSum/pyramidSum.cc \
 					  src/KeypointDetector/Accumulate/accumulate.cc \
@@ -81,6 +82,7 @@ nodist_libkeypoints_la_SOURCES = \
 				src/KeypointDetector/FindMax/kernel.cc \
 				src/KeypointDetector/EnergyMaps/Eigen/kernel.cc \
 				src/KeypointDetector/EnergyMaps/BTK/kernel.cc \
+				src/KeypointDetector/EnergyMaps/CrossProduct/kernel.cc \
 				src/KeypointDetector/EnergyMaps/EnergyMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpMap/kernel.cc \
 				src/KeypointDetector/EnergyMaps/InterpPhaseMap/kernel.cc \
