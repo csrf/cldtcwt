@@ -35,7 +35,7 @@ void readImageRegionToShared(__read_only image2d_t input,
 }
 
 typedef struct {
-    float a0, ax, ay, axx, ayy, axy;
+    float a0, ax, ay, ahalfxx, ahalfyy, axy;
 } QuadraticCoeffs;
 
 
@@ -50,37 +50,29 @@ void solveQuadraticCoefficients(__private QuadraticCoeffs* coeffs,
     // Octave/MATLAB script to generate the pseudoinverse
     // [x, y] = ind2sub([3 3], (1:9)'); x = x-2; y = y-2;
     // 
-    // % Values to multiply a_0, a_x, a_y, a_xx, a_yy, a_xy by
-    // P = [ones(9,1), x, y, x.*x, y.*y, x.*y] 
+    // % Values to multiply a_0, a_x, a_y, a_xx/2, a_yy/2, a_xy by
+    // P = [ones(9,1), x, y, x.*x/2, y.*y/2, x.*y];
     // 
     // % Scaling so corners are weighted down
-    // s = ones(9,1);
-    // s(x.*y ~= 0) = 0.25;
-    // S = diag(s)
+    // S = diag(2.^(2-abs(x)-abs(y)));
     // 
     // inverse = ((S*P)'*(S*P)) \ (S*P)' * S
 
     const float inverse[6][9] = 
     {
-        {-0.04167,  0.08333, -0.04167,  0.08333,  0.83333,  
-          0.08333, -0.04167,  0.08333, -0.04167},
-        {-0.02778,  0.00000,  0.02778, -0.44444,  0.00000,  
-          0.44444, -0.02778,  0.00000,  0.02778},
-        {-0.02778, -0.44444, -0.02778,  0.00000,  0.00000,  
-          0.00000,  0.02778,  0.44444,  0.02778},
-        { 0.06250, -0.12500,  0.06250,  0.37500, -0.75000,  
-          0.37500,  0.06250, -0.12500,  0.06250},
-        { 0.06250,  0.37500,  0.06250, -0.12500, -0.75000, 
-         -0.12500,  0.06250,  0.37500,  0.06250},
-        { 0.25000,  0.00000, -0.25000,  0.00000,  0.00000,  
-          0.00000, -0.25000,  0.00000,  0.25000}
+        {-0.027778,    0.055556,   -0.027778,    0.055556,     0.88889,    0.055556,   -0.027778,    0.055556,   -0.027778},
+        {-0.083333,           0,    0.083333,    -0.33333,           0,     0.33333,   -0.083333,           0,    0.083333},
+        {-0.083333,    -0.33333,   -0.083333,           0,           0,           0,    0.083333,     0.33333,    0.083333},
+        {  0.16667,    -0.33333,     0.16667,     0.66667,     -1.3333,     0.66667,     0.16667,    -0.33333,     0.16667},
+        {  0.16667,     0.66667,     0.16667,    -0.33333,     -1.3333,    -0.33333,     0.16667,     0.66667,     0.16667},
+        {     0.25,           0,       -0.25,           0,           0,           0,       -0.25,           0,        0.25}
     };
 
     coeffs->a0 = 0;
     coeffs->ax = 0;
     coeffs->ay = 0;
-    coeffs->axx = 0;
-    coeffs->ayy = 0;
+    coeffs->ahalfxx = 0;
+    coeffs->ahalfyy = 0;
     coeffs->axy = 0;
 
     for (size_t n = 0; n < 9; ++n) {
@@ -97,8 +89,8 @@ void solveQuadraticCoefficients(__private QuadraticCoeffs* coeffs,
         coeffs->a0 += v * inverse[0][n];
         coeffs->ax += v * inverse[1][n];
         coeffs->ay += v * inverse[2][n];
-        coeffs->axx += v * inverse[3][n];
-        coeffs->ayy += v * inverse[4][n];
+        coeffs->ahalfxx += v * inverse[3][n];
+        coeffs->ahalfyy += v * inverse[4][n];
         coeffs->axy += v * inverse[5][n];
     }
 
@@ -187,21 +179,30 @@ void findMax(__read_only image2d_t input,
                                    &inputLocal[l.y+2][l.x]);
 
         // Find the peak of the surface
-        float denom = 4 * c.axx * c.ayy 
-                       - c.axy * c.axy;
 
-        float dx = (c.axy * c.ay 
-                      - 2 * c.ayy * c.ax)
-                    / denom,
+        // Calculate the Hessian
+        float det = 1.f / (c.ahalfxx * c.ahalfyy - c.axy * c.axy);
 
-              dy = (c.axy * c.ax 
-                      - 2 * c.axx * c.ay)
-                    / denom;
+        float2 invhessian[2] = 
+        {
+            (float2) (det * c.ahalfyy,     det * -c.axy),
+            (float2) (   det * -c.axy,  det * c.ahalfxx)
+        };
 
-        inputCoords += (float2)(dx, dy);
+        // Calculate the grad
+        float2 grad = (float2) (c.ax, c.ay);
+
+        float2 move = -(float2)(dot(invhessian[0], grad), dot(invhessian[1], grad));
+
+        // Drop if the displacement suggests it should be elsewhere entirely
+        if (any(fabs(move) > 1.f))
+            return;
+
+        inputCoords += move;
 
         // Check the eigenvalues of the Hessian of this fit to check that it
         // enough of a dot, rather than a line
+#if 0
         float s = sqrt((c.axx - c.ayy) * (c.axx - c.ayy) + c.axy * c.axy);
 
         float l0t = fabs(c.axx + c.ayy - s);
@@ -213,6 +214,7 @@ void findMax(__read_only image2d_t input,
         // Return if too edge-like
         if (lmin < (eigenRatioThreshold * lmax))
             return;
+#endif
 
         // Output position relative to the centre of the image in the native
         // scaling
@@ -222,6 +224,7 @@ void findMax(__read_only image2d_t input,
                 * convert_float2(get_image_dim(input) - (int2) 1));
 
 
+#ifdef CHECK_SCALE_MAX
         // Check levels up and level down.  Convenientl.y (in a way)
         // the centres of the images remain the centre from level to
         // level.
@@ -245,7 +248,7 @@ void findMax(__read_only image2d_t input,
                                        coarserCoords + (float2) 0.5f).s0;
 
         if ((inputVal > coarserVal) && (inputVal > finerVal)) {
-
+#endif
             int ourOutputPos = atomic_inc(&numOutputs[numOutputsOffset]);
 
             // Write it out (if there's enough space)
@@ -256,8 +259,9 @@ void findMax(__read_only image2d_t input,
             } else
                 numOutputs[numOutputsOffset] = maxNumOutputs;
 
+#ifdef CHECK_SCALE_MAX
         }
-
+#endif
      }
 }
 
