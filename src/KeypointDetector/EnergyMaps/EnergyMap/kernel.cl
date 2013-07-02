@@ -34,7 +34,7 @@ __kernel void energyMap(const __global float2* sb,
 
         }
 
-        float e = sqrt(energy / 6.f);
+        float e = sqrt(energy);
 
         // Calculate result
         float result =
@@ -42,10 +42,10 @@ __kernel void energyMap(const __global float2* sb,
              + sqrt(abs_h_2[1] * abs_h_2[4]) 
              + sqrt(abs_h_2[2] * abs_h_2[5]))
             / fmax(1.e-6f, e)
-                - 1.f * e; 
+                - 0.3f * e; 
 
         // Produce output
-        write_imagef(out, pos, result);
+        write_imagef(out, pos, 4.f * result);
         /*out[outPadding + pos.x + outStride * (outPadding + pos.y)]
                = result;*/
 
