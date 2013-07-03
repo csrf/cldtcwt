@@ -276,3 +276,9 @@ size_t CalculatorInterface::getNumFloatsPerKeypointLocation()
     return calculator_.numFloatsPerKPLocation();
 }
 
+
+Calculator& CalculatorInterface::getCalculator()
+{
+    return calculator_;
+}
+

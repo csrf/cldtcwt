@@ -190,6 +190,11 @@ cl::Buffer Calculator::keypointLocations(void)
     return peakDetectorResults.list();
 }
 
+cl::Buffer Calculator::keypointDescriptors(void)
+{
+    return descriptors_;
+}
+
 
 cl::Buffer Calculator::keypointCumCounts(void)
 {

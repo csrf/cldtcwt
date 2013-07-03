@@ -74,6 +74,7 @@ public:
 
     cl::Image2D getEnergyMapLevel2(void);
     cl::Buffer keypointLocations(void);
+    cl::Buffer keypointDescriptors(void);
     size_t numFloatsPerKPLocation(void);
     cl::Buffer keypointCumCounts(void);
     std::vector<cl::Event> keypointLocationEvents(void);

@@ -8,6 +8,8 @@
 
 #include "avmm/avmm.h"
 
+#include "hdf5/hdfwriter.h"
+
 #include <chrono>
 #include <queue>
 #include <utility>
@@ -22,6 +24,29 @@ std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context>
 
 typedef std::chrono::duration<double, std::milli>
     DurationMilliseconds;
+
+
+void writeResults(cl::CommandQueue& cq, Calculator& cal, int numKeypoints,
+                  HDFWriter& output)
+{
+    // Read the locations
+    std::vector<cl_float> locations(4*numKeypoints);
+    cq.enqueueReadBuffer(cal.keypointLocations(), CL_FALSE, 0, 
+                         sizeof(cl_float) * locations.size(), 
+                         &locations[0]);
+
+    // Read the descriptors
+    std::vector<cl_float> descriptors(2*6*14*numKeypoints);
+    cq.enqueueReadBuffer(cal.keypointDescriptors(), CL_FALSE, 0, 
+                         sizeof(cl_float) * locations.size(),
+                         &descriptors[0]);
+
+    // Write them all out, when ready
+    cq.finish();
+
+    output.append(numKeypoints, &locations[0], &descriptors[0]);
+}
+
 
 int main(void)
 {
@@ -51,7 +76,6 @@ int main(void)
         SWS_POINT
     };
 
-
     const size_t width = codecContext.width(), 
                  height = codecContext.height();
     //const size_t width = 640, height = 480;
@@ -62,6 +86,8 @@ int main(void)
     cl::Context context;
     std::vector<cl::Device> devices;
     std::tie(platform, devices, context) = initOpenCL();
+
+    cl::CommandQueue cq {context, devices[0]};
    
     viewer.initBuffers();
 
@@ -79,23 +105,31 @@ int main(void)
     // Set up the keypoint transfer format
     viewer.setNumFloatsPerKeypoint(ci1.getNumFloatsPerKeypointLocation());
 
+    HDFWriter fileOutput("out.h5", 2*6*14);
 
-
+    
 
 
 
     auto prevTime = std::chrono::steady_clock::now();
     int n = 0;
 
+    bool eof = false;
+
     while (1) {
 
 
-        if (!ready.empty()) {
+        if (!eof && !ready.empty()) {
             
             // Acquire the new image
 
             AV::Packet packet;
-            formatContext.readFrame(&packet);
+
+            // Check for end of file
+            if (formatContext.readFrame(&packet)) {
+                eof = true;
+                continue;
+            }
 
 
             if (packet.get()->stream_index == stream) {
@@ -154,7 +188,10 @@ int main(void)
 
                 viewer.update();
 
-                    // Transfer to the ready queue
+                // Write to file
+                writeResults(cq, ci->getCalculator(), numKPs, fileOutput);
+
+                // Transfer to the ready queue
                 ready.push(ci);
                 processing.pop();
                 
@@ -174,6 +211,9 @@ int main(void)
         }
 
         if (viewer.isDone())
+            break;
+
+        if (processing.empty() && eof)
             break;
     }
 

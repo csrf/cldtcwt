@@ -101,6 +101,8 @@ public:
     size_t getNumKeypointLocations();
     size_t getNumFloatsPerKeypointLocation();
 
+    Calculator& getCalculator();
+
 };
 
 

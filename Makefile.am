@@ -178,7 +178,8 @@ nodist_displayVideoDTCWT_SOURCES = \
 	src/DisplayOutput/AbsToRGBA/kernel.cc \
 	src/DisplayOutput/GreyscaleToRGBA/kernel.cc 
 CLEANFILES += $(nodist_displayVideoDTCWT_SOURCES)
-displayVideoDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la libavmm.la
+displayVideoDTCWT_LDADD = libdtcwt.la libclutil.la libkeypoints.la \
+					      libavmm.la libhdfwriter.la
 displayVideoDTCWT_LDFLAGS = @SFML_LIBS@ @GL_LIBS@ 
 displayVideoDTCWT_CXXFLAGS = @SFML_CFLAGS@ @FFMPEG_CFLAGS@ @GL_CFLAGS@ \
 							 $(AM_CXXFLAGS)
