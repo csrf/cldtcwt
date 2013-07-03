@@ -176,8 +176,9 @@ namespace AV {
         // For the stream number specified, get an unopened
         // codec context.
 
-        void readFrame(Packet* packet);
+        bool readFrame(Packet* packet);
         // Reads the next frame in the sequence
+        // True if error/end of file
 
     private:
         AVFormatContext* formatContext_;

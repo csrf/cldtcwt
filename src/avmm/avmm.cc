@@ -157,9 +157,11 @@ namespace AV {
 
 
 
-    void FormatContext::readFrame(Packet *packet)
+    bool FormatContext::readFrame(Packet *packet)
     {
         int result = av_read_frame(formatContext_, packet->get());
+
+        return result != 0;
     }
 
 
