@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS=-I m4
 
 AM_CXXFLAGS=@CL_CFLAGS@ @opencv_CFLAGS@ -std=c++0x -I${srcdir}/src \
-			-I${builddir}/src @V4L2_CFLAGS@
+			-I${builddir}/src @V4L2_CFLAGS@ @HDF5_CFLAGS@
 
 # For turning OpenCL source files into C++ source
 include $(srcdir)/BuildRules/ClToCc.makerule
@@ -415,6 +415,19 @@ clDTCWT_SpeedTest_TripleQuadToComplexDecimateFilterY_LDADD   = \
 bin_PROGRAMS += clDTCWT-SpeedTest-DTCWT
 clDTCWT_SpeedTest_DTCWT_SOURCES = src/test/test.cc 
 clDTCWT_SpeedTest_DTCWT_LDADD   = libdtcwt.la libclutilcv.la
+
+
+
+# HDF5 writer
+noinst_LTLIBRARIES += libhdfwriter.la
+libhdfwriter_la_SOURCES = src/hdf5/hdfwriter.cc
+libhdfwriter_la_LIBADD = $(HDF5_LIBS)
+
+
+
+bin_PROGRAMS += clDTCWT-hdf5test
+clDTCWT_hdf5test_SOURCES = src/hdf5/test.cc
+clDTCWT_hdf5test_LDADD  = libhdfwriter.la
 
 
 

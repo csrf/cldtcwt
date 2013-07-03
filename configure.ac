@@ -19,6 +19,8 @@ if test "X$no_cl" = "Xyes"; then
     AC_MSG_FAILURE([You need OpenCL])
 fi
 
+AX_LIB_HDF5()
+
 PKG_CHECK_MODULES([opencv], [opencv glew])
 PKG_CHECK_MODULES([V4L2], [libv4l2])
 PKG_CHECK_MODULES([Eigen3], [eigen3])
