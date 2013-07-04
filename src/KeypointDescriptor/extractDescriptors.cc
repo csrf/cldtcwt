@@ -137,8 +137,8 @@ DescriptorExtracter::DescriptorExtracter
 
     // Set up the circle
     for (int n = 0; n < 12; ++n) {
-        finePattern.push_back({float(sin(float(n) / 12.f * 2.f * pi)),
-                               float(cos(float(n) / 12.f * 2.f * pi))});
+        finePattern.push_back({float(sin(float(9-n) / 12.f * 2.f * pi)),
+                               float(cos(float(9-n) / 12.f * 2.f * pi))});
     }
 
     std::vector<Coord> coarsePattern = {{0, 0}};
