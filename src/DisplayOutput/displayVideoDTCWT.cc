@@ -38,7 +38,7 @@ void writeResults(cl::CommandQueue& cq, Calculator& cal, int numKeypoints,
     // Read the descriptors
     std::vector<cl_float> descriptors(2*6*14*numKeypoints);
     cq.enqueueReadBuffer(cal.keypointDescriptors(), CL_FALSE, 0, 
-                         sizeof(cl_float) * locations.size(),
+                         sizeof(cl_float) * descriptors.size(),
                          &descriptors[0]);
 
     // Write them all out, when ready
@@ -186,10 +186,10 @@ int main(void)
                 viewer.setKeypointLocations(ci->getKeypointLocations(),
                                             numKPs);
 
-                viewer.update();
-
                 // Write to file
                 writeResults(cq, ci->getCalculator(), numKPs, fileOutput);
+                viewer.update();
+
 
                 // Transfer to the ready queue
                 ready.push(ci);
