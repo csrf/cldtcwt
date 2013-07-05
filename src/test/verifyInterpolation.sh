@@ -4,11 +4,15 @@ octave --silent --eval "
 
 % Produce a bitmap with the desired pattern
 
-X = zeros(128); X(128, 128) = 255;
+%X = zeros(128); X(128, 128) = 255;
+
+X = rand(128) > 0.5;
 
 testCoords = [49 48];
 
 imwrite(X, 'test.bmp');
+
+X = X * 255;
 
 % Call DTCWT verification on bitmap; it will return test.bmp.0.0,
 % test.bmp.0.1 etc for increasing subbands (the other number is for wavelet 
@@ -25,7 +29,7 @@ subbandCentre = (size(Yh{2}(:,:,1)) - 1) / 2 + 1;
 
 
 % Design the pattern
-z = exp(i * (0:11)' / 12 * 2 * pi);
+z = exp(i * (9-(0:11))' / 12 * 2 * pi);
 pattern = [0 0; real(z) imag(z)];
 
 
@@ -58,7 +62,7 @@ end
 
 out = dlmread('interpolations.dat', ',');
 
-if any(abs(out(1:numel(ref)) - ref(:)) > 1e-5)
+if any(abs(out(1:numel(ref)) - ref(:)) > 1e-2)
 
     disp('Should have been:')
     ref
