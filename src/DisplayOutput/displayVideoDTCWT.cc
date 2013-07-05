@@ -48,13 +48,19 @@ void writeResults(cl::CommandQueue& cq, Calculator& cal, int numKeypoints,
 }
 
 
-int main(void)
+int main(int argc, char* argv[])
 {
     AV::registerAll();
 
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " VideoFilename OutputFilename"
+                  << std::endl;
+
+        return -1;
+    }
+
     // Initialise the video reader
-    AV::FormatContext formatContext
-        {"/home/teg28/MATLAB/AnalyseVideoTracker/video/PVTRA102a10.mov"};
+    AV::FormatContext formatContext {argv[1]};
     formatContext.findStreamInfo();
 
     // Get which stream to read and the codec
@@ -105,7 +111,7 @@ int main(void)
     // Set up the keypoint transfer format
     viewer.setNumFloatsPerKeypoint(ci1.getNumFloatsPerKeypointLocation());
 
-    HDFWriter fileOutput("out.h5", 2*6*14);
+    HDFWriter fileOutput(argv[2], 2*6*14);
 
     
 
