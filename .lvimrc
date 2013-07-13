@@ -1,0 +1,7 @@
+set makeprg=make\ -C\ build
+set sw=4
+set sts=4
+set et
+
+let g:syntastic_cpp_compiler_options = ' -std=gnu++11'
+let g:syntastic_cpp_include_dirs = [ 'src' ]
