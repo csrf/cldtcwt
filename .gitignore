@@ -7,3 +7,5 @@ aclocal.m4
 Makefile.in
 config
 configure
+build/
+deploy/
