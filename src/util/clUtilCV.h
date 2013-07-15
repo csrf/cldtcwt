@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef CLUTILCV_H
 #define CLUTILCV_H
 

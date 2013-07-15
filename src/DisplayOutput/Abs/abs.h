@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef ABS_H
 #define ABS_H
 

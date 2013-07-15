@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "util/clUtil.h"
 #include "CL/cl.hpp"
 #include "DTCWT/intDtcwt.h"

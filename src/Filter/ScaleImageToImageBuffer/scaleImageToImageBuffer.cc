@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "scaleImageToImageBuffer.h"
 #include "util/clUtil.h"
 #include <sstream>

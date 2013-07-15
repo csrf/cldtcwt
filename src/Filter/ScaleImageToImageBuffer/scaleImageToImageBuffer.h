@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef SCALE_IMAGE_TO_IMAGE_BUFFER_H
 #define SCALE_IMAGE_TO_IMAGE_BUFFER_H
 

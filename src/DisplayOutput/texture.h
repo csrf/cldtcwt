@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef TEXTURE_H
 #define TEXTURE_H
 

@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "q2cDecimateFilterY.h"
 #include "util/clUtil.h"
 #include <sstream>

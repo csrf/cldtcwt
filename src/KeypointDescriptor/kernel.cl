@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // Function to calculate the cubic interpolation weights (see Keys 1981,
 // Cubic Convolution Interpolation for Digital Image Processing).
 

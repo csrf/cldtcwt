@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef GREYSCALETORGBA_H
 #define GREYSCALETORGBA_H
 

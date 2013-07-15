@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef DECIMATE_TRIPLE_FILTERX_H
 #define DECIMATE_TRIPLE_FILTERX_H
 

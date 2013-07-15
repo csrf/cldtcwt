@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel
 void greyscaleToRGBA(__read_only image2d_t input,
                      __write_only image2d_t output,

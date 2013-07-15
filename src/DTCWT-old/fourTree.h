@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef FOUR_TREE_H
 #define FOUR_TREE_H
 

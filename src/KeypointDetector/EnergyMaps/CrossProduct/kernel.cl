@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 typedef float2 Complex;
 
 typedef struct {

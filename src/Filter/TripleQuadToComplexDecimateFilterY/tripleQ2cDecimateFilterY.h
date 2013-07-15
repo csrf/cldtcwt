@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef Q2C_DECIMATE_FILTERY_H
 #define Q2C_DECIMATE_FILTERY_H
 

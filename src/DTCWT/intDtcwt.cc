@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // Implementation of interleaved DTCWT
 
 #include "intDtcwt.h"

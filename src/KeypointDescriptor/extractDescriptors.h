@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef EXTRACT_DESCRIPTORS_H
 #define EXTRACT_DESCRIPTORS_H
 

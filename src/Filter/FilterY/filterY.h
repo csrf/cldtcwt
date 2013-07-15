@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef FILTERY_H
 #define FILTERY_H
 

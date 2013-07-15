@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef FINDMAX_H
 #define FINDMAX_H
 

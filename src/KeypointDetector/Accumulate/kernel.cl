@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel
 void accumulate(__global __read_only unsigned int* inputs,
                 unsigned int numInputs,

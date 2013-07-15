@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef QUADTOCOMPLEX_H
 #define QUADTOCOMPLEX_H
 

@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "avmm.h"
 
 // Work around for definition not put into stdint in C++

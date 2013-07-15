@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef ACCUMULATE_H
 #define ACCUMULATE_H
 

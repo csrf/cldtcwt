@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef CROSSPRODUCTMAP_H
 #define CROSSPRODUCTMAP_H
 

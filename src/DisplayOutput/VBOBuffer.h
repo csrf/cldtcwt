@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef VBOBUFFER_H
 #define VBOBUFFER_H
 

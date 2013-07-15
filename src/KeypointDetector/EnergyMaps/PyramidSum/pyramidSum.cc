@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "pyramidSum.h"
 #include "util/clUtil.h"
 #include <string>

@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef INTERPMAPEIGEN_H
 #define INTERPMAPEIGEN_H
 

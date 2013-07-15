@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef VIDEOREADER_H
 #define VIDEOREADER_H
 

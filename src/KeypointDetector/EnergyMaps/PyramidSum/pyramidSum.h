@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef PYRAMID_SUM_H
 #define PYRAMID_SUM_H
 

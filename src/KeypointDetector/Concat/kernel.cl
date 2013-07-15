@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel
 void concat(__read_only global float* inputArray,
             __write_only global float* outputArray,

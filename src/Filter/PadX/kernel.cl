@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // PADDING is the amount of padding above and to the left of the image.  The 
 // global ids should be offset by the amount of the padding.  
 

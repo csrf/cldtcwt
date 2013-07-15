@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef ENERGYMAPEIGEN_H
 #define ENERGYMAPEIGEN_H
 

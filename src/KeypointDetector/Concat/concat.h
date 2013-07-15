@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef CONCAT_H
 #define CONCAT_H
 

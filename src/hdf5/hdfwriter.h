@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef HDFWRITER_H
 #define HDFWRITER_H
 

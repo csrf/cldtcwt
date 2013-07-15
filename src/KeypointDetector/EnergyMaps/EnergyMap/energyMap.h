@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef ENERGY_MAP_H
 #define ENERGY_MAP_H
 

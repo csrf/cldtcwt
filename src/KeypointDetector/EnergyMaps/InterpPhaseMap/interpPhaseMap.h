@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef INTERP_PHASE_MAP_H
 #define INTERP_PHASE_MAP_H
 

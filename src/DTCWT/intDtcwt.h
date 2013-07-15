@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef INT_DTCWT_H
 #define INT_DTCWT_H
 

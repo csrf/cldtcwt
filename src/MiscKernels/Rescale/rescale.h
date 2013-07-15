@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef RESCALE_H
 #define RESCALE_H
 

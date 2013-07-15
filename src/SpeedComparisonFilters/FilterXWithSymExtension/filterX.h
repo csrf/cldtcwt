@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef FILTERX_H
 #define FILTERX_H
 

@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef ABSTORGBA_H
 #define ABSTORGBA_H
 

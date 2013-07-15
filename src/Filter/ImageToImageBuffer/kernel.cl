@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // PADDING should have been defined externally, as should WG_W
 // and WG_H (width and height of the workgroup respectively)
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))

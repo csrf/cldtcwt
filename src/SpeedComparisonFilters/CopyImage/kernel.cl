@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // Working group width and height should be defined as WG_W and WG_H;
 // the length of the filter is FILTER_LENGTH.  PADDING is the amount
 // of padding above and to the left of the image.  The global ids 

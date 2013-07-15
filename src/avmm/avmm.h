@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef AVMM_H
 #define AVMM_H
 

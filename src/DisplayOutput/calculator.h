@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef CALCULATOR_H
 #define CALCULATOR_H
 

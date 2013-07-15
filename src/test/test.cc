@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include <iostream>
 
 #define __CL_ENABLE_EXCEPTIONS

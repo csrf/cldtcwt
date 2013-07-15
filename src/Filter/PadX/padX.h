@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef PADX_H
 #define PADX_H
 

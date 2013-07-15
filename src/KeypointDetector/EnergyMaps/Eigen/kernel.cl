@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel void energyMap(const __global float2* sb,
                         const unsigned int sbStart,
                         const unsigned int sbPitch,

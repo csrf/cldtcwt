@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef REF_IMPLEMENTATION_H
 #define REF_IMPLEMENTATION_H
 

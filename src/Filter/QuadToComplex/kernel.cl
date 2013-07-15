@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 // WG_W and WG_H  should have been defined externally (width and height of 
 // the workgroup respectively)
 __attribute__((reqd_work_group_size(WG_W, WG_H, 1)))

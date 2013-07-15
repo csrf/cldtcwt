@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef CALCULATORINTERFACE_H
 #define CALCULATORINTERFACE_H
 

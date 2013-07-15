@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel
 void pyramidSum(__read_only image2d_t input1, float gain1,
                 __read_only image2d_t input2, float gain2,

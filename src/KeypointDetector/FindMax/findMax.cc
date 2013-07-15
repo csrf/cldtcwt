@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "findMax.h"
 #include "kernel.h"
 using namespace FindMaxNS;

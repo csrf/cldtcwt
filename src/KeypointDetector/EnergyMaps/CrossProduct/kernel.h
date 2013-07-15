@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef KERNEL_H
 #define KERNEL_H
 

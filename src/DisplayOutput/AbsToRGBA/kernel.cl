@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 __kernel
 void absToRGBA(const __global float2* input,
                unsigned int start,

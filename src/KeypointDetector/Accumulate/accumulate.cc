@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #include "accumulate.h"
 #include <iostream>
 #include "util/clUtil.h"

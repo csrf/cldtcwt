@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 #ifndef VIEWER_H
 #define VIEWER_H
 

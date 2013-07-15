@@ -1,3 +1,4 @@
+// Copyright (C) 2013 Timothy Gale
 
 
 // Load a rectangular region from a floating-point image
