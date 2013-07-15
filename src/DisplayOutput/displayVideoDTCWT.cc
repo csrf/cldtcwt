@@ -52,12 +52,14 @@ int main(int argc, char* argv[])
 {
     AV::registerAll();
 
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " VideoFilename OutputFilename"
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " VideoFilename [OutputFilename.h5]"
                   << std::endl;
 
         return -1;
     }
+
+    bool writeOutput = argc == 3;
 
     // Initialise the video reader
     AV::FormatContext formatContext {argv[1]};
@@ -111,10 +113,10 @@ int main(int argc, char* argv[])
     // Set up the keypoint transfer format
     viewer.setNumFloatsPerKeypoint(ci1.getNumFloatsPerKeypointLocation());
 
-    HDFWriter fileOutput(argv[2], 2*6*14);
-
+    HDFWriter fileOutput;
     
-
+    if (writeOutput) 
+        fileOutput = HDFWriter(argv[2], 2*6*14);
 
 
     auto prevTime = std::chrono::steady_clock::now();
@@ -193,7 +195,9 @@ int main(int argc, char* argv[])
                                             numKPs);
 
                 // Write to file
-                writeResults(cq, ci->getCalculator(), numKPs, fileOutput);
+                if (writeOutput)
+                    writeResults(cq, ci->getCalculator(), numKPs, fileOutput);
+
                 viewer.update();
 
 
