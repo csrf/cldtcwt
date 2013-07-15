@@ -52,4 +52,5 @@ cannot be found.
 ## Licensing 
 
 This project is licensed under the terms of the GNU General Public Licence v2;
-see the COPYING file for further information.
+see the COPYING file for further information. Information on the authorship of
+the library can be found in the AUTHORS.md file.
