@@ -29,6 +29,9 @@ include_directories(${OPENCL_INDLUDE_DIRS})
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 include_directories(${HDF5_INCLUDE_DIRS})
 
+pkg_check_modules(FFMPEG libavcodec>=54 libavformat>=54 libavutil>=51 libswscale>=2.1.100 REQUIRED)
+include_directories(${FFMPEG_INCLUDE_DIRS})
+
 ## TARGETS
 
 # Add subdirectory containing the bulk of the source to be compiled.
