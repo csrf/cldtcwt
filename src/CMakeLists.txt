@@ -10,6 +10,7 @@ add_subdirectory(KeypointDescriptor)
 add_subdirectory(KeypointDetector)
 add_subdirectory(MiscKernels)
 add_subdirectory(avmm)
+add_subdirectory(hdf5)
 add_subdirectory(util)
 
 # A combined *shared* library for the entire system
@@ -19,6 +20,7 @@ target_link_libraries(cldtcwt
     bufferfilter
     clutil
     dtcwt
+    hdf5
     keypoint_descriptor
     keypoint_detector
     rescale

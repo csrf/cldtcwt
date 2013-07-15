@@ -46,6 +46,7 @@ add_executable(displayVideoDTCWT
 )
 target_link_libraries(displayVideoDTCWT
     cldtcwt
+    ${HDF5_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${SFML_LIBRARIES}
@@ -83,6 +84,7 @@ add_executable(displayDTCWT
 )
 target_link_libraries(displayDTCWT
     cldtcwt
+    ${HDF5_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${SFML_LIBRARIES}

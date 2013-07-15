@@ -26,6 +26,9 @@ include_directories(${OPENCV_INCLUDE_DIRS})
 find_package(OpenCL REQUIRED)
 include_directories(${OPENCL_INDLUDE_DIRS})
 
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+include_directories(${HDF5_INCLUDE_DIRS})
+
 ## TARGETS
 
 # Add subdirectory containing the bulk of the source to be compiled.
