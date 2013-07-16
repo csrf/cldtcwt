@@ -91,6 +91,12 @@ target_link_libraries(cldtcwt
     ${HDF5_LIBRARIES}
 )
 
+# Set version and SOVERSION on library
+set_target_properties(cldtcwt PROPERTIES
+    SOVERSION 1
+    VERSION 1.0.0
+)
+
 # Install binaries
 install(TARGETS cldtcwt
     RUNTIME DESTINATION bin
