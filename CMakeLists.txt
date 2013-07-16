@@ -40,6 +40,9 @@ include_directories(${HDF5_INCLUDE_DIRS})
 pkg_check_modules(FFMPEG libavcodec>=54 libavformat>=54 libavutil>=51 libswscale>=2.1.100 REQUIRED)
 include_directories(${FFMPEG_INCLUDE_DIRS})
 
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INDLUDE_DIRS})
+
 ## TARGETS
 
 # Add subdirectory containing the bulk of the source to be compiled.
