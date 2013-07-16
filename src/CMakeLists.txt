@@ -90,9 +90,19 @@ target_link_libraries(cldtcwt
     ${FFMPEG_LIBRARIES}
     ${HDF5_LIBRARIES}
 )
+
+# Install binaries
 install(TARGETS cldtcwt
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
+)
+
+# Install header files. We simply glob for any file called *.h in the source
+# directory. Something of a sledgehammer but it gets the job done(!)
+install(
+    DIRECTORY .
+    DESTINATION include/cldtcwt
+    FILES_MATCHING PATTERN *.h
 )
 
 ## EXECUTABLE TARGETS
