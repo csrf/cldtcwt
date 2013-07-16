@@ -93,8 +93,8 @@ target_link_libraries(cldtcwt
 
 # Set version and SOVERSION on library
 set_target_properties(cldtcwt PROPERTIES
-    SOVERSION 1
-    VERSION 1.0.0
+    SOVERSION ${CLDTCWT_MAJOR_VERSION}
+    VERSION ${CLDTCWT_VERSION}
 )
 
 # Install binaries
