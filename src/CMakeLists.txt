@@ -103,12 +103,12 @@ install(TARGETS cldtcwt
     LIBRARY DESTINATION lib
 )
 
-# Install header files. We simply glob for any file called *.h in the source
+# Install header files. We simply glob for any file called *.{h,hpp} in the source
 # directory. Something of a sledgehammer but it gets the job done(!)
 install(
     DIRECTORY .
     DESTINATION include/cldtcwt
-    FILES_MATCHING PATTERN *.h
+    FILES_MATCHING PATTERN *.h PATTERN *.hpp
 )
 
 # Create and install the pkg-config file
