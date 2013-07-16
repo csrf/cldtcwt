@@ -105,6 +105,10 @@ install(
     FILES_MATCHING PATTERN *.h
 )
 
+# Create and install the pkg-config file
+configure_file(cldtcwt.pc.in cldtcwt.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cldtcwt.pc DESTINATION lib/pkgconfig)
+
 ## EXECUTABLE TARGETS
 
 # The display{,Video}DTCWT executables
