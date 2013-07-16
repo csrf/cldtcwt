@@ -90,10 +90,30 @@ target_link_libraries(cldtcwt
     ${FFMPEG_LIBRARIES}
     ${HDF5_LIBRARIES}
 )
+
+# Set version and SOVERSION on library
+set_target_properties(cldtcwt PROPERTIES
+    SOVERSION ${CLDTCWT_MAJOR_VERSION}
+    VERSION ${CLDTCWT_VERSION}
+)
+
+# Install binaries
 install(TARGETS cldtcwt
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )
+
+# Install header files. We simply glob for any file called *.h in the source
+# directory. Something of a sledgehammer but it gets the job done(!)
+install(
+    DIRECTORY .
+    DESTINATION include/cldtcwt
+    FILES_MATCHING PATTERN *.h
+)
+
+# Create and install the pkg-config file
+configure_file(cldtcwt.pc.in cldtcwt.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cldtcwt.pc DESTINATION lib/pkgconfig)
 
 ## EXECUTABLE TARGETS
 

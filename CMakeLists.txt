@@ -3,6 +3,14 @@ project(clDTCWT CXX C)
 cmake_minimum_required(VERSION 2.8)
 enable_testing()
 
+# Set major, minor and patch version for library and hence a convenience
+# variable containing the version string.
+set(CLDTCWT_MAJOR_VERSION "1")
+set(CLDTCWT_MINOR_VERSION "0")
+set(CLDTCWT_PATCH_VERSION "0")
+set(CLDTCWT_VERSION
+    "${CLDTCWT_MAJOR_VERSION}.${CLDTCWT_MINOR_VERSION}.${CLDTCWT_PATCH_VERSION}")
+
 # Add the CMake modules we ship to the CMake module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
