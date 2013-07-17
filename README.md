@@ -1,4 +1,4 @@
-# OpenCL-based Dual-tree Complex Wavelet Transform implementation
+# Dual-tree Complex Wavelet Transform in OpenCL
 
 This repository contains code to perform the dual-tree complex wavelet
 transform in an accelerated manner user OpenCL. It also includes an
