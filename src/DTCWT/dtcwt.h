@@ -196,6 +196,23 @@ public:
                      const std::vector<cl::Event>& waitEvents
                         = std::vector<cl::Event>());
 
+    /// @brief Member function based interface to ::operator().
+    ///
+    /// @param commandQueue
+    /// @param image
+    /// @param env
+    /// @param subbandOutputs
+    /// @param 
+    void transform (cl::CommandQueue& commandQueue,
+                     ImageBuffer<cl_float>& image, 
+                     DtcwtTemps& env,
+                     DtcwtOutput& subbandOutputs,
+                     const std::vector<cl::Event>& waitEvents
+                        = std::vector<cl::Event>())
+    {
+        (*this)(commandQueue, image, env, subbandOutputs, waitEvents);
+    }
+
 };
 
 
