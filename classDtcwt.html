@@ -107,7 +107,75 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>decimateFilter</b> (<
 <tr class="memitem:ae10f979142d18375f9a0a61018b273f3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae10f979142d18375f9a0a61018b273f3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classcl_1_1CommandQueue.html">cl::CommandQueue</a> &amp;commandQueue, <a class="el" href="classImageBuffer.html">ImageBuffer</a>&lt; cl_float &gt; &amp;image, <a class="el" href="classDtcwtTemps.html">DtcwtTemps</a> &amp;env, <a class="el" href="classDtcwtOutput.html">DtcwtOutput</a> &amp;subbandOutputs, const std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt; &amp;waitEvents=std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt;())</td></tr>
 <tr class="separator:ae10f979142d18375f9a0a61018b273f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3ab8ccde2be9886aacde3374d9e74b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDtcwt.html#aa3ab8ccde2be9886aacde3374d9e74b4">transform</a> (<a class="el" href="classcl_1_1CommandQueue.html">cl::CommandQueue</a> &amp;commandQueue, <a class="el" href="classImageBuffer.html">ImageBuffer</a>&lt; cl_float &gt; &amp;image, <a class="el" href="classDtcwtTemps.html">DtcwtTemps</a> &amp;env, <a class="el" href="classDtcwtOutput.html">DtcwtOutput</a> &amp;subbandOutputs, const std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt; &amp;waitEvents=std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt;())</td></tr>
+<tr class="memdesc:aa3ab8ccde2be9886aacde3374d9e74b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Member function based interface to ::operator().  <a href="#aa3ab8ccde2be9886aacde3374d9e74b4">More...</a><br/></td></tr>
+<tr class="separator:aa3ab8ccde2be9886aacde3374d9e74b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="aa3ab8ccde2be9886aacde3374d9e74b4"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Dtcwt::transform </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classcl_1_1CommandQueue.html">cl::CommandQueue</a> &amp;&#160;</td>
+          <td class="paramname"><em>commandQueue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classImageBuffer.html">ImageBuffer</a>&lt; cl_float &gt; &amp;&#160;</td>
+          <td class="paramname"><em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classDtcwtTemps.html">DtcwtTemps</a> &amp;&#160;</td>
+          <td class="paramname"><em>env</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classDtcwtOutput.html">DtcwtOutput</a> &amp;&#160;</td>
+          <td class="paramname"><em>subbandOutputs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>waitEvents</em> = <code>std::vector&lt;<a class="el" href="classcl_1_1Event.html">cl::Event</a>&gt;()</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Member function based interface to ::operator(). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">commandQueue</td><td></td></tr>
+    <tr><td class="paramname">image</td><td></td></tr>
+    <tr><td class="paramname">env</td><td></td></tr>
+    <tr><td class="paramname">subbandOutputs</td><td></td></tr>
+    <tr><td class="paramname"></td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>src/DTCWT/<a class="el" href="dtcwt_8h_source.html">dtcwt.h</a></li>
 <li>src/DTCWT/dtcwt.cc</li>
@@ -115,7 +183,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a cl
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 16 2013 00:23:17 for OpenCL DTCWT by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jul 19 2013 11:41:18 for OpenCL DTCWT by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.4
 </small></address>
