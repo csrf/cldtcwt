@@ -68,7 +68,7 @@ public:
                int maxNumKeypoints = 1000);
 
     /// @brief convenience wrapper around operator().
-    void find_keypoints(ImageBuffer<cl_float>& input,
+    void findKeypoints(ImageBuffer<cl_float>& input,
             const std::vector<cl::Event>& waitEvents = {})
     { (*this)(input, waitEvents); }
 
