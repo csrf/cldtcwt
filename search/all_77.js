@@ -2,7 +2,6 @@ var searchData=
 [
   ['wait',['wait',['../classcl_1_1Event.html#abb1dccd98dc3cee29bd6638bc71005cb',1,'cl::Event']]],
   ['waitforevents',['waitForEvents',['../classcl_1_1Event.html#ac28c9c7bec902c477913945f7dcecf42',1,'cl::Event']]],
-  ['workings',['Workings',['../structWorkings.html',1,'']]],
   ['wrapper',['Wrapper',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],
   ['wrapper_3c_20cl_5fcommand_5fqueue_20_3e',['Wrapper&lt; cl_command_queue &gt;',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],
   ['wrapper_3c_20cl_5fcontext_20_3e',['Wrapper&lt; cl_context &gt;',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],

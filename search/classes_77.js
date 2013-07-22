@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['workings',['Workings',['../structWorkings.html',1,'']]],
   ['wrapper',['Wrapper',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],
   ['wrapper_3c_20cl_5fcommand_5fqueue_20_3e',['Wrapper&lt; cl_command_queue &gt;',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],
   ['wrapper_3c_20cl_5fcontext_20_3e',['Wrapper&lt; cl_context &gt;',['../classcl_1_1detail_1_1Wrapper.html',1,'cl::detail']]],

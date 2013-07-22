@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>OpenCL DTCWT: Calculator Struct Reference</title>
+<title>OpenCL DTCWT: Calculator Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -84,10 +84,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structCalculator-members.html">List of all members</a>  </div>
+<a href="classCalculator-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Calculator Struct Reference</div>  </div>
+<div class="title">Calculator Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
@@ -99,6 +98,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aee348ae2e36eefb508d9cd01021ab9be"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee348ae2e36eefb508d9cd01021ab9be"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Calculator</b> (<a class="el" href="classcl_1_1Context.html">cl::Context</a> &amp;context, const <a class="el" href="classcl_1_1Device.html">cl::Device</a> &amp;device, int width, int height, int maxNumKeypoints=1000)</td></tr>
 <tr class="separator:aee348ae2e36eefb508d9cd01021ab9be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9203e3a6111c02b830a9cb1e07a5b05"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9203e3a6111c02b830a9cb1e07a5b05"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCalculator.html#ae9203e3a6111c02b830a9cb1e07a5b05">find_keypoints</a> (<a class="el" href="classImageBuffer.html">ImageBuffer</a>&lt; cl_float &gt; &amp;input, const std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt; &amp;waitEvents={})</td></tr>
+<tr class="memdesc:ae9203e3a6111c02b830a9cb1e07a5b05"><td class="mdescLeft">&#160;</td><td class="mdescRight">convenience wrapper around operator(). <br/></td></tr>
+<tr class="separator:ae9203e3a6111c02b830a9cb1e07a5b05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a941d7ff24d1d78f05e13d60e0589dfe2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a941d7ff24d1d78f05e13d60e0589dfe2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="classImageBuffer.html">ImageBuffer</a>&lt; cl_float &gt; &amp;input, const std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt; &amp;waitEvents={})</td></tr>
 <tr class="separator:a941d7ff24d1d78f05e13d60e0589dfe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -127,31 +130,15 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numFloatsPerKPLocat
 <tr class="memitem:aa6a664bebdadfdccacfc6cb21c542200"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6a664bebdadfdccacfc6cb21c542200"></a>
 std::vector&lt; <a class="el" href="classcl_1_1Event.html">cl::Event</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>keypointLocationEvents</b> (void)</td></tr>
 <tr class="separator:aa6a664bebdadfdccacfc6cb21c542200"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad538ba238fcdd30c7ef09fc6805b75da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad538ba238fcdd30c7ef09fc6805b75da"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Calculator</b> (<a class="el" href="classcl_1_1Context.html">cl::Context</a> context, std::vector&lt; <a class="el" href="classcl_1_1Device.html">cl::Device</a> &gt; devices)</td></tr>
-<tr class="separator:ad538ba238fcdd30c7ef09fc6805b75da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a3c046e8b58914d0d779206f23e06f129"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c046e8b58914d0d779206f23e06f129"></a>
-<a class="el" href="classIntDtcwt.html">IntDtcwt</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dtcwt</b></td></tr>
-<tr class="separator:a3c046e8b58914d0d779206f23e06f129"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a570246ded6929eb3a85c141aeae9721d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a570246ded6929eb3a85c141aeae9721d"></a>
-<a class="el" href="classEnergyMap.html">EnergyMap</a>&#160;</td><td class="memItemRight" valign="bottom"><b>energyMap</b></td></tr>
-<tr class="separator:a570246ded6929eb3a85c141aeae9721d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79b01f77ac7a2c514843cafa07aa00a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79b01f77ac7a2c514843cafa07aa00a6"></a>
-<a class="el" href="classDescriptorExtracter.html">DescriptorExtracter</a>&#160;</td><td class="memItemRight" valign="bottom"><b>descriptorExtracter</b></td></tr>
-<tr class="separator:a79b01f77ac7a2c514843cafa07aa00a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following files:<ul>
-<li>src/DisplayOutput/<a class="el" href="calculator_8h_source.html">calculator.h</a></li>
-<li>src/SpeedTests/Keypoints/speedTest.cc</li>
-<li>src/DisplayOutput/calculator.cc</li>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>cldtcwt/DisplayOutput/<a class="el" href="calculator_8h_source.html">calculator.h</a></li>
+<li>cldtcwt/DisplayOutput/calculator.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jul 19 2013 11:41:18 for OpenCL DTCWT by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Jul 22 2013 12:58:05 for OpenCL DTCWT by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.4
 </small></address>
