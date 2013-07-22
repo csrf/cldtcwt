@@ -43,10 +43,19 @@ include_directories(${FFMPEG_INCLUDE_DIRS})
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INDLUDE_DIRS})
 
+# Add the library directory to the #include path
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/cldtcwt)
+
 ## TARGETS
 
-# Add subdirectory containing the bulk of the source to be compiled.
-add_subdirectory(src)
+# Add subdirectory containing the shared library source code
+add_subdirectory(cldtcwt)
+
+# Add subdirectory containing command-line tools
+add_subdirectory(tools)
+
+# Add subdirectory containing the tests
+add_subdirectory(test)
 
 ## DOCUMENTATION
 #
