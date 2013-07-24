@@ -8,7 +8,7 @@
 #endif
 #include "CL/cl.hpp"
 
-#include <highgui.h>
+#include <opencv2/highgui/highgui.hpp>
 
 cl::Image2D createImage2D(cl::Context& context, cv::Mat& mat);
 
