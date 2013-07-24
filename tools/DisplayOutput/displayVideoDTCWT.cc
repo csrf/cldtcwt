@@ -2,8 +2,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
-#include "DisplayOutput/calculatorInterface.h"
-#include "DisplayOutput/viewer.h"
+#include "calculatorInterface.h"
+#include "viewer.h"
 
 #include <GL/glx.h>
 

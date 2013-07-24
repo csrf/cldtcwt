@@ -1,5 +1,5 @@
 // Copyright (C) 2013 Timothy Gale
-#include "DisplayOutput/texture.h"
+#include "texture.h"
 #include <vector>
 
 

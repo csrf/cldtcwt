@@ -15,9 +15,18 @@ include_directories(${V4L2_INCLUDE_DIRS})
 if(SFML_FOUND)
     # The displayVideoDTCWT executable:
 
+    add_library(displayVideoCommon
+        VBOBuffer.cc
+        VideoReader.cc
+        calculatorInterface.cc
+        texture.cc
+        viewer.cc
+    )
+
     add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
     target_link_libraries(displayVideoDTCWT
         cldtcwt
+        displayVideoCommon
         ${SFML_LIBRARIES}
     )
 
@@ -33,6 +42,7 @@ if(SFML_FOUND AND V4L2_FOUND)
     add_executable(displayDTCWT displayDTCWT.cc)
     target_link_libraries(displayDTCWT
         cldtcwt
+        displayVideoCommon
         ${SFML_LIBRARIES}
         ${V4L2_LIBRARIES}
     )

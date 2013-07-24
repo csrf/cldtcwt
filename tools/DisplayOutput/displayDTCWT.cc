@@ -2,8 +2,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
-#include "DisplayOutput/calculatorInterface.h"
-#include "DisplayOutput/viewer.h"
+#include "calculatorInterface.h"
+#include "viewer.h"
 
 #include <GL/glx.h>
 
@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 
-#include "DisplayOutput/VideoReader.h"
+#include "VideoReader.h"
 
 std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context> 
     initOpenCL();

@@ -1,5 +1,5 @@
 // Copyright (C) 2013 Timothy Gale
-#include "DisplayOutput/viewer.h"
+#include "viewer.h"
 #include <vector>
 
 
