@@ -3,36 +3,42 @@
 
 find_package(PkgConfig REQUIRED)
 
-find_package(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIR})
-
-pkg_check_modules(SFML sfml-system>=2.0 sfml-window>=2.0 REQUIRED)
+pkg_check_modules(SFML sfml-system>=2.0 sfml-window>=2.0)
 include_directories(${SFML_INCLUDE_DIRS})
 
-pkg_check_modules(V4L2 libv4l2 REQUIRED)
+pkg_check_modules(V4L2 libv4l2)
 include_directories(${V4L2_INCLUDE_DIRS})
 
 ## EXECUTABLE TARGETS
 #
 
-# The displayVideoDTCWT executable:
+if(SFML_FOUND)
+    # The displayVideoDTCWT executable:
 
-add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
-target_link_libraries(displayVideoDTCWT
-    cldtcwt
-    ${SFML_LIBRARIES}
-)
+    add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
+    target_link_libraries(displayVideoDTCWT
+        cldtcwt
+        ${SFML_LIBRARIES}
+    )
 
-# The displayDTCWT executable:
+    install(
+        TARGETS displayVideoDTCWT
+        RUNTIME DESTINATION bin
+    )
+endif(SFML_FOUND)
 
-add_executable(displayDTCWT displayDTCWT.cc)
-target_link_libraries(displayDTCWT
-    cldtcwt
-    ${SFML_LIBRARIES}
-    ${V4L2_LIBRARIES}
-)
+if(SFML_FOUND AND V4L2_FOUND)
+    # The displayDTCWT executable:
 
-install(
-    TARGETS displayVideoDTCWT displayDTCWT
-    RUNTIME DESTINATION bin
-)
+    add_executable(displayDTCWT displayDTCWT.cc)
+    target_link_libraries(displayDTCWT
+        cldtcwt
+        ${SFML_LIBRARIES}
+        ${V4L2_LIBRARIES}
+    )
+
+    install(
+        TARGETS displayDTCWT
+        RUNTIME DESTINATION bin
+    )
+endif(SFML_FOUND AND V4L2_FOUND)
