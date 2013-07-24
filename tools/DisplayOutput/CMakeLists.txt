@@ -10,8 +10,10 @@ if(NOT SFML_FOUND)
     set(SFML_INCLUDE_DIRS ${SFML_INCLUDE_DIR})
     set(SFML_LIBRARIES ${SFML_LIBRARY})
 endif(NOT SFML_FOUND)
-
 include_directories(${SFML_INCLUDE_DIRS})
+
+pkg_check_modules(FFMPEG libavcodec>=54 libavformat>=54 libavutil>=51 libswscale>=2.1.100)
+include_directories(${FFMPEG_INCLUDE_DIRS})
 
 pkg_check_modules(V4L2 libv4l2)
 include_directories(${V4L2_INCLUDE_DIRS})
@@ -19,43 +21,45 @@ include_directories(${V4L2_INCLUDE_DIRS})
 ## EXECUTABLE TARGETS
 #
 
-if(SFML_FOUND)
-    # The displayVideoDTCWT executable:
-
+if(SFML_FOUND AND FFMPEG_FOUND)
     add_library(displayVideoCommon
         VBOBuffer.cc
-        VideoReader.cc
+        avmm/avmm.cc
         calculatorInterface.cc
         texture.cc
         viewer.cc
     )
+
+    # The displayVideoDTCWT executable:
 
     add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
     target_link_libraries(displayVideoDTCWT
         cldtcwt
         displayVideoCommon
         ${SFML_LIBRARIES}
+        ${FFMPEG_LIBRARIES}
     )
 
     install(
         TARGETS displayVideoDTCWT
         RUNTIME DESTINATION bin
     )
-endif(SFML_FOUND)
 
-if(SFML_FOUND AND V4L2_FOUND)
-    # The displayDTCWT executable:
+    if(V4L2_FOUND)
+        # The displayDTCWT executable:
 
-    add_executable(displayDTCWT displayDTCWT.cc)
-    target_link_libraries(displayDTCWT
-        cldtcwt
-        displayVideoCommon
-        ${SFML_LIBRARIES}
-        ${V4L2_LIBRARIES}
-    )
+        add_executable(displayDTCWT displayDTCWT.cc VideoReader.cc)
+        target_link_libraries(displayDTCWT
+            cldtcwt
+            displayVideoCommon
+            ${SFML_LIBRARIES}
+            ${V4L2_LIBRARIES}
+            ${FFMPEG_LIBRARIES}
+        )
 
-    install(
-        TARGETS displayDTCWT
-        RUNTIME DESTINATION bin
-    )
-endif(SFML_FOUND AND V4L2_FOUND)
+        install(
+            TARGETS displayDTCWT
+            RUNTIME DESTINATION bin
+        )
+    endif(V4L2_FOUND)
+endif(SFML_FOUND AND FFMPEG_FOUND)

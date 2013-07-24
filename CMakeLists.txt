@@ -37,9 +37,6 @@ include_directories(${OPENCL_INDLUDE_DIRS})
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 include_directories(${HDF5_INCLUDE_DIRS})
 
-pkg_check_modules(FFMPEG libavcodec libavformat libavutil libswscale REQUIRED)
-include_directories(${FFMPEG_INCLUDE_DIRS})
-
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INDLUDE_DIRS})
 

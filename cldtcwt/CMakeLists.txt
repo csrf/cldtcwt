@@ -37,7 +37,6 @@ set(CLDTCWT_SOURCES
     KeypointDetector/FindMax/findMax.cc
     KeypointDetector/peakDetector.cc
     MiscKernels/Rescale/rescale.cc
-    avmm/avmm.cc
     hdf5/hdfwriter.cc
     util/clUtil.cc
     util/clUtilCV.cc
@@ -80,7 +79,6 @@ target_link_libraries(cldtcwt
     ${OPENCV_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${OPENGL_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
     ${HDF5_LIBRARIES}
 )
 
