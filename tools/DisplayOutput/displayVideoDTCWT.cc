@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
         fileOutput = HDFWriter(argv[2], 2*6*14);
 
 
-    auto prevTime = std::chrono::steady_clock::now();
+    auto prevTime = std::chrono::system_clock::now();
     int n = 0;
 
     bool eof = false;
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
                 ready.push(ci);
                 processing.pop();
                 
-                auto newTime = std::chrono::steady_clock::now();
+                auto newTime = std::chrono::system_clock::now();
 
                 // Work out what the difference between these is
 

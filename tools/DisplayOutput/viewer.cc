@@ -154,9 +154,9 @@ void Viewer::update()
 	glDisable(GL_TEXTURE_2D);
 
     window.display();
-    auto startTime = std::chrono::steady_clock::now();
+    auto startTime = std::chrono::system_clock::now();
     glFinish();
-    auto endTime = std::chrono::steady_clock::now();
+    auto endTime = std::chrono::system_clock::now();
 
     std::cout << "R " 
         << DurationMilliseconds(endTime - startTime).count() << "ms\n";

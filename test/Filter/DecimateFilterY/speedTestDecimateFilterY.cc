@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
 
         {
             // Run, timing
-            auto start = std::chrono::steady_clock::now();
+            auto start = std::chrono::system_clock::now();
 
             for (int n = 0; n < numIterations; ++n) {
                 if (pad)
@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
             }
 
             cq.finish();
-            auto end = std::chrono::steady_clock::now();
+            auto end = std::chrono::system_clock::now();
 
             // Work out what the difference between these is
             double t = DurationSeconds(end - start).count();
