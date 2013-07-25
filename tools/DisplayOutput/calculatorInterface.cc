@@ -6,7 +6,7 @@
 #include "util/clUtil.h"
 
 
-#include "DisplayOutput/calculatorInterface.h"
+#include "calculatorInterface.h"
 #include <iostream>
 
 

@@ -10,7 +10,7 @@
 
 #include <SFML/Window.hpp>
 
-#include "DisplayOutput/VBOBuffer.h"
+#include "VBOBuffer.h"
 
 
 class Viewer {

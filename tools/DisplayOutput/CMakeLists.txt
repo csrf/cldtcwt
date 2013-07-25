@@ -3,36 +3,63 @@
 
 find_package(PkgConfig REQUIRED)
 
-find_package(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIR})
-
-pkg_check_modules(SFML sfml-system>=2.0 sfml-window>=2.0 REQUIRED)
+pkg_check_modules(SFML sfml-system>=2.0 sfml-window>=2.0)
+if(NOT SFML_FOUND)
+    # If pkg-config failed, fall back to searching directories
+    find_package(SFML)
+    set(SFML_INCLUDE_DIRS ${SFML_INCLUDE_DIR})
+    set(SFML_LIBRARIES ${SFML_LIBRARY})
+endif(NOT SFML_FOUND)
 include_directories(${SFML_INCLUDE_DIRS})
 
-pkg_check_modules(V4L2 libv4l2 REQUIRED)
+pkg_check_modules(FFMPEG libavcodec>=54 libavformat>=54 libavutil>=51 libswscale>=2.1.100)
+include_directories(${FFMPEG_INCLUDE_DIRS})
+
+pkg_check_modules(V4L2 libv4l2)
 include_directories(${V4L2_INCLUDE_DIRS})
 
 ## EXECUTABLE TARGETS
 #
 
-# The displayVideoDTCWT executable:
+if(SFML_FOUND AND FFMPEG_FOUND)
+    add_library(displayVideoCommon
+        VBOBuffer.cc
+        avmm/avmm.cc
+        calculatorInterface.cc
+        texture.cc
+        viewer.cc
+    )
 
-add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
-target_link_libraries(displayVideoDTCWT
-    cldtcwt
-    ${SFML_LIBRARIES}
-)
+    # The displayVideoDTCWT executable:
 
-# The displayDTCWT executable:
+    add_executable(displayVideoDTCWT displayVideoDTCWT.cc)
+    target_link_libraries(displayVideoDTCWT
+        cldtcwt
+        displayVideoCommon
+        ${SFML_LIBRARIES}
+        ${FFMPEG_LIBRARIES}
+    )
 
-add_executable(displayDTCWT displayDTCWT.cc)
-target_link_libraries(displayDTCWT
-    cldtcwt
-    ${SFML_LIBRARIES}
-    ${V4L2_LIBRARIES}
-)
+    install(
+        TARGETS displayVideoDTCWT
+        RUNTIME DESTINATION bin
+    )
 
-install(
-    TARGETS displayVideoDTCWT displayDTCWT
-    RUNTIME DESTINATION bin
-)
+    if(V4L2_FOUND)
+        # The displayDTCWT executable:
+
+        add_executable(displayDTCWT displayDTCWT.cc VideoReader.cc)
+        target_link_libraries(displayDTCWT
+            cldtcwt
+            displayVideoCommon
+            ${SFML_LIBRARIES}
+            ${V4L2_LIBRARIES}
+            ${FFMPEG_LIBRARIES}
+        )
+
+        install(
+            TARGETS displayDTCWT
+            RUNTIME DESTINATION bin
+        )
+    endif(V4L2_FOUND)
+endif(SFML_FOUND AND FFMPEG_FOUND)

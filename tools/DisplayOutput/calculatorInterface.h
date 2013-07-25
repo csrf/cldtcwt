@@ -4,11 +4,11 @@
 
 #include "Filter/imageBuffer.h"
 
-#include "calculator.h"
+#include "DisplayOutput/calculator.h"
 #include "VBOBuffer.h"
 #include "texture.h"
-#include "GreyscaleToRGBA/greyscaleToRGBA.h"
-#include "AbsToRGBA/absToRGBA.h"
+#include "DisplayOutput/GreyscaleToRGBA/greyscaleToRGBA.h"
+#include "DisplayOutput/AbsToRGBA/absToRGBA.h"
 #include <array>
 
 #include "Filter/ImageToImageBuffer/imageToImageBuffer.h"

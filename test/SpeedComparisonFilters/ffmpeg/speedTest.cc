@@ -47,7 +47,7 @@ int main(void)
     int numFrames = 1000;
 
 
-    auto prevTime = std::chrono::steady_clock::now();
+    auto prevTime = std::chrono::system_clock::now();
 
     for (int n = 0; n < numFrames;) {
 
@@ -83,7 +83,7 @@ int main(void)
     }
 
 
-    auto newTime = std::chrono::steady_clock::now();
+    auto newTime = std::chrono::system_clock::now();
     std::cout << (DurationMilliseconds(newTime - prevTime).count() / numFrames)
               << "ms\n";
 

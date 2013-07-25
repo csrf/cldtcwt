@@ -83,14 +83,14 @@ int main(int argc, const char* argv[])
 
         std::cout << "Running DTCWT" << std::endl;
 
-        auto start = std::chrono::steady_clock::now();
+        auto start = std::chrono::system_clock::now();
 
         dtcwt(cq, inImage, env, out);
         for (int n = 0; n < (numIterations-1); ++n) 
             dtcwt(cq, inImage, env, out);
         cq.finish();
 
-        auto end = std::chrono::steady_clock::now();
+        auto end = std::chrono::system_clock::now();
 
         // Work out what the difference between these is
         double t = DurationMilliseconds(end - start).count();

@@ -305,7 +305,7 @@ int main(int argc, char** argv)
                                    floatBmp.ptr());
     commandQueue.finish();
 
-    auto t1 = std::chrono::steady_clock::now();
+    auto t1 = std::chrono::system_clock::now();
     
     // Transform
     for (int n = 0; n < numIterations; ++n)
@@ -313,13 +313,13 @@ int main(int argc, char** argv)
 
 
     commandQueue.finish();
-    auto t2 = std::chrono::steady_clock::now();
+    auto t2 = std::chrono::system_clock::now();
 
     for (int n = 0; n < numIterations; ++n)
         detectKeypoints(commandQueue, calculator, workings);
 
     commandQueue.finish();
-    auto t3 = std::chrono::steady_clock::now();
+    auto t3 = std::chrono::system_clock::now();
 
 
 
@@ -327,7 +327,7 @@ int main(int argc, char** argv)
         extractKeypoints(commandQueue, calculator, workings);
  
     commandQueue.finish();
-    auto t4 = std::chrono::steady_clock::now();
+    auto t4 = std::chrono::system_clock::now();
 
     std::cout << "Dimensions: " << width << "x" << height << std::endl;
 

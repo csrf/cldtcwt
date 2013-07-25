@@ -1,0 +1,18 @@
+language: cpp
+
+compiler:
+    - clang
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq cmake doxygen
+    - sudo apt-get install -qq libhdf5-serial-dev libv4l-dev fglrx opencl-headers libeigen3-dev libopencv-dev
+    - sudo apt-get install -qq libsfml-dev libavcodec-dev libswscale-dev libavformat-dev libavutil-dev
+
+before_script:
+    - mkdir build
+    - cd build
+    - cmake ..
+
+script: make all test
+

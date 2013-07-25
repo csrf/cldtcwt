@@ -2,8 +2,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/OpenGL.hpp>
 
-#include "DisplayOutput/calculatorInterface.h"
-#include "DisplayOutput/viewer.h"
+#include "calculatorInterface.h"
+#include "viewer.h"
 
 #include <GL/glx.h>
 
@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 
-#include "DisplayOutput/VideoReader.h"
+#include "VideoReader.h"
 
 std::tuple<cl::Platform, std::vector<cl::Device>, cl::Context> 
     initOpenCL();
@@ -53,7 +53,7 @@ int main(void)
     VideoReader videoReader("/dev/video0", width, height);
     videoReader.startCapture();
 
-    auto prevTime = std::chrono::steady_clock::now();
+    auto prevTime = std::chrono::system_clock::now();
     int n = 0;
 
     while (1) {
@@ -102,7 +102,7 @@ int main(void)
                 ready.push(ci);
                 processing.pop();
                 
-                auto newTime = std::chrono::steady_clock::now();
+                auto newTime = std::chrono::system_clock::now();
 
                 // Work out what the difference between these is
 

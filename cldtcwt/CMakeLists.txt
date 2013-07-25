@@ -9,12 +9,7 @@ set(CLDTCWT_SOURCES
     DisplayOutput/Abs/abs.cc
     DisplayOutput/AbsToRGBA/absToRGBA.cc
     DisplayOutput/GreyscaleToRGBA/greyscaleToRGBA.cc
-    DisplayOutput/VBOBuffer.cc
-    DisplayOutput/VideoReader.cc
     DisplayOutput/calculator.cc
-    DisplayOutput/calculatorInterface.cc
-    DisplayOutput/texture.cc
-    DisplayOutput/viewer.cc
     Filter/DecimateFilterX/decimateFilterX.cc
     Filter/DecimateFilterY/decimateFilterY.cc
     Filter/DecimateTripleFilterX/decimateTripleFilterX.cc
@@ -42,7 +37,6 @@ set(CLDTCWT_SOURCES
     KeypointDetector/FindMax/findMax.cc
     KeypointDetector/peakDetector.cc
     MiscKernels/Rescale/rescale.cc
-    avmm/avmm.cc
     hdf5/hdfwriter.cc
     util/clUtil.cc
     util/clUtilCV.cc
@@ -85,8 +79,6 @@ target_link_libraries(cldtcwt
     ${OPENCV_LIBRARIES}
     ${OPENCL_LIBRARIES}
     ${OPENGL_LIBRARIES}
-    ${SFML_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
     ${HDF5_LIBRARIES}
 )
 
