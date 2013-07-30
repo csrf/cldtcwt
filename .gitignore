@@ -7,3 +7,6 @@ aclocal.m4
 Makefile.in
 config
 configure
+project.vim
+tags
+build
