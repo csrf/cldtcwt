@@ -15,7 +15,7 @@ Calculator::Calculator(cl::Context& context,
     descriptorExtracter_(context, {device}, peakDetector.getPosLength()),
     maxNumKeypoints_(maxNumKeypoints)
 {
-    const int numLevels = 3;
+    const int numLevels = 4;
     const int startLevel = 2;
 
     // Create the DTCWT, temporaries and outputs
@@ -53,7 +53,7 @@ Calculator::Calculator(cl::Context& context,
 
     // Set up the scales (used in peak detection)
     float s = 4.0f;
-    for (int n = 0; n < energyMaps.size(); ++n) {
+    for (int n = 0; n < numLevels; ++n) {
         scales.push_back(s);
         s *= 2.0f;
     }
@@ -89,7 +89,7 @@ void Calculator::operator() (ImageBuffer<cl_float>& input,
                                energyMapsDone);
 
     // Extract the descriptors
-    for (size_t l = 0; l < (energyMaps.size() - 1); ++l) {
+    for (size_t l = 0; l < energyMaps.size(); ++l) {
         descriptorExtracter_(commandQueue, 
                 dtcwtOut[l], scales[l],      // Subband
                 dtcwtOut[l+1], scales[l+1],  // Parent subband

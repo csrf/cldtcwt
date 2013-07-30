@@ -62,7 +62,7 @@ end
 
 out = dlmread('interpolations.dat', ',');
 
-if any(abs(out(1:numel(ref)) - ref(:)) > 1e-2)
+if any(abs(out(1:numel(ref)) - ref(:)) > 1e-2) || any(isnan(out(:)))
 
     disp('Should have been:')
     ref

@@ -197,7 +197,7 @@ void interpMap(const __global float2* sb,
             }
         }
 
-        write_imagef(output, g, energy / 15.f);
+        write_imagef(output, g, energy / 7.5f);
     }
                  
 }

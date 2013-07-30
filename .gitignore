@@ -9,3 +9,5 @@ config
 configure
 build/
 deploy/
+project.vim
+tags

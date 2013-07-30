@@ -116,10 +116,10 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
                                const std::vector<cl::Event>& waitEvents)
 {
     // Check we have been given the right number of scales and energyMaps
-    if (energyMaps.size() != results.levelLists_.size())
+    if (energyMaps.size() < results.levelLists_.size())
         throw std::logic_error("PeakDetector: wrong number of energy maps");
 
-    if (scales.size() != results.levelLists_.size())
+    if (scales.size() < results.levelLists_.size())
         throw std::logic_error("PeakDetector: wrong number of scales");
 
     // Clear the counts
@@ -133,7 +133,7 @@ void PeakDetector::operator() (cl::CommandQueue& cq,
     std::vector<cl::Event> findWaitEvents = waitEvents;
     findWaitEvents.push_back(results.countsCleared_);
 
-    for (int n = 0; n < energyMaps.size(); ++n) {
+    for (int n = 0; n < results.levelLists_.size(); ++n) {
 
         // Work out what the finer image is (zero if none)
         cl::Image* finerImage = &zeroImage_;
