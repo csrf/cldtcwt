@@ -120,7 +120,7 @@ DtcwtTemps::DtcwtTemps(cl::Context& context,
     startLevel_(startLevel), numLevels_(numLevels)
 {
     // Make space in advance for the temps
-    levelTemps_.reserve(numLevels);
+    levelTemps_.reserve(startLevel - 1 + numLevels);
 
     // Allocate space on the graphics card for each of the levels
     
