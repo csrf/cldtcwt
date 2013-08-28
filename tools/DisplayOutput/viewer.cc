@@ -91,26 +91,26 @@ typedef std::chrono::duration<double, std::milli>
 
 void Viewer::update()
 {
-    if (!window.isOpen())
+    if (!window.IsOpened())
         return;
 
 
     sf::Event event;
-    while (window.pollEvent(event)) {
+    while (window.GetEvent(event)) {
 
         // If the user tried to close the window, flag that everything is
         // done
-        if (event.type == sf::Event::Closed) {
+        if (event.Type == sf::Event::Closed) {
             done_ = true;
             return;
         }
 
     }
 
-    window.setActive();
+    window.SetActive();
 
     // Set up the area of the rendering region
-    glViewport(0, 0, window.getSize().x, window.getSize().y);
+    glViewport(0, 0, window.GetWidth(), window.GetWidth());
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-1, 0.5, -0.5, 1, 0, 2);
@@ -153,7 +153,7 @@ void Viewer::update()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 
-    window.display();
+    window.Display();
     auto startTime = std::chrono::system_clock::now();
     glFinish();
     auto endTime = std::chrono::system_clock::now();
@@ -243,9 +243,10 @@ void Viewer::drawEnergyMap()
 void Viewer::drawSubbands(const GLuint textures[]) 
 {
     // Coordinates to display at
+    typedef std::array<int, 2> A;
     std::vector<std::array<int, 2>> positions = {
-        {0, 0}, {1, 0}, {2, 0},
-        {2, 1}, {1, 1}, {0, 1}
+        A{ {0, 0} }, A{ {1, 0} }, A{ {2, 0} },
+        A{ {2, 1} }, A{ {1, 1} }, A{ {0, 1} }
     };
 
     // Select vertex positioning

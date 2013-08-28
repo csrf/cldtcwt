@@ -1,6 +1,6 @@
 // Copyright (C) 2013 Timothy Gale
 #include <SFML/Window.hpp>
-#include <SFML/OpenGL.hpp>
+#include <SFML/Window/Context.hpp>
 
 #include "calculatorInterface.h"
 #include "viewer.h"
