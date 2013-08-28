@@ -88,10 +88,10 @@ void CalculatorInterface::processImage(const void* data, size_t length)
                           // Don't block
                           CL_FALSE, 
                           // Start corner and size
-                          makeCLSizeT<3>({0, 0, 0}), 
-                          makeCLSizeT<3>({width_, height_, 1}), 
+                          makeCLSizeT<3>(std::array<unsigned long, 3>{ {0, 0, 0} }), 
+                          makeCLSizeT<3>(std::array<unsigned long, 3>{ {width_, height_, 1} }), 
                           // Stride and data pointer
-                          0, 0, data,
+                          0, 0, const_cast<void*>(data),
                           nullptr, &imageGreyscaleDone_);
 
     imageToImageBuffer_(cq_, imageGreyscale_, bufferGreyscale_,
