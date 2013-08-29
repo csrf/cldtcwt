@@ -30,3 +30,14 @@ Description: OpenCL implementation of DT-CWT
  libcldtcwt is an implementation of the dual-tree complex wavelet transform
  using the OpenCL compute layer. It is mainly focused on doing fast keypoint
  detection.
+
+Package: libcldtcwt-tools
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: OpenCL implementation of DT-CWT (utility programs)
+ libcldtcwt is an implementation of the dual-tree complex wavelet transform
+ using the OpenCL compute layer. It is mainly focused on doing fast keypoint
+ detection.
+ .
+ This package contains the GUI tool programs from the library.
