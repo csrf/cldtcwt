@@ -1,5 +1,7 @@
 # Dual-tree Complex Wavelet Transform in OpenCL
 
+[![Build Status](https://travis-ci.org/csrf/cldtcwt.png?branch=master)](https://travis-ci.org/csrf/cldtcwt)
+
 This repository contains code to perform the dual-tree complex wavelet
 transform in an accelerated manner user OpenCL. It also includes an
 implementation of polar-matching based keypoint descriptors.
