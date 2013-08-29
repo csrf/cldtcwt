@@ -1,0 +1,43 @@
+Source: cldtcwt
+Priority: extra
+Maintainer: Rich Wareham <rjw57@cam.ac.uk>
+Build-Depends: debhelper (>= 8.9.7), cmake, doxygen,
+ libhdf5-serial-dev, libv4l-dev, opencl-headers,
+ libeigen3-dev, libopencv-dev, libopencl1,
+ libsfml-dev
+Standards-Version: 3.9.4
+Section: libs
+Homepage: https://github.com/csrf/cldtcwt
+Vcs-Git: git://github.com/csrf/cldtcwt.git
+Vcs-Browser: https://github.com/csrf/cldtcwt
+
+Package: libcldtcwt-dev
+Section: libdevel
+Architecture: any
+Depends: libcldtcwt1 (= ${binary:Version})
+Description: OpenCL implementation of DT-CWT (development)
+ libcldtcwt is an implementation of the dual-tree complex wavelet transform
+ using the OpenCL compute layer. It is mainly focused on doing fast keypoint
+ detection.
+ .
+ This package contains the development files.
+
+Package: libcldtcwt1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: OpenCL implementation of DT-CWT
+ libcldtcwt is an implementation of the dual-tree complex wavelet transform
+ using the OpenCL compute layer. It is mainly focused on doing fast keypoint
+ detection.
+
+Package: libcldtcwt-tools
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: OpenCL implementation of DT-CWT (utility programs)
+ libcldtcwt is an implementation of the dual-tree complex wavelet transform
+ using the OpenCL compute layer. It is mainly focused on doing fast keypoint
+ detection.
+ .
+ This package contains the GUI tool programs from the library.

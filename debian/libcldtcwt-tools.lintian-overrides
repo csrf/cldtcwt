@@ -1,0 +1,3 @@
+# We don't use any libc functions covered by this.
+libcldtcwt-tools binary: hardening-no-fortify-functions
+
