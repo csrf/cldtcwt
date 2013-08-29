@@ -10,4 +10,6 @@
 #export DH_VERBOSE=1
 
 %:
-	dh $@ 
+	dh $@ --parallel
+
+# vim:noet:sw=8:ts=8:sts=8
