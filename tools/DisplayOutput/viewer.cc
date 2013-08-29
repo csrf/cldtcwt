@@ -110,7 +110,7 @@ void Viewer::update()
     window.SetActive();
 
     // Set up the area of the rendering region
-    glViewport(0, 0, window.GetWidth(), window.GetWidth());
+    glViewport(0, 0, window.GetWidth(), window.GetHeight());
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-1, 0.5, -0.5, 1, 0, 2);
