@@ -9,6 +9,10 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# Override build to make both the binaries and the documentation
+override_dh_auto_build:
+	dh_auto_build -- all doc
+
 %:
 	dh $@ --parallel
 
