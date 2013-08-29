@@ -75,8 +75,8 @@ int main()
         std::vector<float> outputV(width*height);
 
         cq.enqueueReadImage(output, CL_TRUE, 
-                            makeCLSizeT<3>({0,0,0}), 
-                            makeCLSizeT<3>({width, height, 1}), 
+                            makeCLSizeT<3>(std::array<unsigned long, 3>{ {0,0,0} }), 
+                            makeCLSizeT<3>(std::array<unsigned long, 3>{ {width, height, 1} }), 
                             0, 0, &outputV[0]);
 
         // Display output

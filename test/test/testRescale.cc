@@ -78,7 +78,7 @@ initOpenCL()
         throw std::runtime_error("No platforms!");
 
     std::vector<cl::Device> devices;
-    platforms[0].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+    platforms[0].getDevices(CL_DEVICE_TYPE_DEFAULT, &devices);
 
     // Create a context to work in 
     cl::Context context(devices);

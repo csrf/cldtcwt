@@ -13,11 +13,12 @@
 
 #include "Filter/ImageToImageBuffer/imageToImageBuffer.h"
 
-#if defined(CL_VERSION_1_2)
-    typedef cl::ImageGL GLImage;
-#else
+// HACK: Ubuntu always claims to be 1.2 irrespective of what driver supports.
+//#if defined(CL_VERSION_1_2)
+//    typedef cl::ImageGL GLImage;
+//#else
     typedef cl::Image2DGL GLImage;
-#endif
+//#endif
 
 
 // Number of subbands the DTCWT produces

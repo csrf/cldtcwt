@@ -203,7 +203,7 @@ void decimateFilterY(__global const float* input,
         // opposite subband
         unsigned int start = 
             outputStart + outputPitch 
-                    * select(get_group_id(2), 5 - get_group_id(2), l.y & 1);
+                    * select(get_group_id(2), (size_t)(5lu - get_group_id(2)), (size_t)(l.y & 1ul));
         
         // Add or subtract, and place in appropriate output
         output[2 * (start + outPos.x + outPos.y*outputStride) 
