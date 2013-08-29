@@ -32,7 +32,7 @@ pkg_check_modules(OPENCV opencv REQUIRED)
 include_directories(${OPENCV_INCLUDE_DIRS})
 
 find_package(OpenCL REQUIRED)
-include_directories(${OPENCL_INDLUDE_DIRS})
+include_directories(${OPENCL_INCLUDE_DIRS})
 
 find_package(HDF5 REQUIRED COMPONENTS CXX)
 include_directories(${HDF5_INCLUDE_DIRS})

@@ -92,6 +92,7 @@ set_target_properties(cldtcwt PROPERTIES
 install(TARGETS cldtcwt
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
 
 # Install header files. We simply glob for any file called *.{h,hpp} in the source

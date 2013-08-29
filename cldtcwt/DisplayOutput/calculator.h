@@ -70,7 +70,7 @@ public:
     void operator() (ImageBuffer<cl_float>& input, 
                      const std::vector<cl::Event>& waitEvents = {});
 
-    std::vector<::Subbands*> levelOutputs(void);
+    std::vector< ::Subbands*> levelOutputs(void);
     std::vector<std::vector<cl::Event>> levelDoneEvents(void) const;
 
     cl::Image2D getEnergyMapLevel2(void);
