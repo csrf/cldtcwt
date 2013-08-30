@@ -3,8 +3,7 @@ Priority: extra
 Maintainer: Rich Wareham <rjw57@cam.ac.uk>
 Build-Depends: debhelper (>= 8.9.7), cmake, doxygen,
  libhdf5-serial-dev, libv4l-dev, opencl-headers,
- libeigen3-dev, libopencv-dev, libopencl1,
- libsfml-dev
+ libeigen3-dev, libopencv-dev, libsfml-dev
 Standards-Version: 3.9.4
 Section: libs
 Homepage: https://github.com/csrf/cldtcwt
